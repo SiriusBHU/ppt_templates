@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "页模板（template.yaml）",
+  "type": "object",
+  "required": ["id", "name", "roles", "when_to_use", "frame", "slots", "layout"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {"type": "string", "pattern": "^[a-z]+\\.[a-z0-9]+(-[a-z0-9]+)*$"},
+    "name": {"type": "string", "minLength": 1},
+    "roles": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string"}},
+    "also_fits": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+    "density": {"enum": ["talk", "read"]},
+    "level": {"enum": ["system", "subsystem", "module"]},
+    "tags": {"type": "array", "items": {"type": "string"}},
+    "when_to_use": {"type": "string", "minLength": 1},
+    "when_not_to_use": {"type": "string"},
+    "frame": {"enum": ["standard", "none"]},
+    "slots": {"type": "object"},
+    "layout": {"$ref": "#/$defs/elements"},
+    "guidance": {"type": "array", "items": {"type": "string"}}
+  },
+  "$defs": {
+    "length": {
+      "oneOf": [
+        {"type": "number"},
+        {"type": "string", "pattern": "^\\s*-?\\d+(\\.\\d+)?%\\s*([+-]\\s*\\d+(\\.\\d+)?)?\\s*$"}
+      ]
+    },
+    "box": {"type": "array", "minItems": 4, "maxItems": 4, "items": {"$ref": "#/$defs/length"}},
+    "elements": {"type": "array", "items": {"$ref": "#/$defs/element"}},
+    "element": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {"type": {"enum": ["text", "bullets", "shape", "grid", "component"]}},
+      "allOf": [
+        {"if": {"properties": {"type": {"const": "text"}}}, "then": {"$ref": "#/$defs/text"}},
+        {"if": {"properties": {"type": {"const": "bullets"}}}, "then": {"$ref": "#/$defs/bullets"}},
+        {"if": {"properties": {"type": {"const": "shape"}}}, "then": {"$ref": "#/$defs/shape"}},
+        {"if": {"properties": {"type": {"const": "grid"}}}, "then": {"$ref": "#/$defs/grid"}},
+        {"if": {"properties": {"type": {"const": "component"}}}, "then": {"$ref": "#/$defs/component"}}
+      ]
+    },
+    "text": {
+      "required": ["box", "style"],
+      "oneOf": [{"required": ["bind"]}, {"required": ["value"]}],
+      "additionalProperties": false,
+      "properties": {
+        "type": {},
+        "box": {"$ref": "#/$defs/box"},
+        "bind": {"type": "string"},
+        "value": {"type": "string"},
+        "style": {"type": "string"},
+        "color": {"type": "string"},
+        "align": {"enum": ["left", "center", "right"]},
+        "valign": {"enum": ["top", "middle", "bottom"]}
+      }
+    },
+    "bullets": {
+      "required": ["box", "bind", "style"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {},
+        "box": {"$ref": "#/$defs/box"},
+        "bind": {"type": "string"},
+        "style": {"type": "string"},
+        "color": {"type": "string"}
+      }
+    },
+    "shape": {
+      "required": ["box", "fill"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {},
+        "box": {"$ref": "#/$defs/box"},
+        "fill": {"type": "string"},
+        "line": {"type": "string"},
+        "shape": {"enum": ["rect", "rounded"]}
+      }
+    },
+    "grid": {
+      "required": ["box", "bind", "columns", "item"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {},
+        "box": {"$ref": "#/$defs/box"},
+        "bind": {"type": "string"},
+        "columns": {"type": "integer", "minimum": 1},
+        "gap": {"type": "number", "minimum": 0},
+        "item": {"$ref": "#/$defs/elements"}
+      }
+    },
+    "component": {
+      "required": ["box", "component", "bind"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {},
+        "box": {"$ref": "#/$defs/box"},
+        "component": {"type": "string"},
+        "bind": {"type": "string"},
+        "props": {"type": "object"}
+      }
+    }
+  }
+}
