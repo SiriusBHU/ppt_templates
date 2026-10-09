@@ -1,4 +1,4 @@
-"""ppt 命令行：render / preview / validate / catalog / list / show。"""
+"""ppt 命令行：render / preview / validate / catalog / list / show / sync-skill / mcp。"""
 
 import argparse
 import shutil
@@ -11,6 +11,7 @@ from .errors import PptError
 from .loader import find_repo_root, load_deck, load_example, load_style, template_dir, template_dirs
 from .preview import render_pngs
 from .render import render_deck
+from .skill import sync_skill
 from .slots import prepare_pages
 from .validate import validate_repo
 
@@ -80,6 +81,18 @@ def _show(args) -> None:
         print(path.read_text(encoding="utf-8").rstrip())
 
 
+def _sync_skill(args) -> None:
+    root = find_repo_root()
+    for path in sync_skill(root):
+        print(path.relative_to(root))
+
+
+def _mcp(args) -> None:
+    from .mcp_server import serve  # mcp SDK 导入较慢，只在启动 server 时才加载
+
+    serve()
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(prog="ppt", description="页粒度 PPT 模板渲染器")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -113,6 +126,12 @@ def main(argv=None) -> int:
     p = sub.add_parser("show", help="输出模板定义和示例内容")
     p.add_argument("id", help="<主题>.<模板名>")
     p.set_defaults(run=_show)
+
+    p = sub.add_parser("sync-skill", help="把 .agents/skills 里的 skill 正本复制到各工具读取的位置")
+    p.set_defaults(run=_sync_skill)
+
+    p = sub.add_parser("mcp", help="启动 stdio MCP server")
+    p.set_defaults(run=_mcp)
 
     args = parser.parse_args(argv)
     try:

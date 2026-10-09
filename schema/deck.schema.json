@@ -5,7 +5,7 @@
   "required": ["pages"],
   "additionalProperties": false,
   "properties": {
-    "style": {"type": "string", "description": "风格名，对应 styles/<style>/，默认 default"},
+    "style": {"type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$", "description": "风格名，对应 styles/<style>/，默认 default"},
     "pages": {
       "type": "array",
       "minItems": 1,

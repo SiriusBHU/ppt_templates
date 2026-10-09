@@ -30,6 +30,7 @@ def test_deck_schema(root):
     ok = {"style": "default", "pages": [{"template": "system.solution-layered-arch", "data": {}}]}
     assert errors(schema, ok) == []
     assert errors(schema, {"pages": []}) == ["/pages  共 0 项，低于下限 1"]
+    assert errors(schema, {"style": "../x", "pages": [ok["pages"][0]]}) == ["/style  ../x 不符合格式 ^[a-z0-9]+(-[a-z0-9]+)*$"]
     assert errors(schema, {"pages": [{"template": "x", "data": {}, "extra": 1}]}) == [
         "/pages/0  不允许的字段 extra",
         "/pages/0/template  x 不符合格式 ^[a-z]+\\.[a-z0-9]+(-[a-z0-9]+)*$",

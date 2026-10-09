@@ -4,7 +4,7 @@
 
 ## 当前状态
 
-已实现：`ppt render / preview / validate / catalog / list / show`；布局元素 `text` / `bullets` / `shape` / `grid`；组件 `layered-arch` / `table` / `block-diagram`；仓库级校验（spec 7.1 全部规则）和 catalog。模板目前只有 `system.solution-layered-arch`。尚未实现：母版（`master.pptx`）支持、skill、`ppt mcp`。
+已实现：`ppt render / preview / validate / catalog / list / show / sync-skill / mcp`；布局元素 `text` / `bullets` / `shape` / `grid`；组件 `layered-arch` / `table` / `block-diagram`；仓库级校验（spec 7.1 全部规则，外加 skill 副本一致性）和 catalog；skill（`.agents/skills/ppt-templates`）和 MCP server。模板清单见 `catalog.json`。尚未实现：母版（`master.pptx`）支持。
 
 ## 术语（不要混用）
 
@@ -51,11 +51,11 @@ uv run ppt catalog                       # 重新生成 catalog.json
 uv run ppt render deck.yaml -o out/x.pptx
 uv run ppt preview deck.yaml -o dir/     # 每页一张 PNG（soffice → PDF → pypdfium2）
 uv run ppt preview <id> --write          # 用 example.yaml 重新生成该模板的 preview.png
+uv run ppt sync-skill                    # 把 skill 正本复制到 .claude/skills/（改过正本后运行）
+uv run ppt mcp                           # 启动 stdio MCP server
 uv run pytest                            # 全部测试；找不到 soffice 时跳过预览测试
 uv run pytest tests/test_render.py::test_name   # 单个测试
 ```
-
-计划中（尚未实现）：`uv run ppt mcp`（启动 stdio MCP server）。
 
 `out/` 和 `preview/` 是本地输出目录，已加入 .gitignore。
 
@@ -68,8 +68,19 @@ uv run pytest tests/test_render.py::test_name   # 单个测试
 5. `uv run ppt catalog` 重新生成索引。
 6. `uv run pytest`，然后把 `template.yaml`、`example.yaml`、`preview.png`、`catalog.json` 一起提交。
 
+## MCP
+
+`ppt mcp` 以 stdio 方式提供六个工具（实现在 `src/ppt_templates/mcp_server.py`，内部复用 CLI 的同一批函数）：`get_taxonomy`、`list_templates`、`get_template`（不含 `layout`）、`validate_deck`（返回 `{"ok", "errors"}`）、`render_deck`（只写入仓库的 `out/`，`filename` 必须是以 `.pptx` 结尾、不含路径分隔符的文件名）、`preview_deck`（每页一张宽 1280 的 PNG，需要 `soffice`）。工具失败时返回中文错误。
+
+- Claude Code：仓库根目录的 `.mcp.json` 已配置，按项目加载。
+- Claude Desktop 等其他客户端，在它们的 MCP 配置里加：
+
+```json
+{"mcpServers": {"ppt-templates": {"command": "uv", "args": ["--directory", "<仓库绝对路径>", "run", "ppt", "mcp"]}}}
+```
+
 ## Skill 与多模型适配
 
-- Skill 的规范位置是 `.agents/skills/ppt-templates/SKILL.md`；`.claude/skills/ppt-templates` 是指向它的软链。只改规范位置。
+- Skill 的正本是 `.agents/skills/ppt-templates/SKILL.md`（Codex、Cursor、Gemini CLI 读这里）。Claude Code 只读 `.claude/skills/`，对软链目录的发现不稳定，所以 `.claude/skills/ppt-templates/SKILL.md` 是一份真实副本。只改正本，改完运行 `uv run ppt sync-skill` 同步；`ppt validate` 会检查正本的 frontmatter 合法、副本与正本逐字节一致（仓库里没有 `.agents/skills` 时跳过）。新增别的工具的副本位置，加到 `src/ppt_templates/skill.py` 的 `COPIES`。
 - SKILL.md 只描述流程（排页功能顺序 → 读 catalog 挑模板 → `ppt show` → 写 deck → validate → render → preview），不要把模板内容复制进去。
 - 本文件是仓库规则的规范来源，Codex、Cursor 直接读取；`CLAUDE.md` 只是引用本文件；Gemini CLI 通过 `.gemini/settings.json` 指向本文件。

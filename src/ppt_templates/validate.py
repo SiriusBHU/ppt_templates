@@ -1,4 +1,4 @@
-"""仓库级校验（spec 7.1）：taxonomy、风格、每个模板。"""
+"""仓库级校验（spec 7.1）：taxonomy、风格、每个模板、skill 副本。"""
 
 import math
 from dataclasses import dataclass, field
@@ -15,6 +15,7 @@ from .loader import load_yaml, template_dirs
 from .paths import slot_at
 from .schemas import errors as schema_errors
 from .schemas import load_schema
+from .skill import check_skill
 from .slots import component_errors
 from .taxonomy import Taxonomy, load_taxonomy
 
@@ -293,6 +294,7 @@ def validate_repo(root: Path) -> Report:
             report.errors.append(f"{rel}  缺少 example.yaml")
         if not (tdir / "preview.png").is_file():
             report.warnings.append(f"{rel}  缺少 preview.png（运行 uv run ppt preview {topic}.{name} --write）")
+    report.errors += check_skill(root)
     if not report.errors and not catalog_is_current(root):
         report.errors.append("catalog.json 不是最新的（运行 uv run ppt catalog）")
     return report

@@ -414,6 +414,7 @@ pages:
 | `ppt render <deck.yaml> -o out.pptx` | 渲染 |
 | `ppt preview <deck.yaml> -o dir/` | 渲染后转成每页一张 PNG，用于目视检查 |
 | `ppt preview <id> [--style S] [--write]` | 用模板的 `example.yaml` 渲染预览，默认风格为 `default`；`--write` 写入该模板目录的 `preview.png` |
+| `ppt sync-skill` | 把 skill 正本复制到各工具读取的位置（见 8.1） |
 | `ppt mcp` | 启动 MCP server（见 8.2） |
 
 预览流程：用 `soffice` 把 `.pptx` 转成 PDF，再用 pypdfium2 把 PDF 每页转成 PNG。直接用 `soffice --convert-to png` 只会输出第一页，不能用。
@@ -482,12 +483,9 @@ deck.yaml ───┼─ MCP 客户端：MCP server 暴露同一组功能
 ### 8.1 Skill（Agent Skills 标准）
 
 - 规范位置为 `.agents/skills/ppt-templates/SKILL.md`。Codex、Cursor、Gemini CLI 官方都识别这个目录。
-- `.claude/skills/ppt-templates` 软链到上面，供 Claude Code 使用。
-- 实现时需要验证两个风险：
-  - Cursor 同时扫描 `.claude/skills`，同一个 skill 可能出现两次。
-  - Claude Code 历史上对软链的 skill 目录有过发现失败的问题。
-
-  如果软链不可用，就改为由脚本生成副本，并让 `ppt validate` 检查副本与规范位置一致。
+- `.claude/skills/ppt-templates/SKILL.md` 是一份真实副本，供 Claude Code 使用，不用软链。原因：Claude Code 只读 `.claude/skills`，对软链的 skill 目录发现不稳定。
+- `ppt sync-skill` 把正本复制到各副本位置（目标列表是 `src/ppt_templates/skill.py` 里的常量，以后加别的工具只改这里）；`ppt validate` 检查正本存在、frontmatter 合法（`name` 与目录名一致，`description` 非空且不超过 1024 字），并检查每个副本与正本逐字节一致，不一致就提示运行 `ppt sync-skill`。仓库里没有 `.agents/skills` 时跳过这些检查。
+- Cursor 同时扫描 `.claude/skills`，同一个 skill 可能列出两次，内容相同，可以接受。
 - SKILL.md 只写流程，不复制模板内容：
   1. 按需求排出页功能顺序（问题 → 分析 → 方案 → 效果……）
   2. 读 `catalog.json` 或运行 `ppt list`，为每一页挑模板（可跨主题）
@@ -500,10 +498,14 @@ deck.yaml ───┼─ MCP 客户端：MCP server 暴露同一组功能
 
 `ppt mcp` 启动 stdio MCP server，提供以下工具，内部调用与 CLI 相同的函数：
 
-- `list_templates(topic?, role?, density?, tag?)`
-- `get_template(id)`：返回元数据、`slots`、`guidance` 和示例
-- `validate_deck(deck)`：`deck` 的结构见 `schema/deck.schema.json`
-- `render_deck(deck, output_path)`
+- `get_taxonomy()`：返回主题和页功能（含每个页功能要回答的 `question`）
+- `list_templates(topic?, role?, density?, tag?)`：返回 catalog 条目，`topic` 同时匹配 `also_fits`
+- `get_template(template_id)`：返回元数据、`slots`、`guidance` 和示例；不返回 `layout`，写内容用不到，还占 token
+- `validate_deck(deck)`：`deck` 的结构见 `schema/deck.schema.json`；返回 `{"ok": bool, "errors": [中文错误]}`，包括风格是否存在
+- `render_deck(deck, filename="deck.pptx")`：先校验，失败就报错；只写入仓库的 `out/` 目录，`filename` 必须是不含路径分隔符、以 `.pptx` 结尾的文件名；返回文件的绝对路径
+- `preview_deck(deck)`：渲染后把每页转成宽 1280 的 PNG，以 MCP 图片内容返回；本机没有 `soffice` 时报清楚的中文错误
+
+工具失败时返回中文错误（与 CLI 相同的 `<文件或页>  <JSON Pointer>  <消息>` 格式）。仓库根目录的 `.mcp.json` 让 Claude Code 按项目加载这个 server。
 
 ### 8.3 仓库说明文件
 
@@ -523,7 +525,7 @@ deck.yaml ───┼─ MCP 客户端：MCP server 暴露同一组功能
 1. 骨架：`taxonomy.yaml`、三个 JSON Schema、占位风格、校验器、`ppt validate` / `ppt catalog` / `ppt list` / `ppt show`
 2. 渲染：python-pptx 渲染器、页框、`text` / `bullets` / `shape` / `grid`、`ppt render` / `ppt preview`；首批模板为 `common` 的封面和章节页，再加几个能覆盖 `text` / `bullets` / `grid` 的内容页
 3. 组件：`table`、`layered-arch`、`block-diagram`，以及用到它们的模板
-4. 多模型适配：SKILL.md 和软链（验证 8.1 的两个风险）、`.gemini/settings.json`
+4. 多模型适配：SKILL.md 和副本同步（8.1）、`.gemini/settings.json`
 5. MCP server
 6. 品牌风格：用户文件到位后提取 `styles/default`（可与 2–5 并行）
 

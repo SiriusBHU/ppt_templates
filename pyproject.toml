@@ -3,7 +3,13 @@ name = "ppt-templates"
 version = "0.1.0"
 description = "页粒度的 PPT 模板库与声明式渲染器"
 requires-python = ">=3.13"
-dependencies = ["python-pptx", "pyyaml", "jsonschema", "pypdfium2"]
+dependencies = [
+    "python-pptx",
+    "pyyaml",
+    "jsonschema",
+    "pypdfium2",
+    "mcp>=2.3.0",
+]
 
 [project.scripts]
 ppt = "ppt_templates.cli:main"
