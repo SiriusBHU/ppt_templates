@@ -6,7 +6,7 @@ from pptx import Presentation
 from pptx.util import Emu
 
 from .components import COMPONENTS
-from .draw import add_runs, add_shape, add_text
+from .draw import add_bullets, add_runs, add_shape, add_text
 from .errors import PptError
 from .geometry import CANVAS_H, CANVAS_W, REF_H, REF_W, Transform, grid_cells, px_to_emu, resolve_box
 from .loader import load_style
@@ -66,6 +66,10 @@ def _render_elements(slide, style, elements, area, scope, tf):
             if text is not None:
                 add_text(slide, style, tf(ref_box), text, el["style"], color=el.get("color"),
                          align=el.get("align", "left"), valign=el.get("valign", "top"))
+        elif kind == "bullets":
+            items = lookup(scope, el["bind"])
+            if items:
+                add_bullets(slide, style, tf(ref_box), items, el["style"], color=el.get("color"))
         elif kind == "grid":
             items = lookup(scope, el["bind"]) or []
             for item, cell in zip(items, grid_cells(ref_box, el["columns"], el.get("gap", 0), len(items))):

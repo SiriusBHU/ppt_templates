@@ -20,7 +20,7 @@ def rgb(style: dict, token: str) -> RGBColor:
     return RGBColor.from_string(style["colors"][token].lstrip("#"))
 
 
-def _emu_box(box: Box) -> tuple[Emu, Emu, Emu, Emu]:
+def emu_box(box: Box) -> tuple[Emu, Emu, Emu, Emu]:
     return tuple(Emu(px_to_emu(v)) for v in box)
 
 
@@ -30,7 +30,7 @@ def _text_style(style: dict, token: str) -> dict:
     return style["text_styles"][token]
 
 
-def _add_run(p, style: dict, text: str, text_style: str, color=None, bold=None):
+def add_run(p, style: dict, text: str, text_style: str, color=None, bold=None):
     """追加一个 run；显式写 a:latin / a:ea / a:cs。"""
     ts = _text_style(style, text_style)
     fonts = style["fonts"]
@@ -64,30 +64,52 @@ def set_text(tf, style: dict, text, text_style: str, *, color=None, bold=None, a
         p.alignment = ALIGN[align]
         if "line_spacing" in ts:
             p.line_spacing = ts["line_spacing"]
-        _add_run(p, style, line, text_style, color, bold)
+        add_run(p, style, line, text_style, color, bold)
 
 
 def add_text(slide, style: dict, box: Box, text, text_style: str, **opts):
     """纯文字框：四边内边距为 0（可用 inset 覆盖）。"""
-    tb = slide.shapes.add_textbox(*_emu_box(box))
+    tb = slide.shapes.add_textbox(*emu_box(box))
     set_text(tb.text_frame, style, text, text_style, **opts)
     return tb
 
 
 def add_runs(slide, style: dict, box: Box, runs, *, align="left", valign="top"):
     """单段落、多 run 的文字框（如 24 号标题 + 18 号后半句），runs = [(text, text_style), ...]。"""
-    tb = slide.shapes.add_textbox(*_emu_box(box))
+    tb = slide.shapes.add_textbox(*emu_box(box))
     _setup_frame(tb.text_frame, valign, 0)
     p = tb.text_frame.paragraphs[0]
     p.alignment = ALIGN[align]
     for text, text_style in runs:
-        _add_run(p, style, text, text_style)
+        add_run(p, style, text, text_style)
+    return tb
+
+
+BULLET = "•"
+
+
+def add_bullets(slide, style: dict, box: Box, items, text_style: str, *, color=None):
+    """要点列表：每项一段，带项目符号；项是字符串，或 {text, level}（level 从 0 起，每级多缩进一个字宽）。"""
+    tb = slide.shapes.add_textbox(*emu_box(box))
+    _setup_frame(tb.text_frame, "top", 0)
+    em = px_to_emu(_text_style(style, text_style)["size"] * 96 / 72)
+    for i, item in enumerate(items):
+        text, level = (item, 0) if isinstance(item, str) else (item["text"], item.get("level", 0))
+        p = tb.text_frame.paragraphs[0] if i == 0 else tb.text_frame.add_paragraph()
+        p_pr = p._p.get_or_add_pPr()
+        p_pr.set("marL", str(em * (level + 1)))
+        p_pr.set("indent", str(-em))
+        if i:  # a:pPr 子元素顺序：spcBef 必须在 buFont / buChar 之前
+            p_pr.append(parse_xml(f'<a:spcBef {nsdecls("a")}><a:spcPts val="400"/></a:spcBef>'))
+        p_pr.append(parse_xml(f'<a:buFont {nsdecls("a")} typeface="{style["fonts"]["latin"]}"/>'))
+        p_pr.append(parse_xml(f'<a:buChar {nsdecls("a")} char="{BULLET}"/>'))
+        add_run(p, style, text, text_style, color)
     return tb
 
 
 def add_shape(slide, style: dict, box: Box, fill: str, *, line=None, line_width=0.75, rounded=False, text=None, **text_opts):
     """实心矩形，无阴影；line 给定才画 line_width pt 的描边。text 直接写在形状里，便于居中。"""
-    shape = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE if rounded else MSO_SHAPE.RECTANGLE, *_emu_box(box))
+    shape = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE if rounded else MSO_SHAPE.RECTANGLE, *emu_box(box))
     shape.shadow.inherit = False  # PowerPoint 认空的 a:effectLst
     shape._element.find(qn("p:style")).find(qn("a:effectRef")).set("idx", "0")  # LibreOffice 仍会按主题画阴影
     shape.fill.solid()
