@@ -33,6 +33,8 @@
 - `frame: standard` 的模板由页框渲染 `title` / `title_suffix` / `takeaway`，`layout` 不得再绑定这三个槽位；上下左右页边距统一 32px，不画页码、数据来源、顶部色条；封面这类整页自由布局的模板用 `frame: none`。
 - 字体和字号对所有模板、所有风格统一（硬性要求）：每个文字样式 token 的字号固定在 `schema/style.schema.json` 里，风格不能改，加载风格时检查；模板元素只能用 `style: <token>`，不能写字号或字体。字号只有 24 / 18 / 14 / 12 / 10 / 9 / 8：标题主体 24 + 同一行后半句 18（`title` + `title_suffix`），副标题 18（`subtitle`），重点或总结性文字 14（`emphasis`），正常文字 12（`body` / `body_strong`），细节 10 / 9 / 8（`detail` / `caption` / `footnote`）。模板通过这些 token 选字号，不直接写数字。
 - `slots` 的每个顶层属性都必须被渲染（由页框渲染，或被 `layout` 元素绑定它或它的子路径），同一路径不能被两个顶层元素重复绑定，否则校验报错。`bind` 是点号路径，相对当前作用域解析：顶层是页的 `data`，`grid` 的 `item` 内是当前项，`.` 表示当前项本身。
+- `grid.columns` 是列数上限（实际列数 = min(columns, 项数)，项少时占满整行），`row_height` 固定行高、从顶部排起；任何元素可用 `when: <点号路径>`，值为 null / "" / [] / {} 时不渲染；颜色随数据变化用 `color_map`（text）或 `by` + `fill_map` / `line_map`（shape），形式 `{值: 颜色 token}`，值先转字符串再匹配，取值槽位有 `enum` 时键必须在其内。
+- YAML 按 1.2 读取：只有 `true` / `false` 是布尔，`yes` / `no` / `on` / `off` 都是字符串（所以 `no:` 可以当字段名，布尔字段写 `yes` 会被 schema 拒绝）。
 - 表格、架构图、框图这类复杂元素不在 YAML 里逐个画框，而是引用 `src/ppt_templates/` 中的内置组件（`table`、`layered-arch`、`block-diagram`）。组件自带数据 Schema、`props` Schema 和语义检查，模板 `example.yaml` 与 deck 的数据、layout 的 `props` 都会按它们校验。需要新的复杂元素时，新增组件，而不是在模板里堆 shape。
 - `catalog.json` 是生成物，改动任何模板后都要重新生成，不要手改。
 

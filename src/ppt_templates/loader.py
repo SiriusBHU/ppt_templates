@@ -1,5 +1,6 @@
 """读取仓库里的 style / template / deck YAML。"""
 
+import re
 from pathlib import Path
 
 import yaml
@@ -17,11 +18,25 @@ def find_repo_root(start: Path | None = None) -> Path:
     raise PptError("找不到仓库根目录（含 taxonomy.yaml 的祖先目录）")
 
 
+_BOOL_TAG = "tag:yaml.org,2002:bool"
+
+
+class _Yaml12Loader(yaml.SafeLoader):
+    """布尔值按 YAML 1.2：只有 true / false（大小写三种写法）是布尔；no / yes / on / off 保持字符串。"""
+
+
+_Yaml12Loader.yaml_implicit_resolvers = {
+    first: [(tag, pattern) for tag, pattern in resolvers if tag != _BOOL_TAG]
+    for first, resolvers in yaml.SafeLoader.yaml_implicit_resolvers.items()
+}
+_Yaml12Loader.add_implicit_resolver(_BOOL_TAG, re.compile(r"^(?:true|True|TRUE|false|False|FALSE)$"), list("tTfF"))
+
+
 def load_yaml(path: Path):
     if not path.is_file():
         raise PptError(f"文件不存在: {path}")
     try:
-        return yaml.safe_load(path.read_text(encoding="utf-8"))
+        return yaml.load(path.read_text(encoding="utf-8"), Loader=_Yaml12Loader)
     except yaml.YAMLError as e:
         mark = getattr(e, "problem_mark", None)
         where = f"第 {mark.line + 1} 行第 {mark.column + 1} 列：" if mark else ""

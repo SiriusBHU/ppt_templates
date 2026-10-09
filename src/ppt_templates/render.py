@@ -10,7 +10,7 @@ from .draw import add_bullets, add_runs, add_shape, add_text
 from .errors import PptError
 from .geometry import CANVAS_H, CANVAS_W, REF_H, REF_W, Transform, grid_cells, px_to_emu, resolve_box
 from .loader import load_style
-from .paths import lookup
+from .paths import is_empty, lookup
 from .schemas import pointer
 from .slots import prepare_pages
 
@@ -53,19 +53,31 @@ def _render_frame(slide, style, data):
             add_text(slide, style, box, text, text_style, align=align, valign=valign)
 
 
+def _mapped(mapping, value):
+    """color_map / fill_map / line_map 的取色：值转成字符串后按键匹配；没命中或没有值返回 None。"""
+    if not mapping or value is None:
+        return None
+    return next((token for key, token in mapping.items() if str(key) == str(value)), None)
+
+
 def _render_elements(slide, style, elements, area, scope, tf):
     """area = 父区域 (x, y, w, h)，在参考坐标系中；tf 把参考坐标映射到画布。"""
     ax, ay, aw, ah = area
     for el in elements:
+        if "when" in el and is_empty(lookup(scope, el["when"])):
+            continue
         x, y, w, h = resolve_box(el["box"], aw, ah)
         ref_box = (ax + x, ay + y, w, h)
         kind = el["type"]
         if kind == "shape":
-            add_shape(slide, style, tf(ref_box), el["fill"], line=el.get("line"), rounded=el.get("shape") == "rounded")
+            key = lookup(scope, el["by"]) if "by" in el else None
+            add_shape(slide, style, tf(ref_box), _mapped(el.get("fill_map"), key) or el["fill"],
+                      line=_mapped(el.get("line_map"), key) or el.get("line"), rounded=el.get("shape") == "rounded")
         elif kind == "text":
             text = el["value"] if "value" in el else lookup(scope, el["bind"])
             if text is not None:
-                add_text(slide, style, tf(ref_box), text, el["style"], color=el.get("color"),
+                key = lookup(scope, el["by"]) if "by" in el else text
+                add_text(slide, style, tf(ref_box), text, el["style"], color=_mapped(el.get("color_map"), key) or el.get("color"),
                          align=el.get("align", "left"), valign=el.get("valign", "top"))
         elif kind == "bullets":
             items = lookup(scope, el["bind"])
@@ -73,7 +85,7 @@ def _render_elements(slide, style, elements, area, scope, tf):
                 add_bullets(slide, style, tf(ref_box), items, el["style"], color=el.get("color"))
         elif kind == "grid":
             items = lookup(scope, el["bind"]) or []
-            for item, cell in zip(items, grid_cells(ref_box, el["columns"], el.get("gap", 0), len(items))):
+            for item, cell in zip(items, grid_cells(ref_box, el["columns"], el.get("gap", 0), len(items), el.get("row_height"))):
                 _render_elements(slide, style, el["item"], cell, item, tf)
         elif kind == "component":
             if el["component"] not in COMPONENTS:

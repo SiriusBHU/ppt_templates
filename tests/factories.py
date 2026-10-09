@@ -173,3 +173,25 @@ def diagram_template():
         },
     }
     return template, example
+
+
+def cards_template(**grid):
+    """common.summary-cards：字符串数组排成网格（grid 元素）；grid 里的键覆盖 grid 元素的字段。"""
+    template = {
+        "id": "common.summary-cards",
+        "name": "要点卡片",
+        "roles": ["summary"],
+        "when_to_use": "测试用：卡片网格",
+        "frame": "standard",
+        "slots": {
+            "type": "object",
+            "required": ["title", "cards"],
+            "properties": {
+                "title": {"type": "string", "maxLength": 14},
+                "cards": {"type": "array", "minItems": 1, "maxItems": 6, "items": {"type": "string", "maxLength": 10}},
+            },
+        },
+        "layout": [{"type": "grid", "box": [0, 0, 1200, 400], "bind": "cards", "columns": 4, "gap": 20,
+                    "item": [{"type": "text", "box": [0, 0, "100%", "100%"], "bind": ".", "style": "body"}], **grid}],
+    }
+    return template, {"title": "卡片", "cards": ["甲", "乙"]}

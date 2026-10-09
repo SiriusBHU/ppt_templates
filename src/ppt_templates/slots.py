@@ -7,7 +7,7 @@ from .components import COMPONENTS
 from .errors import PptError
 from .geometry import CANVAS_H, CANVAS_W, REF_H, REF_W, grid_cells, resolve_box
 from .loader import load_template
-from .paths import lookup
+from .paths import is_empty, lookup
 from .schemas import errors, load_schema, pointer
 
 
@@ -34,8 +34,8 @@ def component_errors(template: dict, data, prefix=()) -> list[str]:
 
     def walk(elements, scope, here, area):
         for el in elements:
-            if "bind" not in el:
-                continue
+            if "bind" not in el or ("when" in el and is_empty(lookup(scope, el["when"]))):
+                continue  # 不渲染的元素不检查它的数据
             value = lookup(scope, el["bind"])
             at = here if el["bind"] == "." else (*here, *el["bind"].split("."))
             box = resolve_box(el["box"], *area)
@@ -45,7 +45,7 @@ def component_errors(template: dict, data, prefix=()) -> list[str]:
                     f"{pointer([*at, *path])}  {msg}" for path, msg in comp.check(value, box)]
                 problems.extend(f"{e}（组件 {el['component']}）" for e in found)
             elif el["type"] == "grid" and isinstance(value, list):
-                cells = grid_cells(box, el["columns"], el.get("gap", 0), len(value))
+                cells = grid_cells(box, el["columns"], el.get("gap", 0), len(value), el.get("row_height"))
                 for j, (item, cell) in enumerate(zip(value, cells)):
                     walk(el["item"], item, (*at, j), cell[2:])
 

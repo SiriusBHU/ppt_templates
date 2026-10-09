@@ -10,7 +10,7 @@ from jsonschema.exceptions import SchemaError
 from .catalog import catalog_is_current
 from .components import COMPONENTS
 from .errors import PptError
-from .geometry import CANVAS_H, CANVAS_W, REF_H, REF_W, resolve_box
+from .geometry import CANVAS_H, CANVAS_W, REF_H, REF_W, grid_cells, resolve_box
 from .loader import load_yaml, template_dirs
 from .paths import slot_at
 from .schemas import errors as schema_errors
@@ -112,7 +112,7 @@ def _type_error(el: dict, slot: dict) -> str | None:
 
 
 def check_layout(f: str, tpl: dict, colors: set[str], texts: set[str]) -> list[str]:
-    """spec 7.1 第 5、7 条：槽位都被渲染、bind 存在且类型匹配、页框槽位规则、只引用风格 token。"""
+    """spec 7.1 第 5、7 条：槽位都被渲染、bind / when / by 存在且类型匹配、页框槽位规则、只引用风格 token。"""
     errs = []
     slots, standard = tpl["slots"], tpl["frame"] == "standard"
     props = slots.get("properties") or {}
@@ -129,6 +129,31 @@ def check_layout(f: str, tpl: dict, colors: set[str], texts: set[str]) -> list[s
 
     top_paths = set()
 
+    def check_ref(scope, p, el, key):
+        """when / by 的点号路径必须指向存在的槽位。"""
+        if slot_at(scope, el[key]) is None:
+            err(f"{p}/{key}", f"槽位 {el[key]} 不存在")
+
+    def check_maps(scope, p, el):
+        """color_map / fill_map / line_map：值是颜色 token，键在取值槽位的 enum 内，shape 的映射必须有 by。"""
+        maps = [key for key in ("color_map", "fill_map", "line_map") if key in el]
+        for key in maps:
+            for k, token in el[key].items():
+                if token not in colors:
+                    err(f"{p}/{key}/{k}", f"未知颜色 token {token}")
+        if ("fill_map" in el or "line_map" in el) and "by" not in el:
+            err(f"{p}/by", "fill_map / line_map 必须用 by 指明按哪个槽位取色")
+        path = el.get("by", el.get("bind"))
+        if "color_map" in el and path is None:
+            err(f"{p}/color_map", "color_map 必须配合 bind 或 by，才知道按哪个值取色")
+        enum = _obj(slot_at(scope, path)).get("enum") if path is not None else None
+        if enum:
+            allowed = {str(v) for v in enum}
+            for key in maps:
+                for k in el[key]:
+                    if str(k) not in allowed:
+                        err(f"{p}/{key}/{k}", f"键 {k} 不在槽位 {path} 的可选取值 {enum} 内")
+
     def walk(elements, scope, ptr, top):
         for i, el in enumerate(elements):
             p = f"{ptr}/{i}"
@@ -137,6 +162,10 @@ def check_layout(f: str, tpl: dict, colors: set[str], texts: set[str]) -> list[s
                     err(f"{p}/{key}", f"未知颜色 token {el[key]}")
             if "style" in el and el["style"] not in texts:
                 err(f"{p}/style", f"未知文字样式 token {el['style']}")
+            for key in ("when", "by"):
+                if key in el:
+                    check_ref(scope, p, el, key)
+            check_maps(scope, p, el)
             if el["type"] == "component":
                 if el["component"] not in COMPONENTS:
                     err(f"{p}/component", f"未知组件 {el['component']}")
@@ -195,13 +224,17 @@ def check_geometry(f: str, tpl: dict) -> list[str]:
         n = _obj(slot_at(tpl["slots"], el["bind"])).get("maxItems")
         if not n:
             continue  # 缺 maxItems 已由 check_layout 报告
-        cols, gap = el["columns"], el.get("gap", 0)
-        rows = math.ceil(n / cols)
-        cw = (box[2] - gap * (cols - 1)) / cols
-        ch = (box[3] - gap * (rows - 1)) / rows
+        gap, row_height = el.get("gap", 0), el.get("row_height")
+        cw, ch = grid_cells(box, el["columns"], gap, n, row_height)[0][2:]  # 项数越多单元格越小：maxItems 是最坏情况
         if cw <= 0 or ch <= 0:
             errs.append(f"{f}  /layout/{i}/box  按 maxItems={n} 计算的单元格 {cw:.0f}×{ch:.0f} 不是正数（gap 过大或 box 过小）")
             continue
+        if row_height is not None:
+            rows = math.ceil(n / min(el["columns"], n))
+            need = rows * row_height + gap * (rows - 1)
+            if need > box[3] + EPS:
+                errs.append(f"{f}  /layout/{i}/row_height  按 maxItems={n} 排 {rows} 行，需要 {need:g}px"
+                            f"（{rows}×{row_height:g} + 间距 {gap * (rows - 1):g}），超过 box 高 {box[3]:g}px")
         for j, sub in enumerate(el["item"]):
             if not _fits(resolve_box(sub["box"], cw, ch), cw, ch):
                 errs.append(f"{f}  /layout/{i}/item/{j}/box  按 maxItems={n} 计算的单元格 {cw:.0f}×{ch:.0f} 放不下")

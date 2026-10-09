@@ -41,14 +41,16 @@ def resolve_box(box: list, parent_w: float, parent_h: float) -> Box:
     )
 
 
-def grid_cells(box: Box, columns: int, gap: float, count: int) -> list[Box]:
-    """列数固定为 columns，行数 = ceil(count / columns)，按行优先返回各单元格。"""
+def grid_cells(box: Box, columns: int, gap: float, count: int, row_height: float | None = None) -> list[Box]:
+    """列数 = min(columns, count)（columns 是上限，项少时占满整行），行数 = ceil(count / 列数)，按行优先返回各单元格。
+    row_height 给定时每个单元格这么高，从 box 顶部起按 gap 依次排列；省略则行高均分 box 的高度。"""
     if count == 0:
         return []
     x, y, w, h = box
+    columns = min(columns, count)
     rows = math.ceil(count / columns)
     cw = (w - gap * (columns - 1)) / columns
-    ch = (h - gap * (rows - 1)) / rows
+    ch = (h - gap * (rows - 1)) / rows if row_height is None else row_height
     return [(x + (i % columns) * (cw + gap), y + (i // columns) * (ch + gap), cw, ch) for i in range(count)]
 
 

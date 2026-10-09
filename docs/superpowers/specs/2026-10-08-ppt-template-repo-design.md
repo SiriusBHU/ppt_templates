@@ -251,13 +251,21 @@ Schema 里的 `default` 只是注解。渲染前，渲染器先用 `default` 补
 
 | type | 作用 | 绑定的槽位类型 | 其他参数 |
 |---|---|---|---|
-| `text` | 单段文字 | `string`；也可以不绑定，用 `value` 写固定文字（如小节标题「关键设计」） | `style`、`color`（覆盖文字样式的颜色）、`align`（left / center / right）、`valign`（top / middle / bottom） |
+| `text` | 单段文字 | `string`；也可以不绑定，用 `value` 写固定文字（如小节标题「关键设计」） | `style`、`color`（覆盖文字样式的颜色）、`color_map`、`by`、`align`（left / center / right）、`valign`（top / middle / bottom） |
 | `bullets` | 要点列表 | `string` 数组，或 `{text, level}` 对象数组 | `style` |
-| `shape` | 装饰性矩形 / 线条 | 无 | `fill`、`line`（省略则无边框）、`shape`（rect / rounded） |
-| `grid` | 把数组的每一项按网格重复排布 | 数组，且必须声明 `maxItems` | `columns`、`gap`、`item` |
+| `shape` | 装饰性矩形 / 线条 | 无 | `fill`、`line`（省略则无边框）、`shape`（rect / rounded）、`by`、`fill_map`、`line_map` |
+| `grid` | 把数组的每一项按网格重复排布 | 数组，且必须声明 `maxItems` | `columns`（列数上限）、`gap`、`row_height`、`item` |
 | `component` | 引用渲染器内置组件 | 组件自己定义的数据结构 | `props`：组件的固定选项 |
 
-校验器会检查绑定的槽位类型是否符合上表。
+所有元素都可以带 `when`（见下）。校验器会检查绑定的槽位类型是否符合上表。
+
+**条件渲染（`when`）**：值是点号路径，相对当前作用域解析（与 `bind` 相同）。路径对应的值为 `null`、`""`、`[]`、`{}`，或字段缺失时，不渲染这个元素；`0` 和 `false` 不算空。用来隐藏没填的可选内容连同它的装饰（如可选备注的底色块）。
+
+**按值取色（`color_map` / `fill_map` / `line_map`）**：映射的形式是 `{值: 颜色 token}`，让颜色随数据变化，不必为每种取值写一个模板。
+
+- `text` 的 `color_map` 按文字绑定的值匹配；写了 `by`（点号路径，相对当前作用域）则改按 `by` 的值匹配。命中时覆盖 `color` 和文字样式的颜色。
+- `shape` 的 `fill_map` / `line_map` 按 `by` 的值匹配，命中时覆盖 `fill` / `line`；写了任一映射就必须写 `by`。
+- 取值先转成字符串再比较，所以枚举字符串（高 / 中 / 低、已完成）和数字（键写 `"3"`）都能用；没命中或值为空时沿用 `color` / `fill` / `line`。
 
 **box 取值**：每一项可以是数字（像素），也可以是 `"N%"`、`"N%+M"`、`"N%-M"`，表示父区域宽（x、w）或高（y、h）的百分比再加减像素。父区域是：`frame: standard` 的 body 区、`frame: none` 的画布、`grid` 内的单元格。
 
@@ -271,10 +279,11 @@ Schema 里的 `default` 只是注解。渲染前，渲染器先用 `default` 补
 
 **grid 规则**：
 
-- 列数 = `columns`；行数 = ceil(实际项数 / columns)。
-- 单元格宽 = (box 宽 − gap × (列数 − 1)) / 列数；单元格高按行数同理计算。
+- `columns` 是列数**上限**：实际列数 = min(columns, 实际项数)，项少时每个单元格自动变宽、占满整行；行数 = ceil(实际项数 / 实际列数)。
+- 单元格宽 = (box 宽 − gap × (列数 − 1)) / 列数。默认行高均分 box 高度：单元格高 = (box 高 − gap × (行数 − 1)) / 行数。
+- `row_height`（可选，参考坐标 px，> 0）：给定后每个单元格都是这个高度，从 box 顶部起按 `gap` 依次向下排，不再拉伸；box 底部可以留空。
 - `item` 内子元素的 box 以单元格左上角为原点；`w`、`h` 可写 `"100%"`，表示单元格的宽 / 高。
-- 校验时按 `maxItems` 算出最小单元格，`item` 内的 box 必须放得下。
+- 校验时按 `maxItems` 算出最小单元格（项越多单元格越小，`maxItems` 就是最坏情况），`item` 内的 box 必须放得下；写了 `row_height` 时，还要求 `行数 × row_height + gap × (行数 − 1)` 不超过 box 高度，行数 = ceil(maxItems / min(columns, maxItems))。
 
 `grid` 示例（三栏痛点）：
 
@@ -426,8 +435,9 @@ pages:
    - `frame: standard` 时，`title` 必须出现在 `required` 中；`title`、`title_suffix`、`takeaway` 若存在，必须是 `type: string`，由页框渲染，`layout` 不得再绑定它们。
    - 其余每个顶层属性必须被 `layout` 中的元素绑定（绑定它或它的子路径都算）；同一路径不能被两个顶层元素重复绑定。绑定一个对象或数组即视为渲染了它的全部子字段。
    - 未被渲染的顶层属性、指向不存在槽位的 `bind`，都报错。
+   - `when`、`by` 的点号路径必须指向存在的槽位。`color_map` / `fill_map` / `line_map` 的值必须是风格里的颜色 token；`shape` 的 `fill_map` / `line_map` 必须配 `by`；取值槽位（`by`，没有则 `bind`）声明了 `enum` 时，映射的每个键都必须在 `enum` 内（按字符串比较）。
    - `bind` 的槽位类型必须符合 4.3 的表格；绑定组件时，槽位的顶层类型必须与组件 Schema 一致，并且 `example.yaml` 里对应的数据必须通过组件 Schema 和语义检查（用示例数据代替 Schema 之间的兼容性推导）；元素的 `props` 必须通过组件的 props Schema。
-6. 所有 box 必须落在绘制区域内：`frame: standard` 为参考 body 区 1216×560，`frame: none` 为画布 1280×720；`grid` 按 4.3 的规则检查。
+6. 所有 box 必须落在绘制区域内：`frame: standard` 为参考 body 区 1216×560，`frame: none` 为画布 1280×720；`grid` 按 4.3 的规则检查（含 `row_height` 是否放得下）。
 7. 布局引用的 token 都在 `style.schema.json` 规定的集合内；每个 `styles/*/style.yaml` 都通过 `style.schema.json` 校验。
 8. `example.yaml` 通过 `slots` 校验。
 9. `catalog.json` 与模板内容一致。

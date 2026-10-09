@@ -27,6 +27,7 @@
       ]
     },
     "box": {"type": "array", "minItems": 4, "maxItems": 4, "items": {"$ref": "#/$defs/length"}},
+    "token_map": {"type": "object", "additionalProperties": {"type": "string"}},
     "elements": {"type": "array", "items": {"$ref": "#/$defs/element"}},
     "element": {
       "type": "object",
@@ -51,8 +52,11 @@
         "value": {"type": "string"},
         "style": {"type": "string"},
         "color": {"type": "string"},
+        "by": {"type": "string"},
+        "color_map": {"$ref": "#/$defs/token_map"},
         "align": {"enum": ["left", "center", "right"]},
-        "valign": {"enum": ["top", "middle", "bottom"]}
+        "valign": {"enum": ["top", "middle", "bottom"]},
+        "when": {"type": "string"}
       }
     },
     "bullets": {
@@ -63,7 +67,8 @@
         "box": {"$ref": "#/$defs/box"},
         "bind": {"type": "string"},
         "style": {"type": "string"},
-        "color": {"type": "string"}
+        "color": {"type": "string"},
+        "when": {"type": "string"}
       }
     },
     "shape": {
@@ -74,7 +79,11 @@
         "box": {"$ref": "#/$defs/box"},
         "fill": {"type": "string"},
         "line": {"type": "string"},
-        "shape": {"enum": ["rect", "rounded"]}
+        "shape": {"enum": ["rect", "rounded"]},
+        "by": {"type": "string"},
+        "fill_map": {"$ref": "#/$defs/token_map"},
+        "line_map": {"$ref": "#/$defs/token_map"},
+        "when": {"type": "string"}
       }
     },
     "grid": {
@@ -86,7 +95,9 @@
         "bind": {"type": "string"},
         "columns": {"type": "integer", "minimum": 1},
         "gap": {"type": "number", "minimum": 0},
-        "item": {"$ref": "#/$defs/elements"}
+        "row_height": {"type": "number", "exclusiveMinimum": 0},
+        "item": {"$ref": "#/$defs/elements"},
+        "when": {"type": "string"}
       }
     },
     "component": {
@@ -97,7 +108,8 @@
         "box": {"$ref": "#/$defs/box"},
         "component": {"type": "string"},
         "bind": {"type": "string"},
-        "props": {"type": "object"}
+        "props": {"type": "object"},
+        "when": {"type": "string"}
       }
     }
   }

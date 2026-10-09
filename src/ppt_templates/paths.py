@@ -12,6 +12,11 @@ def lookup(scope, path: str):
     return scope
 
 
+def is_empty(value) -> bool:
+    """None、""、[]、{} 算空（`when` 不成立）；0 和 False 不算。"""
+    return value is None or (isinstance(value, (str, list, dict)) and not value)
+
+
 def slot_at(schema: dict, path: str) -> dict | None:
     """点号路径在 object schema 里对应的子 schema；"." 是 schema 本身；不存在返回 None。"""
     if path == ".":

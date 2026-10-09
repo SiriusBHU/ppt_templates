@@ -1,8 +1,11 @@
 import pytest
 from pptx import Presentation
+from pptx.enum.dml import MSO_FILL
 
+from factories import cards_template, deck_of, mini_template
 from ppt_templates.cli import main
 from ppt_templates.errors import PptError
+from ppt_templates.loader import load_style
 from ppt_templates.render import render_deck
 from ppt_templates.slots import fill_defaults, prepare_pages
 
@@ -163,3 +166,145 @@ def test_cli_exits_nonzero_and_prints_pointer_on_invalid_data(deck, tmp_path, mo
 def test_deck_structure_errors_are_reported(root):
     with pytest.raises(PptError, match="deck 结构错误"):
         render_deck({"pages": []}, root)
+
+
+def _renderer(make_repo, template):
+    """返回 render(data) -> 第 1 页的全部形状；同一个测试里 make_repo 只能调用一次，所以一个模板对应一个 renderer。"""
+    repo = make_repo({template["id"]: (template, None)})
+    return lambda data: list(render_deck(deck_of(template["id"], data), repo).slides[0].shapes)
+
+
+def _shapes(make_repo, template, data):
+    return _renderer(make_repo, template)(data)
+
+
+def _px(shape):
+    return tuple(v / 9525 for v in (shape.left, shape.top, shape.width, shape.height))
+
+
+def _text_px(shapes, text):
+    return _px(next(sh for sh in shapes if sh.has_text_frame and sh.text_frame.text == text))
+
+
+def test_grid_columns_is_a_maximum_so_few_items_fill_the_width(make_repo):
+    template, _ = cards_template()  # columns: 4, gap: 20, box 1200×400，body 区原点 (32, 128)
+    shapes = _shapes(make_repo, template, {"title": "t", "cards": ["甲", "乙"]})
+    assert _text_px(shapes, "甲") == (32, 128, 590, 400)
+    assert _text_px(shapes, "乙") == (32 + 610, 128, 590, 400)
+
+
+def test_grid_uses_all_columns_once_items_reach_the_maximum(make_repo):
+    template, _ = cards_template()
+    shapes = _shapes(make_repo, template, {"title": "t", "cards": ["甲", "乙", "丙", "丁", "戊"]})
+    assert _text_px(shapes, "丁") == (32 + 3 * 305, 128, 285, 190)
+    assert _text_px(shapes, "戊") == (32, 128 + 210, 285, 190)
+
+
+def test_grid_row_height_fixes_cell_height_and_stacks_from_top(make_repo):
+    template, _ = cards_template(columns=2, row_height=60)
+    shapes = _shapes(make_repo, template, {"title": "t", "cards": ["甲", "乙", "丙"]})
+    assert _text_px(shapes, "甲") == (32, 128, 590, 60)
+    assert _text_px(shapes, "丙") == (32, 128 + 80, 590, 60)
+
+
+def _when_template(layout, **props):
+    slots = {"type": "object", "required": ["title"],
+             "properties": {"title": {"type": "string"}, "note": {}, **props}}
+    return mini_template(slots=slots, layout=layout)[0]
+
+
+FLAG = {"type": "shape", "box": [0, 100, 50, 50], "fill": "accent", "when": "note"}
+
+
+@pytest.mark.parametrize("note, shown", [
+    (None, False), ("", False), ([], False), ({}, False),
+    ("x", True), (["a"], True), ({"k": 1}, True), (0, True), (False, True),
+])
+def test_when_hides_element_for_empty_values(make_repo, note, shown):
+    data = {"title": "t", "note": note}
+    shapes = _shapes(make_repo, _when_template([FLAG]), data)
+    assert ((32, 228, 50, 50) in [_px(sh) for sh in shapes]) is shown
+
+
+def test_when_is_skipped_for_a_missing_slot(make_repo):
+    shapes = _shapes(make_repo, _when_template([FLAG]), {"title": "t"})
+    assert (32, 228, 50, 50) not in [_px(sh) for sh in shapes]
+
+
+def test_when_resolves_in_the_grid_item_scope(make_repo):
+    item = {"type": "object", "properties": {"name": {"type": "string"}, "badge": {"type": "string"}}}
+    grid = {"type": "grid", "box": [0, 0, 400, 100], "bind": "cards", "columns": 2, "gap": 0, "item": [
+        {"type": "text", "box": [0, 0, 100, 20], "bind": "name", "style": "body"},
+        {"type": "shape", "box": [0, 30, 10, 10], "fill": "accent", "when": "badge"}]}
+    template = _when_template([grid], cards={"type": "array", "maxItems": 4, "items": item})
+    shapes = _shapes(make_repo, template, {"title": "t", "cards": [{"name": "甲", "badge": "新"}, {"name": "乙"}]})
+    assert [_px(sh) for sh in shapes if sh.width == 10 * 9525] == [(32, 158, 10, 10)]
+
+
+def test_when_false_skips_component_data_checks(make_repo):
+    component = {"type": "component", "component": "layered-arch", "box": [0, 0, 600, 300], "bind": "layers", "when": "layers"}
+    template = _when_template([component], layers={"type": "array"})
+    assert _shapes(make_repo, template, {"title": "t", "layers": []})  # [] 不满足 layered-arch 的 minItems，但元素不渲染
+
+
+def _color(root, token):
+    return load_style(root, "default")["colors"][token].lstrip("#")
+
+
+def _text_template(**text):
+    layout = [{"type": "text", "box": [0, 0, 200, 20], "bind": "name", "style": "body", **text}]
+    props = {"name": {"type": "string"}, "level": {"enum": ["高", "中", "低"]}, "n": {"type": "integer"}}
+    return _when_template(layout, **props)
+
+
+def _run_color(shapes, text):
+    shape = next(sh for sh in shapes if sh.has_text_frame and sh.text_frame.text == text)
+    return str(shape.text_frame.paragraphs[0].runs[0].font.color.rgb)
+
+
+def test_text_color_map_matches_bound_value_and_overrides_color(make_repo, root):
+    render = _renderer(make_repo, _text_template(bind="level", color="muted", color_map={"高": "highlight_strong", "低": "accent"}))
+    for level, token in (("高", "highlight_strong"), ("低", "accent"), ("中", "muted")):
+        assert _run_color(render({"title": "t", "level": level}), level) == _color(root, token)
+
+
+def test_text_color_map_without_match_or_color_uses_style_color(make_repo, root):
+    template = _text_template(bind="level", color_map={"高": "highlight_strong"})
+    shapes = _shapes(make_repo, template, {"title": "t", "level": "低"})
+    assert _run_color(shapes, "低") == _color(root, "text")
+
+
+def test_text_color_map_by_other_path_and_stringified_values(make_repo, root):
+    render = _renderer(make_repo, _text_template(by="n", color_map={"3": "accent"}))
+    assert _run_color(render({"title": "t", "name": "甲", "n": 3}), "甲") == _color(root, "accent")
+    assert _run_color(render({"title": "t", "name": "甲", "n": 4}), "甲") == _color(root, "text")
+
+
+def test_text_color_map_ignores_a_missing_by_value(make_repo, root):
+    template = _text_template(by="n", color_map={"None": "accent"})
+    shapes = _shapes(make_repo, template, {"title": "t", "name": "甲"})
+    assert _run_color(shapes, "甲") == _color(root, "text")
+
+
+def _swatch(render, level):
+    return next(sh for sh in render({"title": "t", "level": level}) if _px(sh) == (32, 228, 50, 50))
+
+
+def test_shape_fill_map_and_line_map_override_fill_and_line(make_repo, root):
+    shape = {"type": "shape", "box": [0, 100, 50, 50], "fill": "surface", "line": "line", "by": "level",
+             "fill_map": {"高": "highlight"}, "line_map": {"高": "highlight_strong"}}
+    render = _renderer(make_repo, _when_template([shape], level={"enum": ["高", "中"]}))
+    hot = _swatch(render, "高")
+    assert str(hot.fill.fore_color.rgb) == _color(root, "highlight")
+    assert str(hot.line.color.rgb) == _color(root, "highlight_strong")
+    plain = _swatch(render, "中")
+    assert str(plain.fill.fore_color.rgb) == _color(root, "surface")
+    assert str(plain.line.color.rgb) == _color(root, "line")
+
+
+def test_shape_line_map_adds_a_line_only_on_match(make_repo, root):
+    shape = {"type": "shape", "box": [0, 100, 50, 50], "fill": "surface", "by": "level", "line_map": {"高": "highlight_strong"}}
+    render = _renderer(make_repo, _when_template([shape], level={"enum": ["高", "中"]}))
+    hot, plain = _swatch(render, "高"), _swatch(render, "中")
+    assert str(hot.line.color.rgb) == _color(root, "highlight_strong")
+    assert plain.line.fill.type == MSO_FILL.BACKGROUND  # 无描边

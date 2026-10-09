@@ -242,3 +242,131 @@ def test_grid_item_with_negative_width_does_not_fit(make_repo):
             "item": [{"type": "text", "box": [0, 0, "100%-14", 20], "bind": ".", "style": "body"}]}
     assert "/layout/1/item/0/box  按 maxItems=3 计算的单元格 10×100 放不下" in _errors(
         make_repo, slots=slots, layout=[NOTE, grid])
+
+
+def _points_slots(max_items=6):
+    return _slots(points={"type": "array", "maxItems": max_items, "items": {"type": "string"}})
+
+
+def _points_grid(**grid):
+    return {"type": "grid", "box": [0, 100, 600, 130], "bind": "points", "columns": 3, "gap": 10,
+            "item": [{"type": "text", "box": [0, 0, "100%", 20], "bind": ".", "style": "body"}], **grid}
+
+
+def test_grid_columns_is_a_maximum_for_geometry(make_repo):
+    # maxItems=2、columns=4 → 最小单元格按 2 列算：宽 295；item 宽 250 放得下，350 放不下
+    grid = _points_grid(columns=4, item=[{"type": "text", "box": [0, 0, 250, 20], "bind": ".", "style": "body"}])
+    assert _errors(make_repo, slots=_points_slots(2), layout=[NOTE, grid]) == []
+
+
+def test_grid_item_too_wide_for_effective_columns(make_repo):
+    grid = _points_grid(columns=4, item=[{"type": "text", "box": [0, 0, 350, 20], "bind": ".", "style": "body"}])
+    assert "/layout/1/item/0/box  按 maxItems=2 计算的单元格 295×130 放不下" in _errors(
+        make_repo, slots=_points_slots(2), layout=[NOTE, grid])
+
+
+def test_row_height_that_fits_the_box_height_is_valid(make_repo):
+    # maxItems=6、3 列 → 2 行：2×60 + 10 = 130 刚好放下
+    assert _errors(make_repo, slots=_points_slots(), layout=[NOTE, _points_grid(row_height=60)]) == []
+
+
+def test_row_height_rows_must_fit_box_height(make_repo):
+    # row_height 70 → 2×70 + 10 = 150 > 130
+    assert "/layout/1/row_height  按 maxItems=6 排 2 行，需要 150px（2×70 + 间距 10），超过 box 高 130px" in _errors(
+        make_repo, slots=_points_slots(), layout=[NOTE, _points_grid(row_height=70)])
+
+
+def test_row_height_item_must_fit_min_cell(make_repo):
+    item = [{"type": "text", "box": [0, 0, "100%", 70], "bind": ".", "style": "body"}]
+    assert "/layout/1/item/0/box  按 maxItems=6 计算的单元格 193×60 放不下" in _errors(
+        make_repo, slots=_points_slots(), layout=[NOTE, _points_grid(row_height=60, item=item)])
+
+
+def test_row_height_must_be_positive_number(make_repo):
+    assert "/layout/1/row_height  取值 0，必须大于 0" in _errors(
+        make_repo, slots=_points_slots(), layout=[NOTE, _points_grid(row_height=0)])
+
+
+def test_when_must_point_to_an_existing_slot(make_repo):
+    shape = {"type": "shape", "box": [0, 100, 10, 10], "fill": "accent"}
+    errs = _errors(make_repo, slots=_points_slots(), layout=[
+        NOTE, {**shape, "when": "nope"}, {**shape, "when": "note"},
+        _points_grid(item=[{**shape, "box": [0, 0, 10, 10], "when": "."}, {**shape, "box": [0, 0, 10, 10], "when": "gone"}])])
+    assert "/layout/1/when  槽位 nope 不存在" in errs
+    assert "/layout/3/item/1/when  槽位 gone 不存在" in errs
+    assert not [e for e in errs if "/layout/2/" in e or "/layout/3/item/0/" in e]
+
+
+def test_when_must_be_a_string(make_repo):
+    assert "/layout/1/when  类型应为 string" in _errors(
+        make_repo, layout=[NOTE, {"type": "shape", "box": [0, 100, 10, 10], "fill": "accent", "when": 1}])
+
+
+def test_when_is_checked_on_every_element_type(make_repo):
+    errs = _errors(make_repo, layout=[
+        {**NOTE, "when": "nope"},
+        {"type": "bullets", "box": [0, 100, 10, 10], "bind": "note", "style": "body", "when": "nope"},
+        {"type": "component", "component": "table", "box": [0, 100, 10, 10], "bind": "note", "when": "nope"}])
+    assert [e for e in errs if e.endswith("/when  槽位 nope 不存在")] == [
+        f"/layout/{i}/when  槽位 nope 不存在" for i in range(3)]
+
+
+LEVEL = {"type": "string", "enum": ["高", "中", "低"]}
+LEVEL_TEXT = {"type": "text", "box": [0, 100, 100, 20], "bind": "level", "style": "body"}
+LEVEL_SHAPE = {"type": "shape", "box": [0, 120, 20, 20], "fill": "surface", "by": "level"}
+
+
+def test_value_based_colors_pass_validation(make_repo):
+    layout = [NOTE, {**LEVEL_TEXT, "color_map": {"高": "highlight_strong", "低": "accent"}},
+              {**LEVEL_SHAPE, "fill_map": {"高": "highlight"}, "line_map": {"高": "highlight_strong"}}]
+    assert _errors(make_repo, slots=_slots(level=LEVEL), layout=layout) == []
+
+
+def test_color_map_values_must_be_color_tokens(make_repo):
+    layout = [NOTE, {**LEVEL_TEXT, "color_map": {"高": "red"}},
+              {**LEVEL_SHAPE, "fill_map": {"高": "blue"}, "line_map": {"中": "green"}}]
+    errs = _errors(make_repo, slots=_slots(level=LEVEL), layout=layout)
+    assert "/layout/1/color_map/高  未知颜色 token red" in errs
+    assert "/layout/2/fill_map/高  未知颜色 token blue" in errs
+    assert "/layout/2/line_map/中  未知颜色 token green" in errs
+
+
+def test_by_must_point_to_an_existing_slot(make_repo):
+    layout = [NOTE, {**LEVEL_SHAPE, "by": "nope", "fill_map": {"高": "highlight"}}]
+    assert "/layout/1/by  槽位 nope 不存在" in _errors(make_repo, slots=_slots(level=LEVEL), layout=layout)
+
+
+def test_shape_maps_require_by(make_repo):
+    shape = {"type": "shape", "box": [0, 120, 20, 20], "fill": "surface"}
+    errs = _errors(make_repo, layout=[NOTE, {**shape, "fill_map": {"高": "highlight"}}, {**shape, "line_map": {"高": "line"}}])
+    for i in (1, 2):
+        assert f"/layout/{i}/by  fill_map / line_map 必须用 by 指明按哪个槽位取色" in errs
+
+
+def test_text_color_map_needs_a_value_to_match(make_repo):
+    fixed = {"type": "text", "box": [0, 100, 100, 20], "value": "固定文字", "style": "body", "color_map": {"高": "accent"}}
+    assert "/layout/1/color_map  color_map 必须配合 bind 或 by，才知道按哪个值取色" in _errors(make_repo, layout=[NOTE, fixed])
+
+
+def test_text_color_map_with_value_and_by_is_valid(make_repo):
+    fixed = {"type": "text", "box": [0, 100, 100, 20], "value": "固定文字", "style": "body", "color_map": {"高": "accent"}}
+    assert _errors(make_repo, slots=_slots(level=LEVEL), layout=[NOTE, {**fixed, "by": "level"}, LEVEL_TEXT]) == []
+
+
+@pytest.mark.parametrize("element, bad", [
+    ({**LEVEL_TEXT, "color_map": {"高": "accent", "紧急": "accent"}}, "color_map/紧急"),
+    ({**LEVEL_SHAPE, "fill_map": {"紧急": "highlight"}}, "fill_map/紧急"),
+    ({**LEVEL_SHAPE, "line_map": {"紧急": "highlight"}}, "line_map/紧急"),
+    ({**LEVEL_TEXT, "bind": "note", "by": "level", "color_map": {"紧急": "accent"}}, "color_map/紧急"),
+])
+def test_map_keys_must_be_in_the_slot_enum(make_repo, element, bad):
+    errs = _errors(make_repo, slots=_slots(level=LEVEL), layout=[NOTE, element])
+    assert f"/layout/1/{bad}  键 紧急 不在槽位 level 的可选取值 ['高', '中', '低'] 内" in errs
+
+
+def test_map_keys_are_compared_as_strings_against_the_enum(make_repo):
+    slots = _slots(n={"type": "integer", "enum": [1, 2]})
+    element = {"type": "text", "box": [0, 100, 100, 20], "bind": "note", "style": "body", "by": "n",
+               "color_map": {"2": "accent", 3: "accent"}}
+    errs = _errors(make_repo, slots=slots, layout=[element, {**LEVEL_TEXT, "bind": "n"}])
+    assert [e for e in errs if "color_map" in e] == ["/layout/0/color_map/3  键 3 不在槽位 n 的可选取值 [1, 2] 内"]
