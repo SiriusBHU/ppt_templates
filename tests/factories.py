@@ -66,3 +66,45 @@ def bullets_template():
         ],
     }
     return template, example
+
+
+def table_template():
+    """common.overview-table：对比表格（table 组件），高亮推荐列。"""
+    template = {
+        "id": "common.overview-table",
+        "name": "对比表格",
+        "roles": ["overview"],
+        "when_to_use": "测试用：对比表格",
+        "frame": "standard",
+        "slots": {
+            "type": "object",
+            "required": ["title", "matrix"],
+            "properties": {
+                "title": {"type": "string", "maxLength": 14},
+                "matrix": {
+                    "type": "object",
+                    "required": ["columns", "rows"],
+                    "properties": {
+                        "columns": {"type": "array", "minItems": 2, "maxItems": 5,
+                                    "items": {"type": "string", "maxLength": 8}},
+                        "rows": {"type": "array", "minItems": 1, "maxItems": 8,
+                                 "items": {"type": "array", "items": {"type": "string", "maxLength": 16}}},
+                        "highlight_column": {"type": "integer", "minimum": 0},
+                    },
+                },
+            },
+        },
+        "layout": [{"type": "component", "component": "table", "box": [0, 0, 1216, 360],
+                    "bind": "matrix", "props": {"first_column_width": 200}}],
+    }
+    example = {
+        "title": "存储介质选型",
+        "matrix": {
+            "columns": ["指标", "SATA SSD", "NVMe SSD", "CXL 内存"],
+            "rows": [["带宽", "0.5 GB/s", "7 GB/s", "64 GB/s"],
+                     ["延迟", "100 μs", "20 μs", "0.3 μs"],
+                     ["单价", "低", "中", "高"]],
+            "highlight_column": 2,
+        },
+    }
+    return template, example

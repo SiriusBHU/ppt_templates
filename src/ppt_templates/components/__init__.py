@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from . import layered_arch
+from . import layered_arch, table
 
 
 @dataclass(frozen=True)
@@ -14,4 +14,5 @@ class Component:
 
 COMPONENTS = {
     "layered-arch": Component(layered_arch.render, layered_arch.SCHEMA),
+    "table": Component(table.render, table.SCHEMA),
 }
