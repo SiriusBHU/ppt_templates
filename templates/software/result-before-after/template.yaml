@@ -40,7 +40,7 @@ slots:
     summary:
       type: string
       maxLength: 50
-      description: 页面底部的一句总结，可选
+      description: 页面底部高亮横条里的一句总结，可选；不填则不画横条
 
 layout:                         # 参考 body 区 1216×560
   # 表头
@@ -56,6 +56,7 @@ layout:                         # 参考 body 区 1216×560
     bind: metrics
     columns: 1
     gap: 12
+    row_height: 100
     item:
       - { type: shape, box: [0, 0, "100%", "100%"], fill: surface }
       - { type: shape, box: [0, 0, 4, "100%"], fill: accent }
@@ -66,8 +67,10 @@ layout:                         # 参考 body 区 1216×560
       - { type: shape, box: [848, 12, 1, "100%-24"], fill: line }
       - { type: text, box: [880, 0, 336, "100%"], bind: delta, style: kpi, align: center, valign: middle }
 
-  # 底部总结
-  - { type: text, box: [0, 504, 1216, 56], bind: summary, style: emphasis, color: primary, valign: middle }
+  # 底部总结：填了才画
+  - { type: shape, box: [0, 496, 1216, 64], fill: highlight, when: summary }
+  - { type: shape, box: [0, 496, 4, 64], fill: highlight_strong, when: summary }
+  - { type: text, box: [20, 496, 1176, 64], bind: summary, style: emphasis, valign: middle, when: summary }
 
 guidance:
   - 指标按重要程度从上到下排列，最突出的放第一行

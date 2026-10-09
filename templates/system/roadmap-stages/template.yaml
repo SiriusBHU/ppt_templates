@@ -29,7 +29,7 @@ slots:
       type: array
       minItems: 3
       maxItems: 5
-      description: 从早到晚的各阶段；不足 5 项时右侧留白，请按需取舍
+      description: 从早到晚的各阶段；不足 5 项时各阶段自动占满整行
       items:
         type: object
         required: [period, name, points]
@@ -67,23 +67,27 @@ layout:                         # 参考 body 区 1216×560
         bind: points
         columns: 1
         gap: 8
+        row_height: 116
         item:
           - { type: shape, box: [0, 0, "100%", "100%"], fill: surface }
           - { type: shape, box: [0, 0, 4, "100%"], fill: accent }
           - { type: text, box: [16, 0, "100%-26", "100%"], bind: ., style: body, valign: middle }
 
-  # 底部：整体目标
+  # 底部：整体目标，填了才画
   - type: shape
     box: [0, 496, 1216, 64]
     fill: highlight
+    when: vision
   - type: shape
     box: [0, 496, 4, 64]
     fill: highlight_strong
+    when: vision
   - type: text
     box: [20, 496, 1176, 64]
     bind: vision
     style: emphasis
     valign: middle
+    when: vision
 
 guidance:
   - 阶段按时间从早到晚排，时间粒度保持一致（都写半年或都写季度）

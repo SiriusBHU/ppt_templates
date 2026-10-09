@@ -27,7 +27,7 @@ slots:
       type: array
       minItems: 3
       maxItems: 6
-      description: 按时间从左到右排列的里程碑；不足 6 个时靠左排列
+      description: 按时间从左到右排列的里程碑；不足 6 个时自动占满整行
       items:
         type: object
         required: [date, name, status]
@@ -45,28 +45,28 @@ slots:
       items: { type: string, maxLength: 100 }
 
 layout:                         # 参考 body 区 1216×560
-  # 时间轴
+  # 时间轴：节点、卡片顶条和状态标签的颜色随状态变化（已完成 深蓝、进行中 橙色、未开始 灰）
   - { type: shape, box: [0, 38, 1216, 2], fill: line }
   - type: grid
-    box: [0, 0, 1216, 324]
+    box: [0, 0, 1216, 320]
     bind: milestones
     columns: 6
     gap: 12
     item:
-      - { type: text, box: [0, 0, "100%", 24], bind: date, style: emphasis, color: accent }
-      - { type: shape, box: [0, 32, 14, 14], fill: accent }
+      - { type: text, box: [0, 0, "100%", 24], bind: date, style: emphasis, color: accent, by: status, color_map: { 已完成: primary, 进行中: highlight_strong, 未开始: muted } }
+      - { type: shape, box: [0, 32, 14, 14], by: status, fill: line, fill_map: { 已完成: primary, 进行中: highlight_strong, 未开始: line } }
       - { type: shape, box: [0, 64, "100%", "100%-64"], fill: surface }
-      - { type: shape, box: [0, 64, "100%", 4], fill: accent }
-      - { type: text, box: [12, 88, "100%-24", 68], bind: name, style: emphasis, color: primary }
+      - { type: shape, box: [0, 64, "100%", 4], by: status, fill: line, fill_map: { 已完成: primary, 进行中: highlight_strong, 未开始: line } }
+      - { type: text, box: [12, 84, "100%-24", 56], bind: name, style: emphasis, color: primary }
       - { type: shape, box: [12, "100%-60", "100%-24", 1], fill: line }
-      - { type: shape, box: [12, "100%-44", 76, 28], fill: bg, line: line, shape: rounded }
-      - { type: text, box: [12, "100%-44", 76, 28], bind: status, style: body_strong, color: accent, align: center, valign: middle }
+      - { type: shape, box: [12, "100%-44", 76, 28], shape: rounded, by: status, fill: line, fill_map: { 已完成: primary, 进行中: highlight_strong, 未开始: line } }
+      - { type: text, box: [12, "100%-44", 76, 28], bind: status, style: body_strong, color: text, by: status, color_map: { 已完成: on_primary, 进行中: on_primary, 未开始: text }, align: center, valign: middle }
 
   # 下方：当前进展与问题
-  - { type: shape, box: [0, 352, 1216, 208], fill: surface }
-  - { type: shape, box: [0, 352, 4, 208], fill: accent }
-  - { type: text, box: [24, 370, 1168, 24], value: 当前进展与问题, style: emphasis, color: primary }
-  - { type: bullets, box: [24, 410, 1168, 136], bind: notes, style: body }
+  - { type: shape, box: [0, 344, 1216, 216], fill: surface }
+  - { type: shape, box: [0, 344, 4, 216], fill: accent }
+  - { type: text, box: [24, 360, 1168, 24], value: 当前进展与问题, style: emphasis, color: primary }
+  - { type: bullets, box: [24, 400, 1168, 148], bind: notes, style: body }
 
 guidance:
   - 里程碑按时间从左到右排列，名称写成可检验的交付物，而不是「推进某某工作」

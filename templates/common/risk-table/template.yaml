@@ -47,17 +47,19 @@ layout:                         # 参考 body 区 1216×560
   - { type: text, box: [452, 0, 560, 36], value: 应对措施, style: body_strong, color: on_primary, valign: middle }
   - { type: text, box: [1036, 0, 164, 36], value: 责任人, style: body_strong, color: on_primary, valign: middle }
 
-  # 表格行：每个风险一行
+  # 表格行：每个风险一行，固定行高从上往下排；左侧竖条和等级标签的颜色随等级变化
   - type: grid
     box: [0, 44, 1216, 516]
     bind: risks
     columns: 1
     gap: 8
+    row_height: 76
     item:
       - { type: shape, box: [0, 0, "100%", "100%"], fill: surface }
-      - { type: shape, box: [0, 0, 4, "100%"], fill: accent }
+      - { type: shape, box: [0, 0, 4, "100%"], by: level, fill: line, fill_map: { 高: highlight_strong, 中: accent, 低: muted } }
       - { type: text, box: [20, 0, 320, "100%"], bind: risk, style: body_strong, valign: middle }
-      - { type: text, box: [356, 0, 72, "100%"], bind: level, style: body_strong, color: highlight_strong, align: center, valign: middle }
+      - { type: shape, box: [364, "50%-12", 56, 24], shape: rounded, by: level, fill: line, fill_map: { 高: highlight_strong, 中: accent, 低: muted } }
+      - { type: text, box: [364, "50%-12", 56, 24], bind: level, style: body_strong, color: on_primary, align: center, valign: middle }
       - { type: text, box: [452, 0, 560, "100%"], bind: mitigation, style: body, valign: middle }
       - { type: text, box: [1036, 0, 164, "100%"], bind: owner, style: body, valign: middle }
 

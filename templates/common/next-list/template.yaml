@@ -37,7 +37,7 @@ slots:
     support:
       type: string
       maxLength: 60
-      description: 需要的支持，建议带前缀「需要的支持：」
+      description: 需要的支持，页面底部的高亮横条，横条自带「需要的支持」标签，不要重复；没有可不填
 
 layout:                         # 参考 body 区 1216×560
   # 表头
@@ -46,12 +46,13 @@ layout:                         # 参考 body 区 1216×560
   - { type: text, box: [764, 0, 200, 36], value: 责任人, style: body_strong, color: on_primary, valign: middle }
   - { type: text, box: [988, 0, 212, 36], value: 完成时间, style: body_strong, color: on_primary, valign: middle }
 
-  # 表格行：每个事项一行
+  # 表格行：每个事项一行，固定行高从上往下排
   - type: grid
-    box: [0, 44, 1216, 452]
+    box: [0, 44, 1216, 436]
     bind: items
     columns: 1
     gap: 8
+    row_height: 64
     item:
       - { type: shape, box: [0, 0, "100%", "100%"], fill: surface }
       - { type: shape, box: [0, 0, 4, "100%"], fill: accent }
@@ -59,8 +60,11 @@ layout:                         # 参考 body 区 1216×560
       - { type: text, box: [764, 0, 200, "100%"], bind: owner, style: body, valign: middle }
       - { type: text, box: [988, 0, 212, "100%"], bind: due, style: body_strong, color: accent, valign: middle }
 
-  # 底部：需要的支持
-  - { type: text, box: [0, 512, 1216, 48], bind: support, style: emphasis, color: primary, valign: middle }
+  # 底部：需要的支持，填了才画
+  - { type: shape, box: [0, 496, 1216, 64], fill: highlight, when: support }
+  - { type: shape, box: [0, 496, 4, 64], fill: highlight_strong, when: support }
+  - { type: text, box: [20, 496, 112, 64], value: 需要的支持, style: emphasis, color: highlight_strong, valign: middle, when: support }
+  - { type: text, box: [148, 496, 1048, 64], bind: support, style: emphasis, valign: middle, when: support }
 
 guidance:
   - 事项按完成时间先后排列，每项以动词开头并写清交付物，不要写「推进」「跟进」这类无法验收的词

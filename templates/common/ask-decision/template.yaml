@@ -42,7 +42,7 @@ slots:
     deadline:
       type: string
       maxLength: 60
-      description: 期望的决策时间和不及时决策的影响，建议带前缀「期望决策时间：」
+      description: 期望的决策时间和不及时决策的影响，放在页面底部的高亮横条里，横条自带「期望决策时间」标签，不要重复；没有可不填
 
 layout:                         # 参考 body 区 1216×560
   # 左：为什么需要决策
@@ -52,10 +52,11 @@ layout:                         # 参考 body 区 1216×560
     style: emphasis
     color: primary
   - type: grid
-    box: [0, 36, 464, 476]
+    box: [0, 36, 464, 468]
     bind: context
     columns: 1
     gap: 12
+    row_height: 148
     item:
       - { type: shape, box: [0, 0, "100%", "100%"], fill: surface }
       - { type: shape, box: [0, 0, 4, "100%"], fill: accent }
@@ -68,21 +69,25 @@ layout:                         # 参考 body 区 1216×560
     style: emphasis
     color: primary
   - type: grid
-    box: [488, 36, 728, 476]
+    box: [488, 36, 728, 468]
     bind: asks
     columns: 1
     gap: 12
+    row_height: 148
     item:
       - { type: shape, box: [0, 0, "100%", "100%"], fill: highlight }
       - { type: shape, box: [0, 0, 4, "100%"], fill: highlight_strong }
       - { type: text, box: [20, "50%-36", "100%-36", 24], bind: item, style: emphasis }
       - { type: text, box: [20, "50%-4", "100%-36", 60], bind: detail, style: body }
 
-  # 底部：决策期限
-  - { type: text, box: [0, 536, 1216, 24], bind: deadline, style: detail, valign: bottom }
+  # 底部：决策期限，填了才画
+  - { type: shape, box: [0, 520, 1216, 40], fill: highlight, when: deadline }
+  - { type: shape, box: [0, 520, 4, 40], fill: highlight_strong, when: deadline }
+  - { type: text, box: [20, 520, 128, 40], value: 期望决策时间, style: emphasis, color: highlight_strong, valign: middle, when: deadline }
+  - { type: text, box: [160, 520, 1036, 40], bind: deadline, style: body, valign: middle, when: deadline }
 
 guidance:
   - context 每条写一个事实或代价，最好带数字，说明「为什么是现在」
   - asks 按重要程度排序，每项写清要批准什么、数量或金额；最多 3 项，多了说明诉求没有聚焦
   - 诉求要具体到可以直接回答「批准 / 不批准」，不要写「希望支持」这类含糊表述
-  - deadline 写清日期和后果，如「期望决策时间：10月23日前；延期将使量产推迟一个季度」
+  - deadline 写清日期和后果，如「10月23日前；延期将使量产推迟一个季度」

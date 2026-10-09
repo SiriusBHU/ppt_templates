@@ -73,7 +73,9 @@
         "presenter",
         "date"
       ],
-      "optional": []
+      "optional": [
+        "highlights"
+      ]
     }
   },
   {

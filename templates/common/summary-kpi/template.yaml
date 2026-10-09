@@ -45,23 +45,23 @@ slots:
 layout:                         # 参考 body 区 1216×560
   # 上：关键指标卡
   - type: grid
-    box: [0, 0, 1216, 292]
+    box: [0, 0, 1216, 312]
     bind: kpis
     columns: 4
     gap: 24
     item:
       - { type: shape, box: [0, 0, "100%", "100%"], fill: surface }
       - { type: shape, box: [0, 0, "100%", 4], fill: accent }
-      - { type: text, box: [0, 84, "100%", 36], bind: value, style: kpi, align: center }
-      - { type: text, box: [12, 136, "100%-24", 22], bind: label, style: body_strong, align: center }
-      - { type: text, box: [16, 168, "100%-32", 64], bind: note, style: detail, align: center }
+      - { type: text, box: [0, 94, "100%", 36], bind: value, style: kpi, align: center }
+      - { type: text, box: [12, 146, "100%-24", 22], bind: label, style: body_strong, align: center }
+      - { type: text, box: [16, 178, "100%-32", 64], bind: note, style: detail, align: center }
 
   # 下：解读
-  - { type: text, box: [0, 324, 1216, 24], value: 结果解读, style: emphasis, color: primary }
-  - { type: bullets, box: [0, 360, 1216, 200], bind: notes, style: body }
+  - { type: text, box: [0, 348, 1216, 24], value: 结果解读, style: emphasis, color: primary }
+  - { type: bullets, box: [0, 384, 1216, 176], bind: notes, style: body }
 
 guidance:
-  - 指标卡最好放满 4 项，少于 4 项时卡片靠左排列
+  - 指标卡 3–4 项最均衡，少于 4 项时卡片自动占满整行
   - 指标按重要性从左到右排，第一项与 takeaway 中的数字保持一致
   - 每张卡的说明写清测试条件或对比基线，没有基线的数字没有说服力
   - 下方解读回答「为什么能达到这些数字」，不要重复指标本身

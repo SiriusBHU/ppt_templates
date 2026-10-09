@@ -27,14 +27,44 @@ slots:
       type: string
       maxLength: 16
       description: 汇报日期，如 2026年10月
+    highlights:
+      type: array
+      minItems: 2
+      maxItems: 3
+      description: 右侧的汇报要点卡片，用 2–3 个最有说服力的结论或数字吸引注意；可选，不填时右侧只留浅色底板
+      items:
+        type: object
+        required: [name, detail]
+        properties:
+          name: { type: string, maxLength: 20, description: 要点，最好带数字 }
+          detail: { type: string, maxLength: 50, description: 一句依据或条件 }
 
 layout:                         # frame: none，坐标以画布左上角为原点，画布 1280×720
+  # 右：浅色底板，四周留 32px 页边距；填了 highlights 再画要点卡片
+  - { type: shape, box: [588, 0, 692, 720], fill: surface }
+  - { type: shape, box: [588, 648, 692, 72], fill: primary }
+  - { type: shape, box: [1160, 32, 24, 24], fill: primary }
+  - { type: shape, box: [1192, 32, 24, 24], fill: accent }
+  - { type: shape, box: [1224, 32, 24, 24], fill: line }
+  - { type: text, box: [640, 112, 608, 24], value: 汇报要点, style: emphasis, color: primary, when: highlights }
+  - type: grid
+    box: [640, 152, 608, 408]
+    bind: highlights
+    when: highlights
+    columns: 1
+    gap: 16
+    item:
+      - { type: shape, box: [0, 0, "100%", "100%"], fill: bg }
+      - { type: shape, box: [0, 0, 4, "100%"], fill: accent }
+      - { type: text, box: [28, "50%-34", "100%-52", 28], bind: name, style: emphasis, color: primary, valign: middle }
+      - { type: text, box: [28, "50%+2", "100%-52", 40], bind: detail, style: body, color: muted }
+
   # 左：深色标题区
   - { type: shape, box: [0, 0, 576, 720], fill: primary }
   - { type: shape, box: [576, 0, 12, 720], fill: accent }
   - { type: text, box: [64, 200, 448, 130], bind: title, style: title, color: on_primary, valign: bottom }
   - { type: shape, box: [64, 350, 64, 4], fill: accent }
-  - { type: text, box: [64, 374, 448, 90], bind: subtitle, style: subtitle, color: on_primary }
+  - { type: text, box: [64, 374, 448, 90], bind: subtitle, style: title_suffix, color: on_primary }
 
   # 左下：汇报人和日期
   - { type: text, box: [64, 620, 448, 24], bind: presenter, style: emphasis, color: on_primary }
@@ -44,3 +74,4 @@ guidance:
   - 主标题写主题而不是文种，如「AI 训练集群存储系统技术方案」，不要写「汇报材料」
   - 副标题用一句话交代范围或目的，不要重复主标题
   - 汇报人写部门加姓名，日期写到月
+  - highlights 只放 2–3 个最想让听众记住的结论，最好带数字，不要把目录搬到封面

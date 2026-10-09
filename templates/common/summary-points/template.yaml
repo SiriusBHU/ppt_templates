@@ -27,31 +27,39 @@ slots:
       type: array
       minItems: 3
       maxItems: 6
-      description: 要点列表，level 0 为要点，level 1 为其下的补充
+      description: 要点卡片，每行一条：左侧是要点结论，右侧是依据
       items:
         type: object
-        required: [text]
+        required: [name, detail]
         properties:
-          text: { type: string, maxLength: 70 }
-          level: { type: integer, minimum: 0, maximum: 1, default: 0 }
+          name: { type: string, maxLength: 16, description: 要点结论，一个短语，如「写入带宽提升3.2倍」 }
+          detail: { type: string, maxLength: 70, description: 支撑这条结论的依据，最好带数字或条件 }
     conclusion:
       type: string
       maxLength: 90
       description: 一句结论或建议（不超过两行），放在页面底部的高亮横条里
 
 layout:                         # 参考 body 区 1216×560
-  # 上：要点
-  - { type: shape, box: [0, 0, 1216, 360], fill: surface }
-  - { type: shape, box: [0, 0, 4, 360], fill: accent }
-  - { type: bullets, box: [32, 56, 1152, 296], bind: points, style: emphasis }
+  # 上：要点卡片，每条一行，行高随条数均分
+  - type: grid
+    box: [0, 0, 1216, 432]
+    bind: points
+    columns: 1
+    gap: 10
+    item:
+      - { type: shape, box: [0, 0, "100%", "100%"], fill: surface }
+      - { type: shape, box: [0, 0, 4, "100%"], fill: accent }
+      - { type: text, box: [28, 0, 300, "100%"], bind: name, style: emphasis, color: primary, valign: middle }
+      - { type: shape, box: [348, 12, 1, "100%-24"], fill: line }
+      - { type: text, box: [372, 0, "100%-396", "100%"], bind: detail, style: body, valign: middle }
 
   # 下：结论横条
-  - { type: shape, box: [0, 384, 1216, 176], fill: highlight }
-  - { type: shape, box: [0, 384, 4, 176], fill: highlight_strong }
-  - { type: text, box: [32, 384, 96, 176], value: 核心结论, style: emphasis, color: highlight_strong, valign: middle }
-  - { type: text, box: [144, 384, 1040, 176], bind: conclusion, style: emphasis, valign: middle }
+  - { type: shape, box: [0, 456, 1216, 104], fill: highlight }
+  - { type: shape, box: [0, 456, 4, 104], fill: highlight_strong }
+  - { type: text, box: [28, 456, 96, 104], value: 核心结论, style: emphasis, color: highlight_strong, valign: middle }
+  - { type: text, box: [144, 456, 1048, 104], bind: conclusion, style: emphasis, valign: middle }
 
 guidance:
-  - 要点按重要性排序，每条写成完整的一句话，最好带数字
-  - 只在需要补充依据时才用 level 1，且挂在对应要点之后
+  - 要点按重要性排序，name 写结论、detail 写依据，最好带数字
+  - 要点之间并列、互不包含；有层级关系的内容拆成两页或合并成一条
   - 结论回答「所以我们建议怎么做」，不要重复要点
