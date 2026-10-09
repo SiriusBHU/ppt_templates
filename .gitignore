@@ -1,2 +1,7 @@
 .omc/
 .DS_Store
+__pycache__/
+.venv/
+*.egg-info/
+out/
+preview/

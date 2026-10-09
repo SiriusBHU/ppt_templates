@@ -4,7 +4,7 @@
 
 ## 当前状态
 
-处于设计阶段：设计 spec 已写好，下面列出的目录和 `ppt` 命令都还没有实现。实现落地后更新本节。
+已实现最小链路：`ppt render`、`ppt preview`，布局元素 `text` / `shape` / `grid`，组件 `layered-arch`，以及按 `slots` 校验内容。只有一个模板 `system.solution-layered-arch`，用于确认效果。仓库级校验、catalog、`ppt list/show/validate/catalog/mcp`、`bullets` 元素、`table` / `block-diagram` 组件、母版支持、skill 都还没有实现。
 
 ## 术语（不要混用）
 
@@ -26,17 +26,29 @@
 - `slots` 本身就是 JSON Schema（Draft 2020-12）。它是模型产出内容的唯一契约，不要在别处另写一份字段说明。
 - 数量、长度等约束只写在 `slots` 里，`when_to_use` 和 `guidance` 不重复。
 - `layout` 坐标是逻辑像素 `[x, y, w, h]`，字号用 pt。画布固定 1280×720。
-  - `frame: standard`：坐标以 body 区左上角为原点，按参考尺寸 1160×500 设计，渲染时缩放到风格的实际 body 区。
+  - `frame: standard`：坐标以 body 区左上角为原点，按参考尺寸 1216×560 设计，渲染时缩放到风格的实际 body 区。
   - `frame: none`：坐标以画布左上角为原点。
 - 颜色、字体、文字样式只能引用 `style.schema.json` 规定的 token，不能写死色值或字体名——否则从不同模板拼出来的 deck 风格会不统一。
-- `frame: standard` 的模板由页框渲染 `title` / `takeaway` / `source` 和页码，`layout` 不得再绑定这三个槽位；封面这类整页自由布局的模板用 `frame: none`。
+- 所有文字统一用微软雅黑（硬性要求），每个文字 run 的 `a:latin` / `a:ea` / `a:cs` 都要写成微软雅黑。本机没有这个字体时，预览会把它固定替换为冬青黑体（见 `src/ppt_templates/preview.py`），预览图只用来检查排版。
+- `frame: standard` 的模板由页框渲染 `title` / `title_suffix` / `takeaway`，`layout` 不得再绑定这三个槽位；上下左右页边距统一 32px，不画页码、数据来源、顶部色条；封面这类整页自由布局的模板用 `frame: none`。
+- 字体和字号对所有模板、所有风格统一（硬性要求）：每个文字样式 token 的字号固定在 `src/ppt_templates/loader.py` 的 `TEXT_SIZES` 里，风格不能改，加载风格时检查；模板元素只能用 `style: <token>`，不能写字号或字体。字号只有 24 / 18 / 14 / 12 / 10 / 9 / 8：标题主体 24 + 同一行后半句 18（`title` + `title_suffix`），副标题 18（`subtitle`），重点或总结性文字 14（`emphasis`），正常文字 12（`body` / `body_strong`），细节 10 / 9 / 8（`detail` / `caption` / `footnote`）。模板通过这些 token 选字号，不直接写数字。
 - `slots` 的每个顶层属性都必须被渲染（由页框或恰好一个 `layout` 元素绑定），否则校验报错。`bind` 是点号路径，相对当前作用域解析：顶层是页的 `data`，`grid` 的 `item` 内是当前项，`.` 表示当前项本身。
 - 表格、架构图、框图这类复杂元素不在 YAML 里逐个画框，而是引用 `src/ppt_templates/` 中的内置组件（`table`、`layered-arch`、`block-diagram`）。需要新的复杂元素时，新增组件，而不是在模板里堆 shape。
 - `catalog.json` 是生成物，改动任何模板后都要重新生成，不要手改。
 
-## 计划中的命令（尚未实现）
+## 命令
 
-Python 3.13 + python-pptx，用 uv 管理环境：
+Python 3.13 + python-pptx，用 uv 管理环境（`uv sync` 安装依赖）。已实现：
+
+```
+uv run ppt render deck.yaml -o out/x.pptx
+uv run ppt preview deck.yaml -o dir/     # 每页一张 PNG（soffice → PDF → pypdfium2）
+uv run ppt preview <id> --write          # 用 example.yaml 重新生成该模板的 preview.png
+uv run pytest                            # 全部测试；找不到 soffice 时跳过预览测试
+uv run pytest tests/test_render.py::test_name   # 单个测试
+```
+
+计划中（尚未实现）：
 
 ```
 uv run ppt list [--topic T] [--role R] [--density D] [--tag X]   # --topic 同时匹配 also_fits
@@ -44,13 +56,10 @@ uv run ppt show <id>
 uv run ppt validate                 # 校验仓库：模板、风格、taxonomy、catalog 是否最新
 uv run ppt validate deck.yaml       # 校验一份 deck 的内容
 uv run ppt catalog                  # 重新生成 catalog.json
-uv run ppt render deck.yaml -o out.pptx
-uv run ppt preview deck.yaml -o dir/     # 每页一张 PNG（soffice → PDF → pypdfium2）
-uv run ppt preview <id> --write          # 用 example.yaml 重新生成该模板的 preview.png
 uv run ppt mcp                      # 启动 stdio MCP server
-uv run pytest                       # 全部测试；找不到 soffice 时跳过预览测试
-uv run pytest tests/path::test_name # 单个测试
 ```
+
+`out/` 和 `preview/` 是本地输出目录，已加入 .gitignore。
 
 ## Skill 与多模型适配
 

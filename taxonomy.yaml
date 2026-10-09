@@ -1,0 +1,74 @@
+# 主题与页功能的受控词表（唯一来源）
+# 主题 id、页功能 id 都必须是单个小写英文单词（^[a-z]+$）
+
+topics:
+  - id: trend
+    name: 行业与技术趋势
+    includes: 业界趋势、技术方向（含 AI 技术趋势）、外部环境
+    excludes: 具体竞争对手 → competition；标准动态 → ipr
+  - id: competition
+    name: 竞争格局
+    includes: 有哪些玩家、份额、定位、各家路线
+    excludes: 针对某个对象的逐项对标 → 该对象所在主题的 benchmark 页
+  - id: ecosystem
+    name: 生态与合作
+    includes: 合作伙伴、开源、开发者社区
+  - id: ipr
+    name: 标准与专利
+    includes: 标准组织与进展、专利布局与全景
+  - id: product
+    name: 产品与业务
+    includes: 业务沙盘、产品现状 / 问题 / 需求 / 规划、客户与场景
+    excludes: 系统怎么实现 → system / hardware / software
+  - id: workload
+    name: 负载分析
+    includes: 负载的计算 / 访存 / 通信特征，对系统和硬件的需求（AI 和非 AI 都算）
+    excludes: 模型本身 → model
+  - id: model
+    name: 算法与模型
+    includes: 模型结构、原理、训练方法、精度
+    excludes: 模型对系统的要求 → workload；AI 趋势 → trend
+  - id: system
+    name: 系统架构
+    includes: 软硬件协同的整体架构、系统瓶颈、演进、系统级创新
+    excludes: 只涉及硬件或只涉及软件 → hardware / software
+  - id: hardware
+    name: 硬件
+    includes: 从硬件架构到单板 / 器件：瓶颈、选型、方案
+    excludes: 软硬件协同的整体 → system
+  - id: software
+    name: 软件
+    includes: 从软件架构到单个特性 / 模块：问题、方案、收益
+    excludes: 软硬件协同的整体 → system
+  - id: project
+    name: 项目与组织
+    includes: 进展、里程碑、人力、组织架构、能力建设
+    excludes: 风险、下一步、资源诉求 → common
+  - id: common
+    name: 通用
+    includes: 封面、目录、章节、结束；摘要、决策请求、风险、下一步；内容不限的通用版式（数据对比、表格、图文）
+    excludes: 讲具体对象的页 → 对应主题
+
+roles:
+  # 内容类
+  - { id: overview,    name: 全景 / 现状, question: 现在是什么样 }
+  - { id: trend,       name: 趋势,        question: 外部往哪走 }
+  - { id: history,     name: 演进回顾,    question: 过去怎么一步步走到现在 }
+  - { id: problem,     name: 问题 / 瓶颈, question: 哪里不行，代价多大 }
+  - { id: analysis,    name: 分析,        question: 为什么会这样，关键因素是什么 }
+  - { id: requirement, name: 需求,        question: 需要满足什么 }
+  - { id: benchmark,   name: 对标,        question: 和竞品比差在哪 }
+  - { id: selection,   name: 选型,        question: 几个选项里选哪个，为什么 }
+  - { id: solution,    name: 方案,        question: 怎么构成，怎么工作 }
+  - { id: feature,     name: 特性 / 创新, question: 关键能力和亮点是什么 }
+  - { id: result,      name: 效果 / 收益, question: 带来了什么可量化的改变 }
+  - { id: roadmap,     name: 规划,        question: 接下来怎么走 }
+  # 通用类（主要用于 common 主题）
+  - { id: cover,   name: 封面 }
+  - { id: agenda,  name: 目录 }
+  - { id: section, name: 章节页 }
+  - { id: summary, name: 摘要 / 总结 }
+  - { id: ask,     name: 决策请求 / 资源诉求 }
+  - { id: risk,    name: 风险与应对 }
+  - { id: next,    name: 下一步 }
+  - { id: closing, name: 结束页 }

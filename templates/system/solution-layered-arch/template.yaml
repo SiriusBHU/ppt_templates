@@ -1,0 +1,118 @@
+id: system.solution-layered-arch
+name: 分层系统架构方案
+roles: [solution, feature]
+also_fits: [software, hardware]
+density: talk
+level: system
+tags: [架构, 分层, 方案]
+when_to_use: 介绍系统整体的分层架构，标出本次新增或改动的模块，并配上关键设计和预期收益
+when_not_to_use: 只讲单个模块内部设计 → software.solution-module-detail；只有架构图、不讲设计和收益 → system.overview-layered-arch
+frame: standard
+
+slots:
+  type: object
+  required: [title, layers, design_points, benefits]
+  properties:
+    title:
+      type: string
+      maxLength: 14
+      description: 标题主体（24 号加粗），说明这是什么方案
+    title_suffix:
+      type: string
+      maxLength: 16
+      description: 与标题同一行的后半句（18 号），补充方案要点
+    takeaway:
+      type: string
+      maxLength: 40
+      description: 副标题，一句话结论，最好带量化收益
+    layers:
+      type: array
+      minItems: 3
+      maxItems: 5
+      description: 从上到下的各层
+      items:
+        type: object
+        required: [name, modules]
+        properties:
+          name: { type: string, maxLength: 6 }
+          modules:
+            type: array
+            minItems: 1
+            maxItems: 6
+            items:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string, maxLength: 10 }
+                highlight:
+                  type: boolean
+                  default: false
+                  description: 本次新增或改动的模块设为 true
+    design_points:
+      type: array
+      minItems: 2
+      maxItems: 3
+      description: 支撑方案的关键设计
+      items:
+        type: object
+        required: [name, detail]
+        properties:
+          name: { type: string, maxLength: 10 }
+          detail: { type: string, maxLength: 40 }
+    benefits:
+      type: array
+      minItems: 2
+      maxItems: 3
+      description: 量化收益指标
+      items:
+        type: object
+        required: [value, label]
+        properties:
+          value: { type: string, maxLength: 6, description: 数值，如 70%、3.2× }
+          label: { type: string, maxLength: 8 }
+
+layout:                         # 参考 body 区 1216×560
+  # 左：分层架构图
+  - type: component
+    component: layered-arch
+    box: [0, 0, 784, 560]
+    bind: layers
+    props: { legend: 本次新增 / 改动 }
+
+  # 右上：关键设计
+  - type: text
+    box: [808, 0, 408, 24]
+    value: 关键设计
+    style: emphasis
+    color: primary
+  - type: grid
+    box: [808, 32, 408, 320]
+    bind: design_points
+    columns: 1
+    gap: 10
+    item:
+      - { type: shape, box: [0, 3, 4, 58], fill: accent }
+      - { type: text, box: [14, 0, "100%-14", 22], bind: name, style: body_strong }
+      - { type: text, box: [14, 24, "100%-14", "100%-24"], bind: detail, style: body, color: muted }
+
+  # 右下：预期收益
+  - type: text
+    box: [808, 382, 408, 24]
+    value: 预期收益
+    style: emphasis
+    color: primary
+  - type: grid
+    box: [808, 414, 408, 146]
+    bind: benefits
+    columns: 3
+    gap: 10
+    item:
+      - { type: shape, box: [0, 0, "100%", "100%"], fill: surface }
+      - { type: text, box: [0, 28, "100%", 40], bind: value, style: kpi, align: center }
+      - { type: text, box: [4, 80, "100%-8", 40], bind: label, style: detail, align: center }
+
+guidance:
+  - 层从上到下排列：接入 → 服务 → 引擎 → 硬件资源
+  - 只把本次真正新增或改动的模块设为 highlight，一般不超过 4 个
+  - 每条关键设计写清「怎么做」和「解决什么」，最好带数字
+  - 收益指标与 takeaway 中的数字保持一致

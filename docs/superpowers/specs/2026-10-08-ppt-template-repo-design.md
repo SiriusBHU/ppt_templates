@@ -187,8 +187,8 @@ slots:                          # 内容契约，本身是 JSON Schema（Draft 2
   required: [title, layers]
   properties:
     title:    { type: string, maxLength: 24 }
-    takeaway: { type: string, maxLength: 40, description: 标题下的一句话结论 }
-    source:   { type: string, maxLength: 60, description: 页脚的数据来源或备注 }
+    title_suffix: { type: string, maxLength: 16, description: 与标题同一行的后半句 }
+    takeaway: { type: string, maxLength: 40, description: 副标题，标题下的一句话结论 }
     layers:
       type: array
       minItems: 3
@@ -212,7 +212,7 @@ slots:                          # 内容契约，本身是 JSON Schema（Draft 2
 layout:                         # frame: standard 时坐标以 body 区左上角为原点
   - type: component
     component: layered-arch
-    box: [0, 0, 1160, 500]      # [x, y, w, h]，单位是逻辑像素
+    box: [0, 0, 1216, 560]      # [x, y, w, h]，单位是逻辑像素
     bind: layers
 
 guidance:
@@ -240,7 +240,7 @@ Schema 里的 `default` 只是注解。渲染前，渲染器先用 `default` 补
 ### 4.2 坐标与样式
 
 - 画布固定为 1280×720 逻辑像素（16:9），所有风格一致。渲染时 1px = 9525 EMU，幻灯片尺寸为 12192000×6858000 EMU。
-- `frame: standard`：`layout` 坐标以页框 `body` 区左上角为原点，按参考尺寸 **1160×500** 设计。风格的 `body` 尺寸不同时，渲染器把所有 box 按比例缩放到实际 body 区（字号不缩放）。这样更换风格时模板不用改。
+- `frame: standard`：`layout` 坐标以页框 `body` 区左上角为原点，按参考尺寸 **1216×560** 设计。风格的 `body` 尺寸不同时，渲染器把所有 box 按比例缩放到实际 body 区（字号不缩放）。这样更换风格时模板不用改。
 - `frame: none`：`layout` 坐标以画布左上角为原点。
 - 字号用 pt。
 - 布局里的颜色、字体、文字样式只能引用风格 token（如 `style: body`、`fill: accent`），不允许写死色值或字体名。这是不同模板拼成一份 deck 后风格依然统一的前提。
@@ -249,20 +249,22 @@ Schema 里的 `default` 只是注解。渲染前，渲染器先用 `default` 补
 
 **绑定（`bind`）**：用点号分隔的路径，相对当前作用域解析。顶层作用域是页的 `data`；在 `grid` 的 `item` 内，作用域是数组的当前项；`bind: .` 表示当前项本身（用于字符串数组）。
 
-| type | 作用 | 绑定的槽位类型 |
-|---|---|---|
-| `text` | 单段文字 | `string` |
-| `bullets` | 要点列表 | `string` 数组，或 `{text, level}` 对象数组 |
-| `shape` | 装饰性矩形 / 线条 | 无 |
-| `grid` | 把数组的每一项按网格重复排布 | 数组，且必须声明 `maxItems` |
-| `component` | 引用渲染器内置组件 | 组件自己定义的数据结构 |
+| type | 作用 | 绑定的槽位类型 | 其他参数 |
+|---|---|---|---|
+| `text` | 单段文字 | `string`；也可以不绑定，用 `value` 写固定文字（如小节标题「关键设计」） | `style`、`color`（覆盖文字样式的颜色）、`align`（left / center / right）、`valign`（top / middle / bottom） |
+| `bullets` | 要点列表 | `string` 数组，或 `{text, level}` 对象数组 | `style` |
+| `shape` | 装饰性矩形 / 线条 | 无 | `fill`、`line`（省略则无边框）、`shape`（rect / rounded） |
+| `grid` | 把数组的每一项按网格重复排布 | 数组，且必须声明 `maxItems` | `columns`、`gap`、`item` |
+| `component` | 引用渲染器内置组件 | 组件自己定义的数据结构 | `props`：组件的固定选项 |
 
 校验器会检查绑定的槽位类型是否符合上表。
+
+**box 取值**：每一项可以是数字（像素），也可以是 `"N%"`、`"N%+M"`、`"N%-M"`，表示父区域宽（x、w）或高（y、h）的百分比再加减像素。父区域是：`frame: standard` 的 body 区、`frame: none` 的画布、`grid` 内的单元格。
 
 首批内置组件：
 
 - `table`：表格 / 对比矩阵
-- `layered-arch`：分层架构图
+- `layered-arch`：分层架构图。每层左侧是 120px 的层名块（`primary` 底、`on_primary` 字），右侧是模块区（`surface` 底），模块等宽排成一行。`highlight: true` 的模块用 `highlight` 填充、`highlight_strong` 描边和文字。`props.legend` 有值且存在高亮模块时，在右下角画图例。
 - `block-diagram`：框图 / 流程图。节点位置由内容给出（`pos: [row, col]`），边是节点间的直线连接；v1 不做自动图布局。
 
 每个组件在代码里声明自己接受的数据 Schema，校验器用它检查被绑定槽位的 Schema 是否兼容。
@@ -279,13 +281,13 @@ Schema 里的 `default` 只是注解。渲染前，渲染器先用 `default` 补
 ```yaml
 layout:
   - type: grid
-    box: [0, 10, 1160, 460]
+    box: [0, 10, 1216, 500]
     bind: points
     columns: 3
     gap: 24
     item:
       - { type: shape, box: [0, 0, "100%", 6], fill: accent }
-      - { type: text,  box: [0, 20, "100%", 40], bind: name, style: h3 }
+      - { type: text,  box: [0, 20, "100%", 40], bind: name, style: emphasis }
       - { type: text,  box: [0, 70, "100%", 200], bind: detail, style: body }
 ```
 
@@ -296,35 +298,69 @@ layout:
 | 区域 | 内容 | 默认样式 |
 |---|---|---|
 | `title` | 槽位 `title` | `title` |
-| `takeaway` | 槽位 `takeaway` | `subtitle` |
+| `title`（续） | 槽位 `title_suffix`，与标题同一行、共用基线 | `title_suffix`（由 `suffix_style` 指定） |
+| `takeaway` | 槽位 `takeaway`（副标题） | `subtitle` |
 | `body` | `layout` 的绘制区域 | — |
-| `source` | 槽位 `source` | `caption` |
-| `page_number` | 页码（自动） | `caption` |
 
-- `frame: standard`：页框负责渲染 `title`、`takeaway`、`source` 三个槽位和页码。
-- `frame: none`：没有页框元素，也没有页码。`title` 等槽位如果存在，就是普通槽位，必须由 `layout` 绑定。
+- 每个区域可以设 `align`。
+- 上下左右页边距统一为 32px。不画页码、数据来源等页脚信息，也不画顶部色条。
+- 风格里的 `frame.decorations` 是一组 `shape` 元素（画布坐标），比如标题区下方的分隔线。每个 `frame: standard` 页都会先画它们，再画其他内容。
+- `frame: standard`：页框负责渲染 `title`、`title_suffix`、`takeaway` 三个槽位。
+- `frame: none`：没有页框元素。`title` 等槽位如果存在，就是普通槽位，必须由 `layout` 绑定。
 
 ## 5. 风格（style.yaml）
 
 ```yaml
 master: master.pptx             # 可选；存在时用它作为底稿
 master_layout: Blank            # 使用母版中的哪个版式；省略时用空白版式
-colors:  { primary: "#...", accent: "#...", text: "#...", muted: "#...", bg: "#...", highlight: "#..." }
-fonts:   { cjk: ..., latin: ... }
-text_styles:
-  title:    { size: 28, weight: bold, color: text }
-  subtitle: { size: 16, color: accent }
-  h3:       { size: 16, weight: bold, color: text }
-  body:     { size: 14, color: text, line_spacing: 1.3 }
-  caption:  { size: 10, color: muted }
-frame:
-  title:       { box: [60, 36, 1160, 56],  style: title }
-  takeaway:    { box: [60, 96, 1160, 32],  style: subtitle }
-  body:        { box: [60, 150, 1160, 500] }
-  source:      { box: [60, 680, 1000, 24], style: caption }
-  page_number: { box: [1120, 680, 100, 24], style: caption }
+fonts: { cjk: 微软雅黑, latin: 微软雅黑 }
+colors:
+  primary: "#..."               # 标题、层名底色
+  accent: "#..."                # 结论句、强调条、指标数值
+  text: "#..."                  # 正文
+  muted: "#..."                 # 次要文字
+  line: "#..."                  # 分隔线、边框
+  surface: "#..."               # 浅底：卡片、层背景
+  bg: "#..."                    # 页面底色
+  on_primary: "#..."            # 深色底上的文字
+  highlight: "#..."             # 高亮填充（新增 / 改动）
+  highlight_strong: "#..."      # 高亮描边和文字
+text_styles:                    # 每项：size（pt）、bold（可选）、color（颜色 token）
+  title:        { size: 24, bold: true, color: primary }   # 标题主体
+  title_suffix: { size: 18, color: primary }               # 与标题同一行的后半句
+  subtitle:     { size: 18, color: accent }                # 副标题（一句话结论）
+  emphasis:     { size: 14, bold: true, color: text }      # 重点 / 总结性文字、小节标题
+  body:         { size: 12, color: text }                  # 正常文字
+  body_strong:  { size: 12, bold: true, color: text }      # 正常文字加粗（条目名称等）
+  detail:       { size: 10, color: muted }                 # 细节
+  caption:      { size: 9, color: muted }                  # 细节：图例、注释
+  footnote:     { size: 8, color: muted }                  # 细节：脚注
+  kpi:          { size: 24, bold: true, color: accent }    # 指标数值
+frame:                          # 上下左右页边距统一 32px
+  title:       { box: [32, 32, 1216, 40], style: title, suffix_style: title_suffix }
+  takeaway:    { box: [32, 76, 1216, 30], style: subtitle }
+  body:        { box: [32, 128, 1216, 560] }
+  decorations:
+    - { type: shape, box: [32, 116, 1216, 1], fill: line }   # 标题区与正文之间的分隔线
 ```
 
+当前取值见 `styles/default/style.yaml`。
+
+- **所有文字统一使用微软雅黑**，这是硬性要求：`style.schema.json` 把 `fonts.cjk` 和 `fonts.latin` 都固定为「微软雅黑」，渲染器给每个文字 run 都写入 `a:latin`、`a:ea`、`a:cs`。品牌文件里的字体不采用。
+- **字体和字号对所有模板、所有风格统一**：
+  - 每个文字样式 token 的字号是固定的（见下表），风格只能改颜色等其他取值，不能改字号和字体。加载风格时检查：文字样式集合必须正好是这些 token，字号必须一一对应。
+  - 模板里的元素只能通过 `style` 引用这些 token，`template.schema.json` 禁止在元素上写 `size`、`font` 之类的字段。
+  - 字号只有以下几档：
+
+  | 用途 | 字号（pt） | 对应 token |
+  |---|---|---|
+  | 标题：主体 + 同一行的后半句 | 24 + 18 | `title` + `title_suffix` |
+  | 副标题 | 18 | `subtitle` |
+  | 重点或总结性文字 | 14 | `emphasis` |
+  | 正常文字 | 12 | `body`、`body_strong` |
+  | 细节文字 | 10 / 9 / 8 | `detail`、`caption`、`footnote` |
+
+  指标数值 `kpi` 用 24，与标题同档。
 - `style.schema.json` 固定 token 集合：上面列出的颜色名和文字样式名，每个风格都必须完整提供。模板只能引用这个集合里的 token，因此任何模板都能配任何风格渲染。
 - 有 `master.pptx` 时，它的幻灯片尺寸必须是 16:9（12192000×6858000 EMU），否则校验失败。
 - 具体值从用户提供的品牌文件中提取。文件到位前先用一套中性的占位风格 `styles/default` 开发，之后整体替换，模板不用改。
@@ -355,7 +391,9 @@ pages:
 
 - 无母版时：新建 Presentation，显式设置幻灯片尺寸为 12192000×6858000 EMU（python-pptx 默认是 4:3），使用空白版式。
 - 有母版时：打开 `master.pptx`，删除其中已有的幻灯片，用 `master_layout` 指定的版式新建页面。
-- 字体：python-pptx 的 `font.name` 只写拉丁字体（`a:latin`），中文字体需要额外通过 XML 写入 `a:ea`。
+- 字体：python-pptx 的 `font.name` 只写拉丁字体（`a:latin`），`a:ea` 和 `a:cs` 需要额外通过 XML 写入。
+- 阴影：只设置 `shadow.inherit = False` 时，LibreOffice 仍会画出主题阴影，还要把形状的 `effectRef idx` 设为 0。
+- 预览：soffice 每次用一次性的用户配置目录（`-env:UserInstallation`），不和用户已打开的 LibreOffice 冲突。本机没有微软雅黑时，LibreOffice 每次回退的字体都不一样，有时还会用衬线体。所以这个一次性配置里写了字体替换表，把微软雅黑固定替换为 macOS 自带的冬青黑体（Hiragino Sans GB）。这只影响预览，pptx 里写的仍是微软雅黑。预览的字形和实际效果略有差别，但排版可以参考。
 
 | 命令 | 作用 |
 |---|---|
@@ -385,11 +423,11 @@ pages:
    - `level` 只出现在 `system` / `hardware` / `software` 主题的模板里。
 4. `slots` 是合法的 JSON Schema，顶层为 `type: object`。
 5. 槽位与渲染一一对应，只检查 `slots` 的顶层属性：
-   - `frame: standard` 时，`title` 必须出现在 `required` 中；`title`、`takeaway`、`source` 若存在，必须是 `type: string`，由页框渲染，`layout` 不得再绑定它们。
+   - `frame: standard` 时，`title` 必须出现在 `required` 中；`title`、`title_suffix`、`takeaway` 若存在，必须是 `type: string`，由页框渲染，`layout` 不得再绑定它们。
    - 其余每个顶层属性必须被 `layout` 中恰好一个元素绑定；绑定一个对象或数组即视为渲染了它的全部子字段。
    - 未被渲染的顶层属性、指向不存在槽位的 `bind`，都报错。
    - `bind` 的槽位类型必须符合 4.3 的表格；绑定组件时，槽位 Schema 必须与组件声明的 Schema 兼容。
-6. 所有 box 必须落在绘制区域内：`frame: standard` 为参考 body 区 1160×500，`frame: none` 为画布 1280×720；`grid` 按 4.3 的规则检查。
+6. 所有 box 必须落在绘制区域内：`frame: standard` 为参考 body 区 1216×560，`frame: none` 为画布 1280×720；`grid` 按 4.3 的规则检查。
 7. 布局引用的 token 都在 `style.schema.json` 规定的集合内；每个 `styles/*/style.yaml` 都通过 `style.schema.json` 校验。
 8. `example.yaml` 通过 `slots` 校验。
 9. `catalog.json` 与模板内容一致。
@@ -417,7 +455,7 @@ deck 校验：`style` 存在；每页的模板存在；`data` 通过对应 `slot
   "level": "system",
   "tags": ["架构", "分层"],
   "when_to_use": "介绍软件整体的分层架构",
-  "slots": { "required": ["title", "layers"], "optional": ["takeaway", "source"] }
+  "slots": { "required": ["title", "layers"], "optional": ["title_suffix", "takeaway"] }
 }
 ```
 
