@@ -9,7 +9,7 @@ from ..errors import PptError
 from ..geometry import px_to_emu
 
 NO_STYLE_NO_GRID = "{2D5ABB26-0587-4C30-8999-92F81FD0307C}"  # 去掉内置表格样式，颜色全部由风格 token 决定
-CELL_PAD = 6
+CELL_PAD = 12
 
 SCHEMA = {
     "type": "object",
@@ -58,7 +58,7 @@ def render(slide, style, box, data, props):
 
     for c, name in enumerate(columns):
         _cell(table.cell(0, c), style, name, "body_strong", "highlight_strong" if c == hot else "primary",
-              color="on_primary", align="center")
+              color="on_primary", align="left" if c == 0 and c != hot else "center")
     for r, row in enumerate(rows, 1):
         fill = "surface" if r % 2 == 0 else "bg"
         for c, text in enumerate(row):

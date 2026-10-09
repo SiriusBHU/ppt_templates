@@ -9,7 +9,7 @@ from ..draw import add_shape, add_text, rgb
 from ..errors import PptError
 from ..geometry import EMU_PER_PX
 
-GAP_X, GAP_Y = 48, 32        # 节点之间的水平 / 垂直间距（px），留给连线和标签
+GAP_X, GAP_Y = 72, 32        # 节点之间的水平 / 垂直间距（px），留给连线和标签
 LABEL_W, LABEL_H = 120, 16   # 连线标签的文字框
 TOP, LEFT, BOTTOM, RIGHT = 0, 1, 2, 3  # 矩形的连接点编号
 
