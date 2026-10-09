@@ -1,0 +1,35 @@
+[
+  {
+    "id": "system.solution-layered-arch",
+    "topic": "system",
+    "also_fits": [
+      "software",
+      "hardware"
+    ],
+    "name": "分层系统架构方案",
+    "roles": [
+      "solution",
+      "feature"
+    ],
+    "density": "talk",
+    "level": "system",
+    "tags": [
+      "架构",
+      "分层",
+      "方案"
+    ],
+    "when_to_use": "介绍系统整体的分层架构，标出本次新增或改动的模块，并配上关键设计和预期收益",
+    "slots": {
+      "required": [
+        "title",
+        "layers",
+        "design_points",
+        "benefits"
+      ],
+      "optional": [
+        "title_suffix",
+        "takeaway"
+      ]
+    }
+  }
+]

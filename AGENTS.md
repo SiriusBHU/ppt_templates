@@ -32,7 +32,7 @@
 - 所有文字统一用微软雅黑（硬性要求），每个文字 run 的 `a:latin` / `a:ea` / `a:cs` 都要写成微软雅黑。本机没有这个字体时，预览会把它固定替换为冬青黑体（见 `src/ppt_templates/preview.py`），预览图只用来检查排版。
 - `frame: standard` 的模板由页框渲染 `title` / `title_suffix` / `takeaway`，`layout` 不得再绑定这三个槽位；上下左右页边距统一 32px，不画页码、数据来源、顶部色条；封面这类整页自由布局的模板用 `frame: none`。
 - 字体和字号对所有模板、所有风格统一（硬性要求）：每个文字样式 token 的字号固定在 `schema/style.schema.json` 里，风格不能改，加载风格时检查；模板元素只能用 `style: <token>`，不能写字号或字体。字号只有 24 / 18 / 14 / 12 / 10 / 9 / 8：标题主体 24 + 同一行后半句 18（`title` + `title_suffix`），副标题 18（`subtitle`），重点或总结性文字 14（`emphasis`），正常文字 12（`body` / `body_strong`），细节 10 / 9 / 8（`detail` / `caption` / `footnote`）。模板通过这些 token 选字号，不直接写数字。
-- `slots` 的每个顶层属性都必须被渲染（由页框或恰好一个 `layout` 元素绑定），否则校验报错。`bind` 是点号路径，相对当前作用域解析：顶层是页的 `data`，`grid` 的 `item` 内是当前项，`.` 表示当前项本身。
+- `slots` 的每个顶层属性都必须被渲染（由页框渲染，或被 `layout` 元素绑定它或它的子路径），同一路径不能被两个顶层元素重复绑定，否则校验报错。`bind` 是点号路径，相对当前作用域解析：顶层是页的 `data`，`grid` 的 `item` 内是当前项，`.` 表示当前项本身。
 - 表格、架构图、框图这类复杂元素不在 YAML 里逐个画框，而是引用 `src/ppt_templates/` 中的内置组件（`table`、`layered-arch`、`block-diagram`）。需要新的复杂元素时，新增组件，而不是在模板里堆 shape。
 - `catalog.json` 是生成物，改动任何模板后都要重新生成，不要手改。
 
@@ -41,6 +41,11 @@
 Python 3.13 + python-pptx，用 uv 管理环境（`uv sync` 安装依赖）。已实现：
 
 ```
+uv run ppt list [--topic T] [--role R] [--density D] [--tag X]   # --topic 同时匹配 also_fits
+uv run ppt show <id>                     # 模板定义 + 示例内容
+uv run ppt validate                      # 校验仓库：taxonomy、风格、模板、catalog 是否最新
+uv run ppt validate deck.yaml            # 校验一份 deck
+uv run ppt catalog                       # 重新生成 catalog.json
 uv run ppt render deck.yaml -o out/x.pptx
 uv run ppt preview deck.yaml -o dir/     # 每页一张 PNG（soffice → PDF → pypdfium2）
 uv run ppt preview <id> --write          # 用 example.yaml 重新生成该模板的 preview.png
@@ -48,18 +53,18 @@ uv run pytest                            # 全部测试；找不到 soffice 时�
 uv run pytest tests/test_render.py::test_name   # 单个测试
 ```
 
-计划中（尚未实现）：
-
-```
-uv run ppt list [--topic T] [--role R] [--density D] [--tag X]   # --topic 同时匹配 also_fits
-uv run ppt show <id>
-uv run ppt validate                 # 校验仓库：模板、风格、taxonomy、catalog 是否最新
-uv run ppt validate deck.yaml       # 校验一份 deck 的内容
-uv run ppt catalog                  # 重新生成 catalog.json
-uv run ppt mcp                      # 启动 stdio MCP server
-```
+计划中（尚未实现）：`uv run ppt mcp`（启动 stdio MCP server）。
 
 `out/` 和 `preview/` 是本地输出目录，已加入 .gitignore。
+
+## 新增一个模板
+
+1. 选主题和主页功能，建目录 `templates/<topic>/<roles[0]>-<形态>/`。
+2. 参照 `templates/system/solution-layered-arch/` 写 `template.yaml` 和 `example.yaml`。
+3. `uv run ppt validate`，按报错修到没有错误。
+4. `uv run ppt preview <id> --write` 生成 `preview.png`，打开看有没有溢出、重叠、没对齐。
+5. `uv run ppt catalog` 重新生成索引。
+6. `uv run pytest`，然后把 `template.yaml`、`example.yaml`、`preview.png`、`catalog.json` 一起提交。
 
 ## Skill 与多模型适配
 

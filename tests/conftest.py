@@ -4,6 +4,7 @@ from pathlib import Path
 import pytest
 import yaml
 
+from ppt_templates.catalog import write_catalog
 from ppt_templates.loader import find_repo_root, load_example
 
 TEMPLATE_ID = "system.solution-layered-arch"
@@ -40,6 +41,7 @@ def make_repo(root, tmp_path):
             _dump(d / "template.yaml", template)
             if example is not None:
                 _dump(d / "example.yaml", example)
+        write_catalog(repo)
         return repo
 
     return make

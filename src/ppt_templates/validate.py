@@ -7,6 +7,7 @@ from pathlib import Path
 from jsonschema import Draft202012Validator
 from jsonschema.exceptions import SchemaError
 
+from .catalog import catalog_is_current
 from .components import COMPONENTS
 from .errors import PptError
 from .geometry import CANVAS_H, CANVAS_W, REF_H, REF_W, resolve_box
@@ -258,4 +259,6 @@ def validate_repo(root: Path) -> Report:
             report.errors.append(f"{rel}  缺少 example.yaml")
         if not (tdir / "preview.png").is_file():
             report.warnings.append(f"{rel}  缺少 preview.png（运行 uv run ppt preview {topic}.{name} --write）")
+    if not report.errors and not catalog_is_current(root):
+        report.errors.append("catalog.json 不是最新的（运行 uv run ppt catalog）")
     return report
