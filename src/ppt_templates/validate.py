@@ -1,5 +1,6 @@
 """仓库级校验（spec 7.1）：taxonomy、风格、每个模板。"""
 
+import math
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -8,14 +9,16 @@ from jsonschema.exceptions import SchemaError
 
 from .components import COMPONENTS
 from .errors import PptError
+from .geometry import CANVAS_H, CANVAS_W, REF_H, REF_W, resolve_box
 from .loader import load_yaml
-from .paths import slot_at
+from .paths import lookup, slot_at
 from .schemas import errors as schema_errors
 from .schemas import load_schema
 from .taxonomy import Taxonomy, load_taxonomy
 
 LEVEL_TOPICS = {"system", "hardware", "software"}
 FRAME_SLOTS = ("title", "title_suffix", "takeaway")
+EPS = 0.5  # 坐标比较容差（px）
 
 
 @dataclass
@@ -152,6 +155,60 @@ def check_layout(f: str, tpl: dict, colors: set[str], texts: set[str]) -> list[s
     return errs
 
 
+def _fits(box, w: float, h: float) -> bool:
+    x, y, bw, bh = box
+    return x >= -EPS and y >= -EPS and x + bw <= w + EPS and y + bh <= h + EPS
+
+
+def check_geometry(f: str, tpl: dict) -> list[str]:
+    """spec 7.1 第 6 条：元素落在绘制区域内；grid 的 item 按 maxItems 算出的最小单元格放得下。"""
+    errs = []
+    standard = tpl["frame"] == "standard"
+    w, h = (REF_W, REF_H) if standard else (CANVAS_W, CANVAS_H)
+    area = "body 区" if standard else "画布"
+    for i, el in enumerate(tpl["layout"]):
+        box = resolve_box(el["box"], w, h)
+        if not _fits(box, w, h):
+            errs.append(f"{f}  /layout/{i}/box  超出 {area} {w}×{h}")
+        if el["type"] != "grid":
+            continue
+        n = (slot_at(tpl["slots"], el["bind"]) or {}).get("maxItems")
+        if not n:
+            continue  # 缺 maxItems 已由 check_layout 报告
+        cols, gap = el["columns"], el.get("gap", 0)
+        rows = math.ceil(n / cols)
+        cw = (box[2] - gap * (cols - 1)) / cols
+        ch = (box[3] - gap * (rows - 1)) / rows
+        for j, sub in enumerate(el["item"]):
+            if not _fits(resolve_box(sub["box"], cw, ch), cw, ch):
+                errs.append(f"{f}  /layout/{i}/item/{j}/box  按 maxItems={n} 计算的单元格 {cw:.0f}×{ch:.0f} 放不下")
+    return errs
+
+
+def check_example(rel: str, tpl: dict, example) -> list[str]:
+    """spec 7.1 第 8 条：example 通过 slots；绑定到组件的数据还要通过组件自己的 schema。"""
+    f = f"{rel}/example.yaml"
+    problems = [f"{f}  {e}" for e in schema_errors(tpl["slots"], example)]
+    if problems:
+        return problems
+
+    def walk(elements, scope, prefix):
+        for el in elements:
+            if "bind" not in el:
+                continue
+            value = lookup(scope, el["bind"])
+            here = prefix if el["bind"] == "." else (*prefix, *el["bind"].split("."))
+            if el["type"] == "component" and el["component"] in COMPONENTS and value is not None:
+                problems.extend(f"{f}  {e}（组件 {el['component']}）"
+                                for e in schema_errors(COMPONENTS[el["component"]].schema, value, prefix=here))
+            elif el["type"] == "grid" and isinstance(value, list):
+                for j, item in enumerate(value):
+                    walk(el["item"], item, (*here, j))
+
+    walk(tpl["layout"], example, ())
+    return problems
+
+
 def _template_dirs(root: Path) -> list[Path]:
     return sorted(p for p in (root / "templates").glob("*/*") if p.is_dir() and not p.name.startswith("."))
 
@@ -194,7 +251,10 @@ def validate_repo(root: Path) -> Report:
             continue
         report.errors += check_meta(f, topic, name, tpl, tax)
         report.errors += check_layout(f, tpl, colors, texts)
-        if not (tdir / "example.yaml").is_file():
+        report.errors += check_geometry(f, tpl)
+        if (tdir / "example.yaml").is_file():
+            report.errors += check_example(rel, tpl, load_yaml(tdir / "example.yaml"))
+        else:
             report.errors.append(f"{rel}  缺少 example.yaml")
         if not (tdir / "preview.png").is_file():
             report.warnings.append(f"{rel}  缺少 preview.png（运行 uv run ppt preview {topic}.{name} --write）")

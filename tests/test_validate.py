@@ -135,3 +135,33 @@ def test_frame_none_renders_title_through_layout(make_repo):
     layout = [{"type": "text", "box": [32, 32, 1216, 40], "bind": "title", "style": "title"},
               {"type": "text", "box": [32, 100, 1216, 80], "bind": "note", "style": "body"}]
     assert _errors(make_repo, frame="none", layout=layout) == []
+
+
+def test_element_outside_body_area(make_repo):
+    assert "/layout/0/box  超出 body 区 1216×560" in _errors(
+        make_repo, layout=[{**NOTE, "box": [0, 0, 1300, 80]}])
+
+
+def test_grid_item_must_fit_smallest_cell(make_repo):
+    slots = _slots(points={"type": "array", "maxItems": 6, "items": {"type": "string"}})
+    grid = {"type": "grid", "box": [0, 100, 600, 100], "bind": "points", "columns": 3, "gap": 10,
+            "item": [{"type": "text", "box": [0, 0, "100%", 60], "bind": ".", "style": "body"}]}
+    assert "/layout/1/item/0/box  按 maxItems=6 计算的单元格 193×45 放不下" in _errors(
+        make_repo, slots=slots, layout=[NOTE, grid])
+
+
+def test_example_must_pass_slots(make_repo):
+    template, example = mini_template()
+    example["note"] = "长" * 61
+    repo = make_repo({"common.summary-note": (template, example)})
+    assert "templates/common/summary-note/example.yaml  /note  长度 61，超过上限 60" in validate_repo(repo).errors
+
+
+def test_component_data_in_example_must_pass_component_schema(make_repo):
+    slots = _slots(layers={"type": "array", "items": {"type": "object"}})
+    layout = [NOTE, {"type": "component", "component": "layered-arch", "box": [0, 100, 800, 400], "bind": "layers"}]
+    template, example = mini_template(slots=slots, layout=layout)
+    example["layers"] = [{"name": "接入层"}]
+    repo = make_repo({"common.summary-note": (template, example)})
+    assert ("templates/common/summary-note/example.yaml  /layers/0  缺少必填字段 modules（组件 layered-arch）"
+            in validate_repo(repo).errors)
