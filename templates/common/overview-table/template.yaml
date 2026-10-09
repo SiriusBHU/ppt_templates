@@ -1,0 +1,70 @@
+id: common.overview-table
+name: 通用对比表格
+roles: [overview, benchmark]
+density: talk
+tags: [表格, 对比, 指标]
+when_to_use: 用一张表格横向对比多个对象（方案、产品、版本）在若干指标上的差异，可用高亮列标出本方案或推荐项
+when_not_to_use: 要在多个方案中给出推荐结论和理由 → hardware.selection-matrix；表格里是客户 / 场景对产品的覆盖状态 → product.overview-sandbox
+frame: standard
+
+slots:
+  type: object
+  required: [title, matrix, note]
+  properties:
+    title:
+      type: string
+      maxLength: 14
+      description: 标题主体（24 号加粗），说明这张表对比什么
+    title_suffix:
+      type: string
+      maxLength: 16
+      description: 与标题同一行的后半句（18 号），补充对比维度或范围
+    takeaway:
+      type: string
+      maxLength: 40
+      description: 副标题，一句话结论，最好带量化差距
+    matrix:
+      type: object
+      required: [columns, rows]
+      description: 对比表格；第一列是指标名，其余各列是被对比的对象
+      properties:
+        columns:
+          type: array
+          minItems: 3
+          maxItems: 6
+          description: 表头，第一项是指标列的名称
+          items: { type: string, maxLength: 12 }
+        rows:
+          type: array
+          minItems: 3
+          maxItems: 7
+          description: 每行一个指标，格数与表头列数相同，第一格是指标名
+          items:
+            type: array
+            items: { type: string, maxLength: 18 }
+        highlight_column:
+          type: integer
+          minimum: 1
+          description: 要高亮的列序号（从 0 数起，不含指标列），用来标出本方案或推荐项
+    note:
+      type: string
+      maxLength: 110
+      description: 底部一行注释，写数据口径、测试条件或结论
+
+layout:                         # 参考 body 区 1216×560
+  # 对比表格：铺满主体
+  - type: component
+    component: table
+    box: [0, 0, 1216, 496]
+    bind: matrix
+    props: { first_column_width: 220 }
+
+  # 底部：数据口径 / 结论
+  - { type: shape, box: [0, 516, 1216, 1], fill: line }
+  - { type: text, box: [0, 528, 1216, 32], bind: note, style: detail }
+
+guidance:
+  - 第一列放指标名，其余列各放一个对象；表头写对象名，不写「方案」「选项」这类泛称
+  - 本方案或推荐项放在 highlight_column 指定的列，一般只高亮一列
+  - 同一行的单元格写法一致（都带单位，或都不带），数字之间便于比较
+  - note 写清数据来源、测试条件或一句结论，不要重复表格里已有的数字

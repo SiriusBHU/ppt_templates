@@ -1,5 +1,571 @@
 [
   {
+    "id": "common.agenda-list",
+    "topic": "common",
+    "also_fits": [],
+    "name": "目录列表",
+    "roles": [
+      "agenda"
+    ],
+    "density": "talk",
+    "tags": [
+      "目录",
+      "汇报"
+    ],
+    "when_to_use": "汇报开头列出各部分的序号、名称和一句话说明",
+    "slots": {
+      "required": [
+        "title",
+        "items"
+      ],
+      "optional": [
+        "title_suffix",
+        "takeaway"
+      ]
+    }
+  },
+  {
+    "id": "common.ask-decision",
+    "topic": "common",
+    "also_fits": [],
+    "name": "决策请求与资源诉求",
+    "roles": [
+      "ask"
+    ],
+    "density": "talk",
+    "tags": [
+      "决策",
+      "资源",
+      "诉求"
+    ],
+    "when_to_use": "向管理层说明为什么需要决策，并清楚列出需要批准的事项或资源诉求，可附决策期限",
+    "slots": {
+      "required": [
+        "title",
+        "context",
+        "asks"
+      ],
+      "optional": [
+        "title_suffix",
+        "takeaway",
+        "deadline"
+      ]
+    }
+  },
+  {
+    "id": "common.cover-basic",
+    "topic": "common",
+    "also_fits": [],
+    "name": "基础封面",
+    "roles": [
+      "cover"
+    ],
+    "density": "talk",
+    "tags": [
+      "封面",
+      "汇报"
+    ],
+    "when_to_use": "汇报或评审材料的第一页，写明主题、副标题、汇报人和日期",
+    "slots": {
+      "required": [
+        "title",
+        "subtitle",
+        "presenter",
+        "date"
+      ],
+      "optional": []
+    }
+  },
+  {
+    "id": "common.next-list",
+    "topic": "common",
+    "also_fits": [],
+    "name": "下一步计划清单",
+    "roles": [
+      "next"
+    ],
+    "density": "talk",
+    "tags": [
+      "下一步",
+      "计划",
+      "责任人"
+    ],
+    "when_to_use": "列出下一阶段要做的事项，明确每项的责任人和完成时间，可附需要的支持",
+    "slots": {
+      "required": [
+        "title",
+        "items"
+      ],
+      "optional": [
+        "title_suffix",
+        "takeaway",
+        "support"
+      ]
+    }
+  },
+  {
+    "id": "common.overview-table",
+    "topic": "common",
+    "also_fits": [],
+    "name": "通用对比表格",
+    "roles": [
+      "overview",
+      "benchmark"
+    ],
+    "density": "talk",
+    "tags": [
+      "表格",
+      "对比",
+      "指标"
+    ],
+    "when_to_use": "用一张表格横向对比多个对象（方案、产品、版本）在若干指标上的差异，可用高亮列标出本方案或推荐项",
+    "slots": {
+      "required": [
+        "title",
+        "matrix",
+        "note"
+      ],
+      "optional": [
+        "title_suffix",
+        "takeaway"
+      ]
+    }
+  },
+  {
+    "id": "common.risk-table",
+    "topic": "common",
+    "also_fits": [],
+    "name": "风险与应对表",
+    "roles": [
+      "risk"
+    ],
+    "density": "talk",
+    "tags": [
+      "风险",
+      "应对",
+      "责任人"
+    ],
+    "when_to_use": "以表格逐项列出项目或方案的主要风险、等级、应对措施和责任人",
+    "slots": {
+      "required": [
+        "title",
+        "risks"
+      ],
+      "optional": [
+        "title_suffix",
+        "takeaway"
+      ]
+    }
+  },
+  {
+    "id": "common.section-basic",
+    "topic": "common",
+    "also_fits": [],
+    "name": "基础章节页",
+    "roles": [
+      "section"
+    ],
+    "density": "talk",
+    "tags": [
+      "章节",
+      "分隔"
+    ],
+    "when_to_use": "汇报中分隔各部分的整页标题，写明序号、章节名和一句话说明",
+    "slots": {
+      "required": [
+        "num",
+        "title"
+      ],
+      "optional": [
+        "subtitle"
+      ]
+    }
+  },
+  {
+    "id": "common.summary-kpi",
+    "topic": "common",
+    "also_fits": [],
+    "name": "关键数字总结",
+    "roles": [
+      "summary",
+      "result"
+    ],
+    "density": "talk",
+    "tags": [
+      "测试结果",
+      "关键指标",
+      "总结"
+    ],
+    "when_to_use": "用几个大数字概括测试结果或阶段成果，并在下方逐条解释这些数字",
+    "slots": {
+      "required": [
+        "title",
+        "kpis",
+        "notes"
+      ],
+      "optional": [
+        "title_suffix",
+        "takeaway"
+      ]
+    }
+  },
+  {
+    "id": "common.summary-points",
+    "topic": "common",
+    "also_fits": [],
+    "name": "要点总结",
+    "roles": [
+      "summary"
+    ],
+    "density": "talk",
+    "tags": [
+      "总结",
+      "结论",
+      "要点"
+    ],
+    "when_to_use": "汇报结尾或一个部分结束时，用几条要点加一句结论收束",
+    "slots": {
+      "required": [
+        "title",
+        "points",
+        "conclusion"
+      ],
+      "optional": [
+        "title_suffix",
+        "takeaway"
+      ]
+    }
+  },
+  {
+    "id": "competition.overview-landscape",
+    "topic": "competition",
+    "also_fits": [],
+    "name": "竞争格局总览",
+    "roles": [
+      "overview",
+      "benchmark"
+    ],
+    "density": "talk",
+    "tags": [
+      "竞品",
+      "定位",
+      "优劣势"
+    ],
+    "when_to_use": "在一页内展示主要竞争对手的定位、优势和劣势，并给出对我们的启示",
+    "slots": {
+      "required": [
+        "title",
+        "players",
+        "insight"
+      ],
+      "optional": [
+        "title_suffix",
+        "takeaway"
+      ]
+    }
+  },
+  {
+    "id": "hardware.selection-matrix",
+    "topic": "hardware",
+    "also_fits": [
+      "system",
+      "software"
+    ],
+    "name": "硬件选型对比",
+    "roles": [
+      "selection",
+      "benchmark"
+    ],
+    "density": "talk",
+    "level": "system",
+    "tags": [
+      "选型",
+      "对比",
+      "推荐"
+    ],
+    "when_to_use": "把几个候选方案按若干维度并排对比，高亮其中一个，并在右侧给出推荐结论和理由",
+    "slots": {
+      "required": [
+        "title",
+        "matrix",
+        "recommendation"
+      ],
+      "optional": [
+        "title_suffix",
+        "takeaway"
+      ]
+    }
+  },
+  {
+    "id": "hardware.solution-block-diagram",
+    "topic": "hardware",
+    "also_fits": [
+      "system"
+    ],
+    "name": "硬件框图方案",
+    "roles": [
+      "solution"
+    ],
+    "density": "talk",
+    "level": "system",
+    "tags": [
+      "框图",
+      "硬件架构",
+      "方案"
+    ],
+    "when_to_use": "用框图说明一个硬件方案由哪些部件组成、部件之间怎么连接，标出本次新增的部件，并配上关键参数和说明",
+    "slots": {
+      "required": [
+        "title",
+        "diagram",
+        "params"
+      ],
+      "optional": [
+        "title_suffix",
+        "takeaway",
+        "notes"
+      ]
+    }
+  },
+  {
+    "id": "model.overview-structure",
+    "topic": "model",
+    "also_fits": [
+      "workload"
+    ],
+    "name": "模型结构总览",
+    "roles": [
+      "overview"
+    ],
+    "density": "talk",
+    "tags": [
+      "模型",
+      "结构",
+      "参数"
+    ],
+    "when_to_use": "用框图展示模型的整体结构和关键模块，并配上参数规格与补充说明",
+    "slots": {
+      "required": [
+        "title",
+        "diagram",
+        "specs"
+      ],
+      "optional": [
+        "title_suffix",
+        "takeaway",
+        "notes"
+      ]
+    }
+  },
+  {
+    "id": "product.overview-sandbox",
+    "topic": "product",
+    "also_fits": [],
+    "name": "业务沙盘",
+    "roles": [
+      "overview"
+    ],
+    "density": "talk",
+    "tags": [
+      "业务",
+      "客户",
+      "产品覆盖"
+    ],
+    "when_to_use": "用「客户或场景 × 产品」的矩阵展示业务覆盖现状，并提炼几条业务洞察",
+    "slots": {
+      "required": [
+        "title",
+        "matrix",
+        "insights"
+      ],
+      "optional": [
+        "title_suffix",
+        "takeaway"
+      ]
+    }
+  },
+  {
+    "id": "project.overview-milestones",
+    "topic": "project",
+    "also_fits": [],
+    "name": "里程碑进展",
+    "roles": [
+      "overview"
+    ],
+    "density": "talk",
+    "tags": [
+      "里程碑",
+      "进展",
+      "时间轴"
+    ],
+    "when_to_use": "按时间顺序展示项目的关键里程碑和各自的完成状态，并说明当前进展和遇到的问题",
+    "slots": {
+      "required": [
+        "title",
+        "milestones",
+        "notes"
+      ],
+      "optional": [
+        "title_suffix",
+        "takeaway"
+      ]
+    }
+  },
+  {
+    "id": "software.problem-pain-points",
+    "topic": "software",
+    "also_fits": [
+      "system"
+    ],
+    "name": "软件实现痛点",
+    "roles": [
+      "problem"
+    ],
+    "density": "talk",
+    "level": "module",
+    "tags": [
+      "问题",
+      "痛点",
+      "实现"
+    ],
+    "when_to_use": "讲清软件实现中的三个具体问题，每个问题配上现象说明和量化影响，作为方案页之前的铺垫",
+    "slots": {
+      "required": [
+        "title",
+        "points"
+      ],
+      "optional": [
+        "title_suffix",
+        "takeaway"
+      ]
+    }
+  },
+  {
+    "id": "software.result-before-after",
+    "topic": "software",
+    "also_fits": [
+      "system",
+      "hardware"
+    ],
+    "name": "改进前后对比",
+    "roles": [
+      "result"
+    ],
+    "density": "talk",
+    "tags": [
+      "效果",
+      "收益",
+      "对比"
+    ],
+    "when_to_use": "用改进前、改进后和提升幅度逐项展示几个关键指标的变化，说明方案带来的可量化收益",
+    "slots": {
+      "required": [
+        "title",
+        "metrics"
+      ],
+      "optional": [
+        "title_suffix",
+        "takeaway",
+        "summary"
+      ]
+    }
+  },
+  {
+    "id": "software.solution-module-flow",
+    "topic": "software",
+    "also_fits": [
+      "system"
+    ],
+    "name": "模块处理流程方案",
+    "roles": [
+      "solution"
+    ],
+    "density": "talk",
+    "level": "module",
+    "tags": [
+      "模块",
+      "流程",
+      "方案"
+    ],
+    "when_to_use": "介绍单个软件模块的内部处理流程，标出本次新增或改动的节点，并配上关键设计",
+    "slots": {
+      "required": [
+        "title",
+        "flow",
+        "design_points"
+      ],
+      "optional": [
+        "title_suffix",
+        "takeaway"
+      ]
+    }
+  },
+  {
+    "id": "system.problem-bottleneck",
+    "topic": "system",
+    "also_fits": [
+      "hardware",
+      "software"
+    ],
+    "name": "系统瓶颈分析",
+    "roles": [
+      "problem",
+      "analysis"
+    ],
+    "density": "talk",
+    "level": "system",
+    "tags": [
+      "瓶颈",
+      "根因",
+      "量化指标"
+    ],
+    "when_to_use": "说明系统当前的瓶颈：先给出现象，再用量化指标说明代价，最后拆解根因",
+    "slots": {
+      "required": [
+        "title",
+        "symptom",
+        "metrics",
+        "causes"
+      ],
+      "optional": [
+        "title_suffix",
+        "takeaway"
+      ]
+    }
+  },
+  {
+    "id": "system.roadmap-stages",
+    "topic": "system",
+    "also_fits": [
+      "product",
+      "hardware",
+      "software"
+    ],
+    "name": "分阶段演进路线",
+    "roles": [
+      "roadmap"
+    ],
+    "density": "talk",
+    "level": "system",
+    "tags": [
+      "路线",
+      "演进",
+      "时间轴"
+    ],
+    "when_to_use": "按时间顺序展示系统分几个阶段演进，每个阶段给出时间、名称和要达成的要点",
+    "slots": {
+      "required": [
+        "title",
+        "stages"
+      ],
+      "optional": [
+        "title_suffix",
+        "takeaway",
+        "vision"
+      ]
+    }
+  },
+  {
     "id": "system.solution-layered-arch",
     "topic": "system",
     "also_fits": [
@@ -25,6 +591,63 @@
         "layers",
         "design_points",
         "benefits"
+      ],
+      "optional": [
+        "title_suffix",
+        "takeaway"
+      ]
+    }
+  },
+  {
+    "id": "trend.trend-points",
+    "topic": "trend",
+    "also_fits": [],
+    "name": "趋势要点",
+    "roles": [
+      "trend"
+    ],
+    "density": "talk",
+    "tags": [
+      "趋势",
+      "依据",
+      "影响"
+    ],
+    "when_to_use": "归纳行业或技术的几个关键趋势，每条给出事实依据，并说明对我们的影响",
+    "slots": {
+      "required": [
+        "title",
+        "trends"
+      ],
+      "optional": [
+        "title_suffix",
+        "takeaway"
+      ]
+    }
+  },
+  {
+    "id": "workload.requirement-matrix",
+    "topic": "workload",
+    "also_fits": [
+      "system",
+      "hardware"
+    ],
+    "name": "负载特征与系统需求",
+    "roles": [
+      "requirement",
+      "analysis"
+    ],
+    "density": "talk",
+    "tags": [
+      "负载",
+      "特征",
+      "需求"
+    ],
+    "when_to_use": "把某类负载的关键特征量化，并逐条推导出对系统或硬件的需求",
+    "slots": {
+      "required": [
+        "title",
+        "workload",
+        "items"
       ],
       "optional": [
         "title_suffix",

@@ -1,0 +1,92 @@
+id: system.roadmap-stages
+name: 分阶段演进路线
+roles: [roadmap]
+also_fits: [product, hardware, software]
+density: talk
+level: system
+tags: [路线, 演进, 时间轴]
+when_to_use: 按时间顺序展示系统分几个阶段演进，每个阶段给出时间、名称和要达成的要点
+when_not_to_use: 已完成与未完成的里程碑进展 → project.overview-milestones；只讲过去的演进回顾、不展望未来 → 对应主题的 history 页
+frame: standard
+
+slots:
+  type: object
+  required: [title, stages]
+  properties:
+    title:
+      type: string
+      maxLength: 14
+      description: 标题主体（24 号加粗），说明这是什么路线
+    title_suffix:
+      type: string
+      maxLength: 16
+      description: 与标题同一行的后半句（18 号），补充时间跨度或目标
+    takeaway:
+      type: string
+      maxLength: 40
+      description: 副标题，一句话结论，说明路线的主线逻辑
+    stages:
+      type: array
+      minItems: 3
+      maxItems: 5
+      description: 从早到晚的各阶段；不足 5 项时右侧留白，请按需取舍
+      items:
+        type: object
+        required: [period, name, points]
+        properties:
+          period: { type: string, maxLength: 12, description: 时间，如 2026年H1 }
+          name: { type: string, maxLength: 10, description: 阶段名称 }
+          points:
+            type: array
+            minItems: 1
+            maxItems: 3
+            description: 该阶段要达成的事项
+            items: { type: string, maxLength: 30 }
+    vision:
+      type: string
+      maxLength: 50
+      description: 路线终点的整体目标，一句话，放在底部（可选）
+
+layout:                         # 参考 body 区 1216×560
+  # 时间轴：横贯整页的细线，节点画在每个阶段的起点
+  - type: shape
+    box: [0, 40, 1216, 2]
+    fill: line
+
+  - type: grid
+    box: [0, 0, 1216, 472]
+    bind: stages
+    columns: 5
+    gap: 24
+    item:
+      - { type: text, box: [0, 4, "100%", 22], bind: period, style: body_strong, color: accent }
+      - { type: shape, box: [0, 35, 12, 12], fill: accent }
+      - { type: text, box: [0, 62, "100%", 26], bind: name, style: emphasis, color: primary }
+      - type: grid
+        box: [0, 104, "100%", "100%-104"]
+        bind: points
+        columns: 1
+        gap: 8
+        item:
+          - { type: shape, box: [0, 0, "100%", "100%"], fill: surface }
+          - { type: shape, box: [0, 0, 4, "100%"], fill: accent }
+          - { type: text, box: [16, 0, "100%-26", "100%"], bind: ., style: body, valign: middle }
+
+  # 底部：整体目标
+  - type: shape
+    box: [0, 496, 1216, 64]
+    fill: highlight
+  - type: shape
+    box: [0, 496, 4, 64]
+    fill: highlight_strong
+  - type: text
+    box: [20, 496, 1176, 64]
+    bind: vision
+    style: emphasis
+    valign: middle
+
+guidance:
+  - 阶段按时间从早到晚排，时间粒度保持一致（都写半年或都写季度）
+  - 每个阶段的要点写「交付什么」，不要写「研究什么」，最好带可检验的数字
+  - 阶段名称用名词短语，体现该阶段的主题（如「验证」「规模化」）
+  - vision 写路线终点的整体目标，与 takeaway 呼应但不重复

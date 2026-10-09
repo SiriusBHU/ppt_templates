@@ -1,0 +1,36 @@
+title: 万亿参数 MoE 模型结构
+title_suffix: 稀疏激活降低单次计算量
+takeaway: 每个 Token 只激活 2 个专家，计算量约为同规模稠密模型的二十分之一
+diagram:
+  nodes:
+    - { id: emb, name: Token 嵌入, pos: [0, 1] }
+    - { id: rope, name: RoPE 位置编码, pos: [1, 0] }
+    - { id: attn, name: 分组查询注意力, pos: [1, 1] }
+    - { id: kv, name: KV 缓存, pos: [1, 2] }
+    - { id: router, name: Top-2 路由, pos: [2, 1] }
+    - { id: shared, name: 共享专家 ×2, pos: [3, 0] }
+    - { id: experts, name: 路由专家 ×64, pos: [3, 1], highlight: true }
+    - { id: head, name: 输出头, pos: [4, 1] }
+    - { id: aux, name: 负载均衡损失, pos: [2, 2] }
+    - { id: a2a, name: All-to-All 通信, pos: [3, 2] }
+  edges:
+    - { from: emb, to: attn }
+    - { from: rope, to: attn }
+    - { from: attn, to: kv, label: 读写 }
+    - { from: attn, to: router }
+    - { from: router, to: experts, label: 分发 }
+    - { from: shared, to: experts, label: 求和 }
+    - { from: experts, to: head }
+    - { from: aux, to: router, label: 约束 }
+    - { from: experts, to: a2a, label: 跨节点 }
+specs:
+  - { name: 参数量, value: 1.2T（激活 60B） }
+  - { name: 层数, value: 80 层 }
+  - { name: 隐层维度, value: "8192" }
+  - { name: 注意力头, value: 64 头 / 8 KV 头 }
+  - { name: 专家数, value: 64 路由 + 2 共享 }
+  - { name: 上下文长度, value: 128K }
+notes:
+  - 注意力与专家层交替堆叠，共 80 层，每层结构相同
+  - 专家按 64 路并行放置，每个 Token 每层产生 2 次跨节点通信
+  - KV 缓存随上下文长度线性增长，128K 时单序列约 40GB

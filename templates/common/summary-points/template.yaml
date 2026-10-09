@@ -1,0 +1,57 @@
+id: common.summary-points
+name: 要点总结
+roles: [summary]
+density: talk
+tags: [总结, 结论, 要点]
+when_to_use: 汇报结尾或一个部分结束时，用几条要点加一句结论收束
+when_not_to_use: 要突出几个关键数字 → common.summary-kpi；要提出决策或资源诉求 → common.ask-decision
+frame: standard
+
+slots:
+  type: object
+  required: [title, points, conclusion]
+  properties:
+    title:
+      type: string
+      maxLength: 14
+      description: 标题主体（24 号加粗），如「总结」
+    title_suffix:
+      type: string
+      maxLength: 16
+      description: 与标题同一行的后半句（18 号）
+    takeaway:
+      type: string
+      maxLength: 40
+      description: 副标题，一句话概括总结的主线
+    points:
+      type: array
+      minItems: 3
+      maxItems: 6
+      description: 要点列表，level 0 为要点，level 1 为其下的补充
+      items:
+        type: object
+        required: [text]
+        properties:
+          text: { type: string, maxLength: 70 }
+          level: { type: integer, minimum: 0, maximum: 1, default: 0 }
+    conclusion:
+      type: string
+      maxLength: 90
+      description: 一句结论或建议（不超过两行），放在页面底部的高亮横条里
+
+layout:                         # 参考 body 区 1216×560
+  # 上：要点
+  - { type: shape, box: [0, 0, 1216, 360], fill: surface }
+  - { type: shape, box: [0, 0, 4, 360], fill: accent }
+  - { type: bullets, box: [32, 56, 1152, 296], bind: points, style: emphasis }
+
+  # 下：结论横条
+  - { type: shape, box: [0, 384, 1216, 176], fill: highlight }
+  - { type: shape, box: [0, 384, 4, 176], fill: highlight_strong }
+  - { type: text, box: [32, 384, 96, 176], value: 核心结论, style: emphasis, color: highlight_strong, valign: middle }
+  - { type: text, box: [144, 384, 1040, 176], bind: conclusion, style: emphasis, valign: middle }
+
+guidance:
+  - 要点按重要性排序，每条写成完整的一句话，最好带数字
+  - 只在需要补充依据时才用 level 1，且挂在对应要点之后
+  - 结论回答「所以我们建议怎么做」，不要重复要点

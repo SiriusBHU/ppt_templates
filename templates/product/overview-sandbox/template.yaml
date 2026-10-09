@@ -1,0 +1,79 @@
+id: product.overview-sandbox
+name: 业务沙盘
+roles: [overview]
+density: talk
+tags: [业务, 客户, 产品覆盖]
+when_to_use: 用「客户或场景 × 产品」的矩阵展示业务覆盖现状，并提炼几条业务洞察
+when_not_to_use: 比较多个方案的指标并推荐 → hardware.selection-matrix；通用的数据对比表 → common.overview-table
+frame: standard
+
+slots:
+  type: object
+  required: [title, matrix, insights]
+  properties:
+    title:
+      type: string
+      maxLength: 14
+      description: 标题主体（24 号加粗），说明是哪块业务的沙盘
+    title_suffix:
+      type: string
+      maxLength: 16
+      description: 与标题同一行的后半句（18 号），补充范围或时间
+    takeaway:
+      type: string
+      maxLength: 40
+      description: 副标题，一句话概括覆盖现状
+    matrix:
+      type: object
+      description: 沙盘矩阵；首列是客户或场景，其余每列是一个产品，单元格写覆盖状态
+      required: [columns, rows]
+      properties:
+        columns:
+          type: array
+          minItems: 3
+          maxItems: 6
+          description: 表头，首项写「客户 / 场景」，其后是产品名称
+          items: { type: string, maxLength: 12 }
+        rows:
+          type: array
+          minItems: 3
+          maxItems: 8
+          items:
+            type: array
+            items: { type: string, maxLength: 16 }
+        highlight_column:
+          type: integer
+          minimum: 1
+          description: 需要突出的产品列（从 1 起，0 是客户列）
+    insights:
+      type: array
+      minItems: 2
+      maxItems: 3
+      description: 从矩阵中读出的业务洞察，每条一句话
+      items: { type: string, maxLength: 60 }
+
+layout:                         # 参考 body 区 1216×560
+  # 上：沙盘矩阵
+  - type: component
+    component: table
+    box: [0, 0, 1216, 408]
+    bind: matrix
+    props: { first_column_width: 200 }
+
+  # 下：业务洞察
+  - { type: shape, box: [0, 432, 1216, 128], fill: surface }
+  - { type: shape, box: [0, 432, 4, 128], fill: accent }
+  - type: text
+    box: [24, 444, 400, 24]
+    value: 业务洞察
+    style: emphasis
+    color: primary
+  - type: bullets
+    box: [24, 476, 1168, 72]
+    bind: insights
+    style: body
+
+guidance:
+  - 行是客户或场景，列是产品；单元格统一用「状态 + 数量」的写法，如「已商用 · 12 家」，没有覆盖写「—」
+  - 状态用同一套词（已商用 / 试点中 / 规划中 / —），读者才能一眼扫出空白
+  - highlight_column 指向当前要重点推进的产品；洞察写机会和缺口，不要复述表格内容

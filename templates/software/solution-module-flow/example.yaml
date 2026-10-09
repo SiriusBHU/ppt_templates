@@ -1,0 +1,34 @@
+title: 检查点异步下刷
+title_suffix: 增量比对加本地缓冲
+takeaway: 引入增量比对与本地缓冲，检查点写入不再阻塞训练，单次耗时从180秒降到12秒
+flow:
+  nodes:
+    - { id: train, name: 训练进程, pos: [0, 0] }
+    - { id: shard, name: 张量分片, pos: [0, 1] }
+    - { id: diff, name: 增量比对, pos: [0, 2], highlight: true }
+    - { id: zip, name: 压缩编码, pos: [0, 3] }
+    - { id: buf, name: 本地缓冲, pos: [1, 3], highlight: true }
+    - { id: queue, name: 下刷队列, pos: [1, 2] }
+    - { id: ec, name: 纠删码编码, pos: [1, 1] }
+    - { id: store, name: 存储集群, pos: [1, 0] }
+    - { id: meta, name: 元数据提交, pos: [2, 0] }
+    - { id: verify, name: 完整性校验, pos: [2, 1] }
+    - { id: ready, name: 可恢复版本, pos: [2, 2] }
+  edges:
+    - { from: train, to: shard }
+    - { from: shard, to: diff, label: 全量 }
+    - { from: diff, to: zip, label: 变化块 }
+    - { from: zip, to: buf }
+    - { from: buf, to: queue, label: 异步 }
+    - { from: queue, to: ec }
+    - { from: ec, to: store }
+    - { from: store, to: meta }
+    - { from: meta, to: verify }
+    - { from: verify, to: ready }
+design_points:
+  - name: 增量比对
+    detail: 与上一版本逐分片比对哈希，只保留发生变化的张量分片，参数更新稀疏的层几乎不再重复写入；比对在 GPU 空闲的间隙由 CPU 完成，不占用训练算力，单次写入数据量减少60%
+  - name: 本地缓冲
+    detail: 压缩后的检查点先落到计算节点本地 NVMe 缓冲区，写入完成即通知训练进程继续迭代，单次阻塞耗时从180秒降到12秒；缓冲区按两份检查点大小预留，写满时才退化为同步写入
+  - name: 异步下刷
+    detail: 后台线程按队列顺序把检查点下刷到存储集群，下刷带宽设有限速保护，不与训练数据加载争抢网络；下刷失败自动重试，三次失败后告警并保留本地副本

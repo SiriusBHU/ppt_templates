@@ -1,0 +1,112 @@
+id: hardware.selection-matrix
+name: 硬件选型对比
+roles: [selection, benchmark]
+also_fits: [system, software]
+density: talk
+level: system
+tags: [选型, 对比, 推荐]
+when_to_use: 把几个候选方案按若干维度并排对比，高亮其中一个，并在右侧给出推荐结论和理由
+when_not_to_use: 只是通用的数据对比、不需要给出推荐 → common.overview-table；已经选定方案、讲它怎么构成 → hardware.solution-block-diagram
+frame: standard
+
+slots:
+  type: object
+  required: [title, matrix, recommendation]
+  properties:
+    title:
+      type: string
+      maxLength: 14
+      description: 标题主体（24 号加粗），说明选的是什么
+    title_suffix:
+      type: string
+      maxLength: 16
+      description: 与标题同一行的后半句（18 号），补充候选方案的范围
+    takeaway:
+      type: string
+      maxLength: 40
+      description: 副标题，一句话结论，说明选哪个、凭什么
+    matrix:
+      type: object
+      required: [columns, rows, highlight_column]
+      description: 对比表。第一列是评估维度，其余每列是一个候选方案
+      properties:
+        columns:
+          type: array
+          minItems: 3
+          maxItems: 4
+          description: 表头：第一项是「评估维度」之类的行标题，其余是候选方案名
+          items: { type: string, maxLength: 12 }
+        rows:
+          type: array
+          minItems: 3
+          maxItems: 6
+          description: 每行一个评估维度，格数必须等于表头列数
+          items:
+            type: array
+            minItems: 3
+            maxItems: 4
+            items: { type: string, maxLength: 16 }
+        highlight_column:
+          type: integer
+          minimum: 1
+          maximum: 3
+          description: 推荐方案所在的列（从 0 起，0 是行标题列，所以至少为 1）
+    recommendation:
+      type: object
+      required: [choice, reasons]
+      properties:
+        choice: { type: string, maxLength: 18, description: 推荐的方案名，与表头中的方案名一致 }
+        reasons:
+          type: array
+          minItems: 2
+          maxItems: 3
+          description: 推荐理由，每条带数字或明确的对比
+          items: { type: string, maxLength: 50 }
+
+layout:                         # 参考 body 区 1216×560
+  # 左：对比表
+  - type: component
+    component: table
+    box: [0, 0, 800, 560]
+    bind: matrix
+    props: { first_column_width: 160 }
+
+  # 右：推荐结论
+  - type: shape
+    box: [824, 0, 392, 560]
+    fill: highlight
+  - type: shape
+    box: [824, 0, 392, 4]
+    fill: highlight_strong
+  - type: text
+    box: [848, 28, 344, 20]
+    value: 推荐方案
+    style: body_strong
+    color: highlight_strong
+  - type: text
+    box: [848, 56, 344, 48]
+    bind: recommendation.choice
+    style: emphasis
+    color: primary
+  - type: shape
+    box: [848, 112, 344, 1]
+    fill: highlight_strong
+  - type: text
+    box: [848, 128, 344, 20]
+    value: 推荐理由
+    style: body_strong
+  - type: grid
+    box: [848, 156, 344, 380]
+    bind: recommendation.reasons
+    columns: 1
+    gap: 12
+    item:
+      - { type: shape, box: [0, 0, "100%", "100%"], fill: bg }
+      - { type: shape, box: [0, 0, 4, "100%"], fill: highlight_strong }
+      - { type: text, box: [18, 0, "100%-32", "100%"], bind: ., style: body, valign: middle }
+
+guidance:
+  - 表头第一项写「评估维度」，其余是候选方案；推荐方案放在最右一列，highlight_column 指向它
+  - 评估维度按重要性从上到下排，单元格写具体数字或简短结论，不要只写「好」「差」
+  - 候选方案一般 2–3 个，太多就先在备选里筛掉
+  - 推荐理由要和表格里的数字对应，不要引入表里没有的新论据

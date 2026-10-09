@@ -1,0 +1,67 @@
+id: common.summary-kpi
+name: 关键数字总结
+roles: [summary, result]
+density: talk
+tags: [测试结果, 关键指标, 总结]
+when_to_use: 用几个大数字概括测试结果或阶段成果，并在下方逐条解释这些数字
+when_not_to_use: 要对比改进前后的数据 → software.result-before-after；总结以文字要点为主 → common.summary-points
+frame: standard
+
+slots:
+  type: object
+  required: [title, kpis, notes]
+  properties:
+    title:
+      type: string
+      maxLength: 14
+      description: 标题主体（24 号加粗），说明是什么结果
+    title_suffix:
+      type: string
+      maxLength: 16
+      description: 与标题同一行的后半句（18 号），补充测试范围
+    takeaway:
+      type: string
+      maxLength: 40
+      description: 副标题，一句话结论，最好带量化收益
+    kpis:
+      type: array
+      minItems: 2
+      maxItems: 4
+      description: 关键指标，排成一行，按重要性从左到右
+      items:
+        type: object
+        required: [value, label, note]
+        properties:
+          value: { type: string, maxLength: 6, description: 数值，如 70%、3.2× }
+          label: { type: string, maxLength: 12 }
+          note: { type: string, maxLength: 36, description: 测试条件或对比基线 }
+    notes:
+      type: array
+      minItems: 2
+      maxItems: 4
+      description: 解释这些数字的来源、原因或意义
+      items: { type: string, maxLength: 110 }
+
+layout:                         # 参考 body 区 1216×560
+  # 上：关键指标卡
+  - type: grid
+    box: [0, 0, 1216, 292]
+    bind: kpis
+    columns: 4
+    gap: 24
+    item:
+      - { type: shape, box: [0, 0, "100%", "100%"], fill: surface }
+      - { type: shape, box: [0, 0, "100%", 4], fill: accent }
+      - { type: text, box: [0, 84, "100%", 36], bind: value, style: kpi, align: center }
+      - { type: text, box: [12, 136, "100%-24", 22], bind: label, style: body_strong, align: center }
+      - { type: text, box: [16, 168, "100%-32", 64], bind: note, style: detail, align: center }
+
+  # 下：解读
+  - { type: text, box: [0, 324, 1216, 24], value: 结果解读, style: emphasis, color: primary }
+  - { type: bullets, box: [0, 360, 1216, 200], bind: notes, style: body }
+
+guidance:
+  - 指标卡最好放满 4 项，少于 4 项时卡片靠左排列
+  - 指标按重要性从左到右排，第一项与 takeaway 中的数字保持一致
+  - 每张卡的说明写清测试条件或对比基线，没有基线的数字没有说服力
+  - 下方解读回答「为什么能达到这些数字」，不要重复指标本身

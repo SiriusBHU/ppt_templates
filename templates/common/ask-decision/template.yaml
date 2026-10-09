@@ -1,0 +1,88 @@
+id: common.ask-decision
+name: 决策请求与资源诉求
+roles: [ask]
+tags: [决策, 资源, 诉求]
+when_to_use: 向管理层说明为什么需要决策，并清楚列出需要批准的事项或资源诉求，可附决策期限
+when_not_to_use: 只是汇报计划和分工、不需要对方拍板 → common.next-list；要列出风险和应对措施 → common.risk-table
+frame: standard
+
+slots:
+  type: object
+  required: [title, context, asks]
+  properties:
+    title:
+      type: string
+      maxLength: 14
+      description: 标题主体（24 号加粗），说明请求什么
+    title_suffix:
+      type: string
+      maxLength: 16
+      description: 与标题同一行的后半句（18 号），补充诉求范围
+    takeaway:
+      type: string
+      maxLength: 40
+      description: 副标题，一句话说明请求和收益，最好带金额或量化收益
+    context:
+      type: array
+      minItems: 2
+      maxItems: 3
+      description: 为什么现在需要决策：背景、现状或不决策的代价
+      items: { type: string, maxLength: 60 }
+    asks:
+      type: array
+      minItems: 1
+      maxItems: 3
+      description: 需要对方批准的事项或资源
+      items:
+        type: object
+        required: [item, detail]
+        properties:
+          item: { type: string, maxLength: 20, description: 诉求事项，如「批准立项」「追加预算」 }
+          detail: { type: string, maxLength: 90, description: 具体内容，写清数量、金额或范围 }
+    deadline:
+      type: string
+      maxLength: 60
+      description: 期望的决策时间和不及时决策的影响，建议带前缀「期望决策时间：」
+
+layout:                         # 参考 body 区 1216×560
+  # 左：为什么需要决策
+  - type: text
+    box: [0, 0, 464, 24]
+    value: 决策背景
+    style: emphasis
+    color: primary
+  - type: grid
+    box: [0, 36, 464, 476]
+    bind: context
+    columns: 1
+    gap: 12
+    item:
+      - { type: shape, box: [0, 0, "100%", "100%"], fill: surface }
+      - { type: shape, box: [0, 0, 4, "100%"], fill: accent }
+      - { type: text, box: [20, 0, "100%-36", "100%"], bind: ., style: emphasis, valign: middle }
+
+  # 右：需要批准的事项
+  - type: text
+    box: [488, 0, 728, 24]
+    value: 需要的决策与资源
+    style: emphasis
+    color: primary
+  - type: grid
+    box: [488, 36, 728, 476]
+    bind: asks
+    columns: 1
+    gap: 12
+    item:
+      - { type: shape, box: [0, 0, "100%", "100%"], fill: highlight }
+      - { type: shape, box: [0, 0, 4, "100%"], fill: highlight_strong }
+      - { type: text, box: [20, "50%-36", "100%-36", 24], bind: item, style: emphasis }
+      - { type: text, box: [20, "50%-4", "100%-36", 60], bind: detail, style: body }
+
+  # 底部：决策期限
+  - { type: text, box: [0, 536, 1216, 24], bind: deadline, style: detail, valign: bottom }
+
+guidance:
+  - context 每条写一个事实或代价，最好带数字，说明「为什么是现在」
+  - asks 按重要程度排序，每项写清要批准什么、数量或金额；最多 3 项，多了说明诉求没有聚焦
+  - 诉求要具体到可以直接回答「批准 / 不批准」，不要写「希望支持」这类含糊表述
+  - deadline 写清日期和后果，如「期望决策时间：10月23日前；延期将使量产推迟一个季度」

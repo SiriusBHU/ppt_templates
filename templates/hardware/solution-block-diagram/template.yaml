@@ -1,0 +1,127 @@
+id: hardware.solution-block-diagram
+name: 硬件框图方案
+roles: [solution]
+also_fits: [system]
+density: talk
+level: system
+tags: [框图, 硬件架构, 方案]
+when_to_use: 用框图说明一个硬件方案由哪些部件组成、部件之间怎么连接，标出本次新增的部件，并配上关键参数和说明
+when_not_to_use: 要展示分层关系（接入层、服务层、硬件层）→ system.solution-layered-arch；只有软件处理流程 → software.solution-module-flow
+frame: standard
+
+slots:
+  type: object
+  required: [title, diagram, params]
+  properties:
+    title:
+      type: string
+      maxLength: 14
+      description: 标题主体（24 号加粗），说明这是什么硬件方案
+    title_suffix:
+      type: string
+      maxLength: 16
+      description: 与标题同一行的后半句（18 号），补充方案要点
+    takeaway:
+      type: string
+      maxLength: 40
+      description: 副标题，一句话结论，最好带量化收益
+    diagram:
+      type: object
+      required: [nodes]
+      description: 硬件框图。节点按 pos 的 [行, 列] 放进最多 4 行 3 列的网格；连线只连同行或同列的节点，不要连斜线
+      properties:
+        nodes:
+          type: array
+          minItems: 3
+          maxItems: 12
+          items:
+            type: object
+            required: [id, name, pos]
+            properties:
+              id: { type: string, description: 节点标识，连线用它引用节点 }
+              name: { type: string, maxLength: 14 }
+              pos:
+                type: array
+                description: "[行, 列]，行 0–3，列 0–2"
+                minItems: 2
+                maxItems: 2
+                prefixItems:
+                  - { type: integer, minimum: 0, maximum: 3 }
+                  - { type: integer, minimum: 0, maximum: 2 }
+              highlight:
+                type: boolean
+                default: false
+                description: 本次新增或改动的部件设为 true
+        edges:
+          type: array
+          maxItems: 14
+          items:
+            type: object
+            required: [from, to]
+            properties:
+              from: { type: string }
+              to: { type: string }
+              label: { type: string, maxLength: 6, description: 连线标注，如接口类型；水平连线的间距很窄，只写很短的词 }
+    params:
+      type: array
+      minItems: 3
+      maxItems: 6
+      description: 关键参数
+      items:
+        type: object
+        required: [name, value]
+        properties:
+          name: { type: string, maxLength: 8 }
+          value: { type: string, maxLength: 16 }
+    notes:
+      type: array
+      minItems: 1
+      maxItems: 3
+      description: 补充说明，其中一条写明高亮部件的含义
+      items: { type: string, maxLength: 48 }
+
+layout:                         # 参考 body 区 1216×560
+  # 左：硬件框图
+  - type: component
+    component: block-diagram
+    box: [0, 0, 760, 560]
+    bind: diagram
+
+  # 右上：关键参数
+  - type: text
+    box: [784, 0, 432, 24]
+    value: 关键参数
+    style: emphasis
+    color: primary
+  - type: grid
+    box: [784, 32, 432, 300]
+    bind: params
+    columns: 1
+    gap: 0
+    item:
+      - { type: text, box: [0, 0, 120, "100%"], bind: name, style: detail, valign: middle }
+      - { type: text, box: [128, 0, "100%-128", "100%"], bind: value, style: body_strong, valign: middle }
+      - { type: shape, box: [0, "100%-1", "100%", 1], fill: line }
+
+  # 右下：补充说明
+  - type: text
+    box: [784, 364, 432, 24]
+    value: 设计说明
+    style: emphasis
+    color: primary
+  - type: shape
+    box: [784, 396, 432, 164]
+    fill: surface
+  - type: shape
+    box: [784, 396, 4, 164]
+    fill: accent
+  - type: bullets
+    box: [804, 412, 396, 136]
+    bind: notes
+    style: body
+
+guidance:
+  - 节点按数据流向排布：同一行从左到右，同一列从上到下；连线只连同行或同列的相邻节点
+  - 只把本次真正新增或改动的部件设为 highlight，一般不超过 3 个
+  - 参数写能直接对比的规格数字（容量、带宽、功耗），名称用简称
+  - 说明里要有一条交代高亮部件的含义，另一条写方案的关键取舍

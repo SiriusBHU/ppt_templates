@@ -1,0 +1,36 @@
+title: 训练节点硬件方案
+title_suffix: 引入 DPU 卸载检查点
+takeaway: 新增 DPU 和本地缓存，检查点写入不再占用 CPU 与计算网络
+diagram:
+  nodes:
+    - { id: cpu, name: 双路 CPU, pos: [0, 0] }
+    - { id: pcie, name: PCIe 5.0 交换芯片, pos: [0, 1] }
+    - { id: gpu, name: GPU 模组 ×8, pos: [0, 2] }
+    - { id: ddr, name: DDR5 内存, pos: [1, 0] }
+    - { id: dpu, name: DPU 卸载卡, pos: [1, 1], highlight: true }
+    - { id: nvl, name: NVLink 交换芯片, pos: [1, 2] }
+    - { id: nvme, name: 本地 NVMe 缓存, pos: [2, 0], highlight: true }
+    - { id: nic, name: 400G RDMA 网卡, pos: [2, 1] }
+    - { id: ib, name: 计算网络, pos: [2, 2] }
+    - { id: store, name: 外部存储集群, pos: [3, 1] }
+  edges:
+    - { from: cpu, to: pcie, label: x16 }
+    - { from: pcie, to: gpu, label: x16 }
+    - { from: cpu, to: ddr }
+    - { from: pcie, to: dpu }
+    - { from: gpu, to: nvl }
+    - { from: ddr, to: nvme, label: 检查点下刷 }
+    - { from: dpu, to: nic }
+    - { from: nvl, to: ib }
+    - { from: nic, to: store, label: 异步复制 }
+params:
+  - { name: 计算, value: 双路共128核 }
+  - { name: GPU, value: 8卡 NVLink 全互联 }
+  - { name: 内存, value: 2TB DDR5-5600 }
+  - { name: 本地缓存, value: 8×7.68TB NVMe }
+  - { name: 网络, value: 8×400G RDMA }
+  - { name: 整机功耗, value: 约10.2kW }
+notes:
+  - 橙色部件为本次新增：DPU 卸载卡和本地缓存
+  - DPU 独立处理检查点下刷，释放 CPU 算力，也不占用计算网络带宽
+  - 本地缓存按两个检查点周期配置，容量留有30%余量

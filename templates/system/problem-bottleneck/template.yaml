@@ -1,0 +1,109 @@
+id: system.problem-bottleneck
+name: 系统瓶颈分析
+roles: [problem, analysis]
+also_fits: [hardware, software]
+density: talk
+level: system
+tags: [瓶颈, 根因, 量化指标]
+when_to_use: 说明系统当前的瓶颈：先给出现象，再用量化指标说明代价，最后拆解根因
+when_not_to_use: 只讲单个软件特性的实现缺陷、有三个并列痛点 → software.problem-pain-points；已经有解决方案、讲怎么改 → system.solution-layered-arch
+frame: standard
+
+slots:
+  type: object
+  required: [title, symptom, metrics, causes]
+  properties:
+    title:
+      type: string
+      maxLength: 14
+      description: 标题主体（24 号加粗），说明瓶颈出在哪里
+    title_suffix:
+      type: string
+      maxLength: 16
+      description: 与标题同一行的后半句（18 号），补充瓶颈的后果
+    takeaway:
+      type: string
+      maxLength: 40
+      description: 副标题，一句话结论，最好带量化代价
+    symptom:
+      type: string
+      maxLength: 60
+      description: 现象描述，一句话说清「在什么场景下出现了什么问题」
+    metrics:
+      type: array
+      minItems: 2
+      maxItems: 3
+      description: 量化指标，说明瓶颈的代价有多大
+      items:
+        type: object
+        required: [value, label, note]
+        properties:
+          value: { type: string, maxLength: 6, description: 数值，如 12%、180秒 }
+          label: { type: string, maxLength: 20, description: 指标名称 }
+          note: { type: string, maxLength: 28, description: 测量口径，如规模、时间窗口 }
+    causes:
+      type: array
+      minItems: 2
+      maxItems: 4
+      description: 导致瓶颈的根因，按影响从大到小排列
+      items:
+        type: object
+        required: [name, detail]
+        properties:
+          name: { type: string, maxLength: 14 }
+          detail: { type: string, maxLength: 80, description: 根因的机理，最好带数字 }
+
+layout:                         # 参考 body 区 1216×560
+  # 顶部：现象
+  - type: shape
+    box: [0, 0, 1216, 56]
+    fill: highlight
+  - type: shape
+    box: [0, 0, 4, 56]
+    fill: highlight_strong
+  - type: text
+    box: [20, 0, 1176, 56]
+    bind: symptom
+    style: emphasis
+    valign: middle
+
+  # 左：量化指标
+  - type: text
+    box: [0, 80, 448, 24]
+    value: 关键指标
+    style: emphasis
+    color: primary
+  - type: grid
+    box: [0, 112, 448, 448]
+    bind: metrics
+    columns: 1
+    gap: 16
+    item:
+      - { type: shape, box: [0, 0, "100%", "100%"], fill: surface }
+      - { type: shape, box: [0, 0, 4, "100%"], fill: accent }
+      - { type: text, box: [24, "50%-44", "100%-40", 40], bind: value, style: kpi, color: highlight_strong }
+      - { type: text, box: [24, "50%+2", "100%-40", 22], bind: label, style: body_strong }
+      - { type: text, box: [24, "50%+26", "100%-40", 18], bind: note, style: detail }
+
+  # 右：根因
+  - type: text
+    box: [472, 80, 744, 24]
+    value: 根因分析
+    style: emphasis
+    color: primary
+  - type: grid
+    box: [472, 112, 744, 448]
+    bind: causes
+    columns: 1
+    gap: 12
+    item:
+      - { type: shape, box: [0, 0, "100%", "100%"], fill: surface }
+      - { type: shape, box: [0, 0, 4, "100%"], fill: accent }
+      - { type: text, box: [20, "50%-32", "100%-36", 22], bind: name, style: body_strong }
+      - { type: text, box: [20, "50%-6", "100%-36", 40], bind: detail, style: body, color: muted }
+
+guidance:
+  - symptom 只写现象和场景，不写原因；原因放进根因卡片
+  - 指标数值用对业务有感知的口径（时间占比、停顿时长、利用率），不要写内部计数器
+  - 根因按影响从大到小排，每条写清「机理」，最好带数字
+  - 指标和根因的数字要与 takeaway 保持一致

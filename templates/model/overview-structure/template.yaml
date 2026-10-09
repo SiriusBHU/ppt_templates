@@ -1,0 +1,114 @@
+id: model.overview-structure
+name: 模型结构总览
+roles: [overview]
+also_fits: [workload]
+density: talk
+tags: [模型, 结构, 参数]
+when_to_use: 用框图展示模型的整体结构和关键模块，并配上参数规格与补充说明
+when_not_to_use: 要从模型特征推导对系统的需求 → workload.requirement-matrix；展示软硬件系统的分层架构 → system.solution-layered-arch
+frame: standard
+
+slots:
+  type: object
+  required: [title, diagram, specs]
+  properties:
+    title:
+      type: string
+      maxLength: 14
+      description: 标题主体（24 号加粗），说明是哪个模型的结构
+    title_suffix:
+      type: string
+      maxLength: 16
+      description: 与标题同一行的后半句（18 号），补充结构特点
+    takeaway:
+      type: string
+      maxLength: 40
+      description: 副标题，一句话说明这个结构的关键设计
+    diagram:
+      type: object
+      description: 模型结构框图；节点按 [行, 列] 放进网格，最多 5 行 3 列，边只连同行或同列的相邻节点
+      required: [nodes]
+      properties:
+        nodes:
+          type: array
+          minItems: 3
+          maxItems: 15
+          items:
+            type: object
+            required: [id, name, pos]
+            properties:
+              id: { type: string }
+              name: { type: string, maxLength: 14, description: 模块名称 }
+              pos:
+                type: array
+                minItems: 2
+                maxItems: 2
+                items: { type: integer, minimum: 0, maximum: 4 }
+              highlight: { type: boolean, description: 关键创新或重点模块设为 true，一般不超过 2 个 }
+        edges:
+          type: array
+          items:
+            type: object
+            required: [from, to]
+            properties:
+              from: { type: string }
+              to: { type: string }
+              label: { type: string, maxLength: 6 }
+    specs:
+      type: array
+      minItems: 3
+      maxItems: 6
+      description: 关键规格，从上到下排列
+      items:
+        type: object
+        required: [name, value]
+        properties:
+          name: { type: string, maxLength: 8, description: 规格名称，如参数量、层数 }
+          value: { type: string, maxLength: 16, description: 规格取值，带单位 }
+    notes:
+      type: array
+      minItems: 1
+      maxItems: 3
+      description: 补充说明，每条一句话
+      items: { type: string, maxLength: 50 }
+
+layout:                         # 参考 body 区 1216×560
+  # 左：模型结构框图
+  - type: component
+    component: block-diagram
+    box: [0, 0, 760, 560]
+    bind: diagram
+
+  # 右上：关键规格
+  - type: text
+    box: [784, 0, 432, 24]
+    value: 关键规格
+    style: emphasis
+    color: primary
+  - type: grid
+    box: [784, 32, 432, 348]
+    bind: specs
+    columns: 1
+    gap: 8
+    item:
+      - { type: shape, box: [0, 0, "100%", "100%"], fill: surface }
+      - { type: shape, box: [0, 0, 4, "100%"], fill: accent }
+      - { type: text, box: [20, 0, 130, "100%"], bind: name, style: detail, valign: middle }
+      - { type: text, box: [160, 0, "100%-176", "100%"], bind: value, style: body_strong, valign: middle }
+
+  # 右下：补充说明
+  - type: text
+    box: [784, 396, 432, 24]
+    value: 补充说明
+    style: emphasis
+    color: primary
+  - type: bullets
+    box: [784, 428, 432, 132]
+    bind: notes
+    style: body
+
+guidance:
+  - 框图自上而下表示数据流向，主干放中间一列，辅助模块放在两侧同一行
+  - 只高亮真正的创新点或本页要强调的模块，一般不超过 2 个
+  - 连线只连同行或同列的相邻节点，不要跨过其他节点；连线标签不超过 6 个字
+  - 规格选与系统设计最相关的：参数量、层数、上下文长度、专家数等

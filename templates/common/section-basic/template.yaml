@@ -1,0 +1,37 @@
+id: common.section-basic
+name: 基础章节页
+roles: [section]
+density: talk
+tags: [章节, 分隔]
+when_to_use: 汇报中分隔各部分的整页标题，写明序号、章节名和一句话说明
+when_not_to_use: 汇报第一页 → common.cover-basic；列出所有部分 → common.agenda-list
+frame: none
+
+slots:
+  type: object
+  required: [num, title]
+  properties:
+    num:
+      type: string
+      maxLength: 2
+      description: 章节序号，如 02，与目录一致
+    title:
+      type: string
+      maxLength: 20
+      description: 章节标题（24 号加粗），单行
+    subtitle:
+      type: string
+      maxLength: 30
+      description: 一句话说明本章要讲什么（18 号），单行
+
+layout:                         # frame: none，坐标以画布左上角为原点，画布 1280×720
+  - { type: shape, box: [0, 0, 1280, 720], fill: primary }
+  - { type: shape, box: [0, 0, 16, 720], fill: accent }
+  - { type: text, box: [96, 270, 600, 32], bind: num, style: kpi, color: line }
+  - { type: text, box: [96, 318, 1088, 36], bind: title, style: title, color: on_primary }
+  - { type: shape, box: [96, 376, 64, 4], fill: accent }
+  - { type: text, box: [96, 404, 1088, 30], bind: subtitle, style: subtitle, color: on_primary }
+
+guidance:
+  - 序号和章节名与目录页保持一致
+  - 副标题交代本章要回答的问题，不超过一行

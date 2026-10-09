@@ -1,0 +1,55 @@
+id: common.agenda-list
+name: 目录列表
+roles: [agenda]
+density: talk
+tags: [目录, 汇报]
+when_to_use: 汇报开头列出各部分的序号、名称和一句话说明
+when_not_to_use: 某一部分开始前的整页分隔 → common.section-basic
+frame: standard
+
+slots:
+  type: object
+  required: [title, items]
+  properties:
+    title:
+      type: string
+      maxLength: 14
+      description: 标题主体（24 号加粗），通常写「目录」
+    title_suffix:
+      type: string
+      maxLength: 16
+      description: 与标题同一行的后半句（18 号）
+    takeaway:
+      type: string
+      maxLength: 40
+      description: 副标题，一句话概括汇报的整体脉络
+    items:
+      type: array
+      minItems: 3
+      maxItems: 6
+      description: 汇报的各个部分，按顺序排列
+      items:
+        type: object
+        required: [num, name, note]
+        properties:
+          num: { type: string, maxLength: 2, description: 序号，如 01 }
+          name: { type: string, maxLength: 14 }
+          note: { type: string, maxLength: 40, description: 这一部分要讲清什么 }
+
+layout:                         # 参考 body 区 1216×560
+  - type: grid
+    box: [0, 0, 1216, 560]
+    bind: items
+    columns: 1
+    gap: 12
+    item:
+      - { type: shape, box: [0, 0, "100%", "100%"], fill: surface }
+      - { type: shape, box: [0, 0, 4, "100%"], fill: accent }
+      - { type: text, box: [32, 0, 64, "100%"], bind: num, style: kpi, valign: middle }
+      - { type: text, box: [112, "50%-26", "100%-136", 24], bind: name, style: emphasis, valign: bottom }
+      - { type: text, box: [112, "50%+4", "100%-136", 18], bind: note, style: detail }
+
+guidance:
+  - 名称用名词短语，如「系统瓶颈分析」，不写整句
+  - 说明写这一部分要回答的问题或给出的结论，不要重复名称
+  - 部分之间的顺序与后面章节页的序号保持一致

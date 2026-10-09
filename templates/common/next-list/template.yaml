@@ -1,0 +1,69 @@
+id: common.next-list
+name: 下一步计划清单
+roles: [next]
+tags: [下一步, 计划, 责任人]
+when_to_use: 列出下一阶段要做的事项，明确每项的责任人和完成时间，可附需要的支持
+when_not_to_use: 需要对方批准资源或决策 → common.ask-decision；按时间轴展示长期规划 → system.roadmap-stages；列的是风险而不是行动 → common.risk-table
+frame: standard
+
+slots:
+  type: object
+  required: [title, items]
+  properties:
+    title:
+      type: string
+      maxLength: 14
+      description: 标题主体（24 号加粗），说明是哪个阶段的计划
+    title_suffix:
+      type: string
+      maxLength: 16
+      description: 与标题同一行的后半句（18 号），补充时间范围
+    takeaway:
+      type: string
+      maxLength: 40
+      description: 副标题，一句话说明下一阶段的目标，最好带时间和量化指标
+    items:
+      type: array
+      minItems: 2
+      maxItems: 6
+      description: 按时间先后排列的下一步事项
+      items:
+        type: object
+        required: [task, owner, due]
+        properties:
+          task: { type: string, maxLength: 50, description: 要做的事，以动词开头，写清交付物 }
+          owner: { type: string, maxLength: 10, description: 责任人或责任部门 }
+          due: { type: string, maxLength: 10, description: 完成时间，如 10月31日 }
+    support:
+      type: string
+      maxLength: 60
+      description: 需要的支持，建议带前缀「需要的支持：」
+
+layout:                         # 参考 body 区 1216×560
+  # 表头
+  - { type: shape, box: [0, 0, 1216, 36], fill: primary }
+  - { type: text, box: [20, 0, 700, 36], value: 事项, style: body_strong, color: on_primary, valign: middle }
+  - { type: text, box: [764, 0, 200, 36], value: 责任人, style: body_strong, color: on_primary, valign: middle }
+  - { type: text, box: [988, 0, 212, 36], value: 完成时间, style: body_strong, color: on_primary, valign: middle }
+
+  # 表格行：每个事项一行
+  - type: grid
+    box: [0, 44, 1216, 452]
+    bind: items
+    columns: 1
+    gap: 8
+    item:
+      - { type: shape, box: [0, 0, "100%", "100%"], fill: surface }
+      - { type: shape, box: [0, 0, 4, "100%"], fill: accent }
+      - { type: text, box: [20, 0, 700, "100%"], bind: task, style: body_strong, valign: middle }
+      - { type: text, box: [764, 0, 200, "100%"], bind: owner, style: body, valign: middle }
+      - { type: text, box: [988, 0, 212, "100%"], bind: due, style: body_strong, color: accent, valign: middle }
+
+  # 底部：需要的支持
+  - { type: text, box: [0, 512, 1216, 48], bind: support, style: emphasis, color: primary, valign: middle }
+
+guidance:
+  - 事项按完成时间先后排列，每项以动词开头并写清交付物，不要写「推进」「跟进」这类无法验收的词
+  - 每项只有一个责任人，完成时间写到具体日期
+  - 事项超过 6 个时合并同类项，或拆成多页
+  - support 只写真正需要对方给的资源或决策，没有就不填

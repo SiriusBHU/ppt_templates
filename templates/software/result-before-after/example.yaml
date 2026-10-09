@@ -1,0 +1,9 @@
+title: 检查点优化效果
+title_suffix: 四项核心指标全面改善
+takeaway: 检查点写入耗时缩短93%，万卡训练的有效算力占比提升到96%
+metrics:
+  - { name: 检查点写入耗时, before: 180秒, after: 12秒, delta: 缩短93% }
+  - { name: 故障恢复时间, before: 25分钟, after: 7分钟, delta: 缩短72% }
+  - { name: 数据加载吞吐, before: 1.2TB/s, after: 3.8TB/s, delta: 提升3.2倍 }
+  - { name: 元数据 P99 延迟, before: 50ms, after: 5ms, delta: 降低90% }
+summary: 训练有效算力占比从82%提升到96%，万卡集群每月可多完成约一轮完整训练

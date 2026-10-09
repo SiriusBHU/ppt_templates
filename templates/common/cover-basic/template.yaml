@@ -1,0 +1,46 @@
+id: common.cover-basic
+name: 基础封面
+roles: [cover]
+density: talk
+tags: [封面, 汇报]
+when_to_use: 汇报或评审材料的第一页，写明主题、副标题、汇报人和日期
+when_not_to_use: 分隔各部分的整页标题 → common.section-basic
+frame: none
+
+slots:
+  type: object
+  required: [title, subtitle, presenter, date]
+  properties:
+    title:
+      type: string
+      maxLength: 28
+      description: 主标题（24 号加粗），说明汇报主题，不超过两行
+    subtitle:
+      type: string
+      maxLength: 36
+      description: 副标题（18 号），补充汇报的范围或目的
+    presenter:
+      type: string
+      maxLength: 20
+      description: 汇报人和所在部门
+    date:
+      type: string
+      maxLength: 16
+      description: 汇报日期，如 2026年10月
+
+layout:                         # frame: none，坐标以画布左上角为原点，画布 1280×720
+  # 左：深色标题区
+  - { type: shape, box: [0, 0, 576, 720], fill: primary }
+  - { type: shape, box: [576, 0, 12, 720], fill: accent }
+  - { type: text, box: [64, 200, 448, 130], bind: title, style: title, color: on_primary, valign: bottom }
+  - { type: shape, box: [64, 350, 64, 4], fill: accent }
+  - { type: text, box: [64, 374, 448, 90], bind: subtitle, style: subtitle, color: on_primary }
+
+  # 左下：汇报人和日期
+  - { type: text, box: [64, 620, 448, 24], bind: presenter, style: emphasis, color: on_primary }
+  - { type: text, box: [64, 652, 448, 20], bind: date, style: body, color: on_primary }
+
+guidance:
+  - 主标题写主题而不是文种，如「AI 训练集群存储系统技术方案」，不要写「汇报材料」
+  - 副标题用一句话交代范围或目的，不要重复主标题
+  - 汇报人写部门加姓名，日期写到月

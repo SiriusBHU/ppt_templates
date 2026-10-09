@@ -1,0 +1,61 @@
+id: trend.trend-points
+name: 趋势要点
+roles: [trend]
+density: talk
+tags: [趋势, 依据, 影响]
+when_to_use: 归纳行业或技术的几个关键趋势，每条给出事实依据，并说明对我们的影响
+when_not_to_use: 对比各家玩家的路线和优劣势 → competition.overview-landscape；只有几个关键数字、不展开依据 → common.summary-kpi
+frame: standard
+
+slots:
+  type: object
+  required: [title, trends]
+  properties:
+    title:
+      type: string
+      maxLength: 14
+      description: 标题主体（24 号加粗），说明这是什么领域的趋势
+    title_suffix:
+      type: string
+      maxLength: 16
+      description: 与标题同一行的后半句（18 号），补充趋势的总体判断
+    takeaway:
+      type: string
+      maxLength: 40
+      description: 副标题，一句话结论，点明这些趋势共同指向什么
+    trends:
+      type: array
+      minItems: 3
+      maxItems: 4
+      description: 按重要性从上到下排列的趋势，每条一行
+      items:
+        type: object
+        required: [name, evidence, impact]
+        properties:
+          name: { type: string, maxLength: 12, description: 趋势名称，用短语概括变化 }
+          evidence: { type: string, maxLength: 100, description: 支撑趋势的事实依据，最好带数字和时间 }
+          impact: { type: string, maxLength: 70, description: 这条趋势对我们的产品或方案意味着什么 }
+
+layout:                         # 参考 body 区 1216×560；每条趋势一行，高度随条数自动均分
+  - type: grid
+    box: [0, 0, 1216, 560]
+    bind: trends
+    columns: 1
+    gap: 12
+    item:
+      # 左：趋势名称 + 依据
+      - { type: shape, box: [0, 0, 716, "100%"], fill: surface }
+      - { type: shape, box: [0, 0, 4, "100%"], fill: accent }
+      - { type: text, box: [24, 0, 176, "100%"], bind: name, style: emphasis, color: primary, valign: middle }
+      - { type: shape, box: [212, 16, 1, "100%-32"], fill: line }
+      - { type: text, box: [228, 0, 468, "100%"], bind: evidence, style: body, valign: middle }
+      # 右：对我们的影响
+      - { type: shape, box: [728, 0, 488, "100%"], fill: highlight }
+      - { type: shape, box: [728, 0, 4, "100%"], fill: highlight_strong }
+      - { type: text, box: [748, 12, 452, 16], value: 对我们的影响, style: detail, color: highlight_strong }
+      - { type: text, box: [748, 32, 452, "100%-44"], bind: impact, style: body_strong, valign: middle }
+
+guidance:
+  - 趋势按对我们影响从大到小排列，名称用短语，不写成完整句子
+  - 依据写客观事实（数据、事件、时间），不写判断；影响才写判断
+  - 影响要落到我们的产品、方案或资源上，不要重复趋势本身

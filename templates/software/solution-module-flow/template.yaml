@@ -1,0 +1,112 @@
+id: software.solution-module-flow
+name: 模块处理流程方案
+roles: [solution]
+also_fits: [system]
+density: talk
+level: module
+tags: [模块, 流程, 方案]
+when_to_use: 介绍单个软件模块的内部处理流程，标出本次新增或改动的节点，并配上关键设计
+when_not_to_use: 讲系统整体的分层架构 → system.solution-layered-arch；只讲问题、不讲方案 → software.problem-pain-points
+frame: standard
+
+slots:
+  type: object
+  required: [title, flow, design_points]
+  properties:
+    title:
+      type: string
+      maxLength: 14
+      description: 标题主体（24 号加粗），说明这是什么方案
+    title_suffix:
+      type: string
+      maxLength: 16
+      description: 与标题同一行的后半句（18 号），补充方案要点
+    takeaway:
+      type: string
+      maxLength: 40
+      description: 副标题，一句话结论，最好带量化收益
+    flow:
+      type: object
+      required: [nodes]
+      description: 处理流程图，节点放在 3 行 4 列的网格里，按 pos 的 [行, 列] 排布，连线带箭头
+      properties:
+        nodes:
+          type: array
+          minItems: 4
+          maxItems: 12
+          items:
+            type: object
+            required: [id, name, pos]
+            properties:
+              id: { type: string, description: 节点标识，连线用它引用节点 }
+              name: { type: string, maxLength: 8 }
+              pos:
+                type: array
+                minItems: 2
+                maxItems: 2
+                description: "[行, 列]，行 0–2，列 0–3，同一位置只能放一个节点"
+                prefixItems:
+                  - { type: integer, minimum: 0, maximum: 2 }
+                  - { type: integer, minimum: 0, maximum: 3 }
+              highlight:
+                type: boolean
+                default: false
+                description: 本次新增或改动的节点设为 true
+        edges:
+          type: array
+          description: 节点之间的连线，从 from 指向 to
+          items:
+            type: object
+            required: [from, to]
+            properties:
+              from: { type: string }
+              to: { type: string }
+              label: { type: string, maxLength: 5, description: 连线说明，可选 }
+    design_points:
+      type: array
+      minItems: 2
+      maxItems: 3
+      description: 支撑方案的关键设计
+      items:
+        type: object
+        required: [name, detail]
+        properties:
+          name: { type: string, maxLength: 10 }
+          detail: { type: string, maxLength: 100 }
+
+layout:                         # 参考 body 区 1216×560
+  # 左：处理流程图
+  - type: text
+    box: [0, 0, 784, 24]
+    value: 处理流程
+    style: emphasis
+    color: primary
+  - type: component
+    component: block-diagram
+    box: [0, 40, 784, 480]
+    bind: flow
+  - { type: shape, box: [672, 542, 12, 12], fill: highlight, line: highlight_strong }
+  - { type: text, box: [690, 538, 94, 20], value: 本次新增 / 改动, style: caption, align: right }
+
+  # 右：关键设计
+  - type: text
+    box: [808, 0, 408, 24]
+    value: 关键设计
+    style: emphasis
+    color: primary
+  - type: grid
+    box: [808, 40, 408, 520]
+    bind: design_points
+    columns: 1
+    gap: 12
+    item:
+      - { type: shape, box: [0, 0, "100%", "100%"], fill: surface }
+      - { type: shape, box: [0, 0, 4, "100%"], fill: accent }
+      - { type: text, box: [20, 16, "100%-36", 22], bind: name, style: emphasis, color: primary }
+      - { type: text, box: [20, 48, "100%-36", "100%-60"], bind: detail, style: body }
+
+guidance:
+  - 节点按处理顺序排布，可以走蛇形：第一行从左到右，第二行从右到左，依此类推，让每条连线只连相邻节点
+  - 只把本次真正新增或改动的节点设为 highlight，一般不超过 3 个
+  - 每条关键设计写清「怎么做」和「解决什么」，最好带数字
+  - takeaway 里的数字要在关键设计中有对应

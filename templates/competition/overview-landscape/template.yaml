@@ -1,0 +1,71 @@
+id: competition.overview-landscape
+name: 竞争格局总览
+roles: [overview, benchmark]
+density: talk
+tags: [竞品, 定位, 优劣势]
+when_to_use: 在一页内展示主要竞争对手的定位、优势和劣势，并给出对我们的启示
+when_not_to_use: 只拿一个对象逐项对标指标 → 该对象所在主题的 benchmark 页，或 common.overview-table；讲外部技术方向 → trend.trend-points
+frame: standard
+
+slots:
+  type: object
+  required: [title, players, insight]
+  properties:
+    title:
+      type: string
+      maxLength: 14
+      description: 标题主体（24 号加粗），说明是哪个领域的竞争格局
+    title_suffix:
+      type: string
+      maxLength: 16
+      description: 与标题同一行的后半句（18 号），补充范围或时间
+    takeaway:
+      type: string
+      maxLength: 40
+      description: 副标题，一句话概括格局特点
+    players:
+      type: array
+      minItems: 3
+      maxItems: 6
+      description: 主要玩家，按重要性从上到下排列，每家一行
+      items:
+        type: object
+        required: [name, position, strength, weakness]
+        properties:
+          name: { type: string, maxLength: 12, description: 玩家名称 }
+          position: { type: string, maxLength: 18, description: 一句话定位或路线 }
+          strength: { type: string, maxLength: 70, description: 主要优势 }
+          weakness: { type: string, maxLength: 70, description: 主要劣势或短板 }
+    insight:
+      type: string
+      maxLength: 70
+      description: 格局给我们的启示，一句话
+
+layout:                         # 参考 body 区 1216×560；每家一行，高度随家数自动均分
+  # 列标题
+  - { type: text, box: [24, 0, 240, 20], value: 玩家与定位, style: body_strong, color: primary }
+  - { type: text, box: [288, 0, 432, 20], value: 优势, style: body_strong, color: accent }
+  - { type: text, box: [756, 0, 444, 20], value: 劣势, style: body_strong, color: highlight_strong }
+
+  - type: grid
+    box: [0, 28, 1216, 460]
+    bind: players
+    columns: 1
+    gap: 8
+    item:
+      - { type: shape, box: [0, 0, "100%", "100%"], fill: surface }
+      - { type: shape, box: [0, 0, 4, "100%"], fill: accent }
+      - { type: text, box: [24, "50%-24", 240, 24], bind: name, style: emphasis, color: primary }
+      - { type: text, box: [24, "50%+2", 240, 16], bind: position, style: detail }
+      - { type: text, box: [288, 0, 432, "100%"], bind: strength, style: body, valign: middle }
+      - { type: text, box: [756, 0, 444, "100%"], bind: weakness, style: body, valign: middle }
+
+  # 底部：启示
+  - { type: shape, box: [0, 504, 1216, 56], fill: highlight }
+  - { type: shape, box: [0, 504, 4, 56], fill: highlight_strong }
+  - { type: text, box: [24, 504, 1176, 56], bind: insight, style: emphasis, valign: middle }
+
+guidance:
+  - 玩家按与我们竞争的激烈程度排序，一般 4–6 家；只有 3 家时每行会变高，文字保持不变
+  - 定位写路线或产品形态，不写公司简介；优势和劣势各写最关键的一两点，带事实或数字
+  - 启示要落到我们的机会或动作上，不要只重复格局描述

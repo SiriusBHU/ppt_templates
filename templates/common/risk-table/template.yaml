@@ -1,0 +1,68 @@
+id: common.risk-table
+name: 风险与应对表
+roles: [risk]
+tags: [风险, 应对, 责任人]
+when_to_use: 以表格逐项列出项目或方案的主要风险、等级、应对措施和责任人
+when_not_to_use: 要请对方拍板或批准资源 → common.ask-decision；列的是后续行动而不是风险 → common.next-list
+frame: standard
+
+slots:
+  type: object
+  required: [title, risks]
+  properties:
+    title:
+      type: string
+      maxLength: 14
+      description: 标题主体（24 号加粗），说明是什么对象的风险
+    title_suffix:
+      type: string
+      maxLength: 16
+      description: 与标题同一行的后半句（18 号），补充范围
+    takeaway:
+      type: string
+      maxLength: 40
+      description: 副标题，一句话说明整体风险判断，最好带高风险项数量
+    risks:
+      type: array
+      minItems: 2
+      maxItems: 6
+      description: 按风险等级从高到低排列的风险项
+      items:
+        type: object
+        required: [risk, level, mitigation, owner]
+        properties:
+          risk: { type: string, maxLength: 36, description: 风险描述，写清是什么可能出问题 }
+          level:
+            type: string
+            enum: [高, 中, 低]
+            description: 风险等级
+          mitigation: { type: string, maxLength: 90, description: 应对措施，写清怎么做和何时完成 }
+          owner: { type: string, maxLength: 8, description: 责任人或责任部门 }
+
+layout:                         # 参考 body 区 1216×560
+  # 表头
+  - { type: shape, box: [0, 0, 1216, 36], fill: primary }
+  - { type: text, box: [20, 0, 320, 36], value: 风险, style: body_strong, color: on_primary, valign: middle }
+  - { type: text, box: [356, 0, 72, 36], value: 等级, style: body_strong, color: on_primary, align: center, valign: middle }
+  - { type: text, box: [452, 0, 560, 36], value: 应对措施, style: body_strong, color: on_primary, valign: middle }
+  - { type: text, box: [1036, 0, 164, 36], value: 责任人, style: body_strong, color: on_primary, valign: middle }
+
+  # 表格行：每个风险一行
+  - type: grid
+    box: [0, 44, 1216, 516]
+    bind: risks
+    columns: 1
+    gap: 8
+    item:
+      - { type: shape, box: [0, 0, "100%", "100%"], fill: surface }
+      - { type: shape, box: [0, 0, 4, "100%"], fill: accent }
+      - { type: text, box: [20, 0, 320, "100%"], bind: risk, style: body_strong, valign: middle }
+      - { type: text, box: [356, 0, 72, "100%"], bind: level, style: body_strong, color: highlight_strong, align: center, valign: middle }
+      - { type: text, box: [452, 0, 560, "100%"], bind: mitigation, style: body, valign: middle }
+      - { type: text, box: [1036, 0, 164, "100%"], bind: owner, style: body, valign: middle }
+
+guidance:
+  - 按风险等级从高到低排，把最需要关注的放在最上面
+  - risk 写「什么可能出问题」，不要只写名词；mitigation 写「怎么做、何时完成」，不要写「加强管理」这类空话
+  - 每个风险只对应一个责任人，写具体的人或部门
+  - 风险项超过 6 个时，只保留高、中风险，其余放进附录

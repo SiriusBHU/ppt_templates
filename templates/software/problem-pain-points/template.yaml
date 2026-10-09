@@ -1,0 +1,61 @@
+id: software.problem-pain-points
+name: 软件实现痛点
+roles: [problem]
+also_fits: [system]
+density: talk
+level: module
+tags: [问题, 痛点, 实现]
+when_to_use: 讲清软件实现中的三个具体问题，每个问题配上现象说明和量化影响，作为方案页之前的铺垫
+when_not_to_use: 讲系统级的性能瓶颈和根因 → system.problem-bottleneck；问题多于三个或需要逐项展开分析 → common.overview-table
+frame: standard
+
+slots:
+  type: object
+  required: [title, points]
+  properties:
+    title:
+      type: string
+      maxLength: 14
+      description: 标题主体（24 号加粗），说明这是什么问题
+    title_suffix:
+      type: string
+      maxLength: 16
+      description: 与标题同一行的后半句（18 号），补充问题要点
+    takeaway:
+      type: string
+      maxLength: 40
+      description: 副标题，一句话结论，最好带量化影响
+    points:
+      type: array
+      minItems: 3
+      maxItems: 3
+      description: 三个并列的实现问题，从左到右排列
+      items:
+        type: object
+        required: [name, detail, impact]
+        properties:
+          name: { type: string, maxLength: 12, description: 问题名称，点出症结 }
+          detail: { type: string, maxLength: 100, description: 现象和原因，说清在什么场景下、怎么出现的 }
+          impact: { type: string, maxLength: 9, description: 量化影响，如「损失算力8%」「恢复25分钟」 }
+
+layout:                         # 参考 body 区 1216×560
+  - type: grid
+    box: [0, 0, 1216, 560]
+    bind: points
+    columns: 3
+    gap: 24
+    item:
+      - { type: shape, box: [0, 0, "100%", "100%"], fill: surface }
+      - { type: shape, box: [0, 0, "100%", 4], fill: accent }
+      - { type: text, box: [20, 40, "100%-40", 24], bind: name, style: emphasis, color: primary }
+      - { type: shape, box: [20, 78, 32, 3], fill: accent }
+      - { type: text, box: [20, 112, "100%-40", 18], value: 问题现象, style: detail }
+      - { type: text, box: [20, 140, "100%-40", 140], bind: detail, style: body }
+      - { type: shape, box: [0, 308, "100%", 252], fill: highlight }
+      - { type: text, box: [20, 332, "100%-40", 18], value: 量化影响, style: detail }
+      - { type: text, box: [20, 360, "100%-40", 160], bind: impact, style: kpi, color: highlight_strong, align: center, valign: middle }
+
+guidance:
+  - 三个问题要并列且互不重叠，按严重程度或在流程中出现的先后排列
+  - detail 写清「在什么场景下」和「为什么会这样」，不要只写结论
+  - impact 必须是可量化的数字，并与 takeaway 中的数字保持一致

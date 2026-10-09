@@ -1,0 +1,23 @@
+title: 大模型训练负载需求
+title_suffix: 对存储系统的六项要求
+takeaway: 检查点写入和故障恢复读取是最严苛的两项，决定存储带宽下限
+workload: 千亿参数 MoE 模型预训练（4096 卡集群，持续训练 60 天）
+items:
+  - feature: 检查点写入
+    value: 单次 2.4TB，每30分钟一次
+    requirement: 聚合写带宽不低于 800GB/s，写入期间不阻塞训练，单次落盘时间控制在 3 秒以内，并支持增量检查点
+  - feature: 故障恢复读取
+    value: 日均中断 2 至 3 次
+    requirement: 全量检查点 5 分钟内加载完成，读带宽不低于 1TB/s，恢复期间不影响其他任务
+  - feature: 训练数据读取
+    value: 4096 路并发随机读，128KB
+    requirement: 随机读不低于 2000 万 IOPS，尾延迟低于 5ms，避免 GPU 等待数据，数据加载与计算完全重叠
+  - feature: 元数据操作
+    value: 每秒 80 万次 open / stat
+    requirement: 元数据服务分布式扩展，单目录支持亿级文件，热点目录不出现单点瓶颈
+  - feature: 多任务并发
+    value: 同时运行 20 个以上任务
+    requirement: 支持按任务做带宽和 IOPS 的 QoS 保障，保证关键任务带宽下限不被挤占
+  - feature: 数据集规模
+    value: 单数据集 3PB，持续增长
+    requirement: 冷热数据自动分层，热数据留在 NVMe，单位容量成本较全闪降低 40%

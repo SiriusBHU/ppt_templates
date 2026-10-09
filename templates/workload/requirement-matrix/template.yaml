@@ -1,0 +1,70 @@
+id: workload.requirement-matrix
+name: 负载特征与系统需求
+roles: [requirement, analysis]
+also_fits: [system, hardware]
+density: talk
+tags: [负载, 特征, 需求]
+when_to_use: 把某类负载的关键特征量化，并逐条推导出对系统或硬件的需求
+when_not_to_use: 需求已确定、要在多个方案间选择 → hardware.selection-matrix；只讲模型结构和参数 → model.overview-structure
+frame: standard
+
+slots:
+  type: object
+  required: [title, workload, items]
+  properties:
+    title:
+      type: string
+      maxLength: 14
+      description: 标题主体（24 号加粗），说明分析的是什么负载的需求
+    title_suffix:
+      type: string
+      maxLength: 16
+      description: 与标题同一行的后半句（18 号），补充分析视角
+    takeaway:
+      type: string
+      maxLength: 40
+      description: 副标题，一句话结论，点明最关键的需求
+    workload:
+      type: string
+      maxLength: 40
+      description: 负载名称和规模，如「千亿参数 MoE 模型预训练（4096 卡）」
+    items:
+      type: array
+      minItems: 3
+      maxItems: 6
+      description: 按重要性从上到下排列的负载特征，每条一行
+      items:
+        type: object
+        required: [feature, value, requirement]
+        properties:
+          feature: { type: string, maxLength: 12, description: 负载特征名称 }
+          value: { type: string, maxLength: 24, description: 特征的量化值，带单位 }
+          requirement: { type: string, maxLength: 80, description: 由该特征推出的、对系统的具体需求，最好带指标 }
+
+layout:                         # 参考 body 区 1216×560；每个特征一行，高度随条数自动均分
+  # 顶部：负载名称
+  - { type: shape, box: [0, 0, 1216, 40], fill: primary }
+  - { type: text, box: [20, 0, 1176, 40], bind: workload, style: emphasis, color: on_primary, valign: middle }
+
+  # 列标题
+  - { type: text, box: [20, 52, 240, 16], value: 负载特征, style: detail }
+  - { type: text, box: [270, 52, 260, 16], value: 量化值, style: detail }
+  - { type: text, box: [600, 52, 600, 16], value: 对系统的需求, style: detail }
+
+  - type: grid
+    box: [0, 76, 1216, 484]
+    bind: items
+    columns: 1
+    gap: 10
+    item:
+      - { type: shape, box: [0, 0, "100%", "100%"], fill: surface }
+      - { type: shape, box: [0, 0, 4, "100%"], fill: accent }
+      - { type: text, box: [20, 0, 236, "100%"], bind: feature, style: body_strong, valign: middle }
+      - { type: text, box: [270, 0, 260, "100%"], bind: value, style: body_strong, color: accent, valign: middle }
+      - { type: text, box: [544, 0, 32, "100%"], value: "→", style: emphasis, color: muted, align: center, valign: middle }
+      - { type: text, box: [600, 0, 600, "100%"], bind: requirement, style: body, valign: middle }
+
+guidance:
+  - 特征按对系统影响从大到小排列，只写能量化的特征，每条特征对应一条需求
+  - 量化值带单位和条件（如「每30分钟一次」），需求写成可验收的指标，而不是「需要高性能」
+  - 需求只写结论，推导过程放备注或下一页

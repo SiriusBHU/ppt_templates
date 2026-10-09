@@ -1,0 +1,76 @@
+id: software.result-before-after
+name: 改进前后对比
+roles: [result]
+also_fits: [system, hardware]
+density: talk
+tags: [效果, 收益, 对比]
+when_to_use: 用改进前、改进后和提升幅度逐项展示几个关键指标的变化，说明方案带来的可量化收益
+when_not_to_use: 只展示几个孤立的关键数字、不对比前后 → common.summary-kpi；需要对比多个方案或竞品 → common.overview-table
+frame: standard
+
+slots:
+  type: object
+  required: [title, metrics]
+  properties:
+    title:
+      type: string
+      maxLength: 14
+      description: 标题主体（24 号加粗），说明这是什么效果
+    title_suffix:
+      type: string
+      maxLength: 16
+      description: 与标题同一行的后半句（18 号），补充效果要点
+    takeaway:
+      type: string
+      maxLength: 40
+      description: 副标题，一句话结论，最好带最突出的一个数字
+    metrics:
+      type: array
+      minItems: 2
+      maxItems: 4
+      description: 从上到下的指标行，按重要程度排列
+      items:
+        type: object
+        required: [name, before, after, delta]
+        properties:
+          name: { type: string, maxLength: 12, description: 指标名称，需要时带单位 }
+          before: { type: string, maxLength: 10, description: 改进前的数值，带单位 }
+          after: { type: string, maxLength: 10, description: 改进后的数值，带单位 }
+          delta: { type: string, maxLength: 8, description: 提升幅度，如 缩短93%、提升3.2倍 }
+    summary:
+      type: string
+      maxLength: 50
+      description: 页面底部的一句总结，可选
+
+layout:                         # 参考 body 区 1216×560
+  # 表头
+  - { type: text, box: [24, 0, 300, 20], value: 指标, style: detail }
+  - { type: text, box: [340, 0, 200, 20], value: 改进前, style: detail, align: center }
+  - { type: text, box: [616, 0, 200, 20], value: 改进后, style: detail, align: center }
+  - { type: text, box: [880, 0, 336, 20], value: 提升幅度, style: detail, align: center }
+  - { type: shape, box: [0, 26, 1216, 1], fill: line }
+
+  # 指标行
+  - type: grid
+    box: [0, 40, 1216, 448]
+    bind: metrics
+    columns: 1
+    gap: 12
+    item:
+      - { type: shape, box: [0, 0, "100%", "100%"], fill: surface }
+      - { type: shape, box: [0, 0, 4, "100%"], fill: accent }
+      - { type: text, box: [24, 0, 300, "100%"], bind: name, style: emphasis, color: primary, valign: middle }
+      - { type: text, box: [340, 0, 200, "100%"], bind: before, style: emphasis, color: muted, align: center, valign: middle }
+      - { type: text, box: [548, 0, 60, "100%"], value: →, style: emphasis, color: muted, align: center, valign: middle }
+      - { type: text, box: [616, 0, 200, "100%"], bind: after, style: emphasis, color: accent, align: center, valign: middle }
+      - { type: shape, box: [848, 12, 1, "100%-24"], fill: line }
+      - { type: text, box: [880, 0, 336, "100%"], bind: delta, style: kpi, align: center, valign: middle }
+
+  # 底部总结
+  - { type: text, box: [0, 504, 1216, 56], bind: summary, style: emphasis, color: primary, valign: middle }
+
+guidance:
+  - 指标按重要程度从上到下排列，最突出的放第一行
+  - before 与 after 的单位要一致，便于一眼看出变化
+  - delta 写清方向和幅度，如「缩短93%」「提升3.2倍」，并与 takeaway 中的数字保持一致
+  - 写 summary 时，用它说明这些指标合起来对业务意味着什么
