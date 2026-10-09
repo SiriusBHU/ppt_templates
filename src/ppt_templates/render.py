@@ -18,8 +18,6 @@ CANVAS_AREA = (0, 0, CANVAS_W, CANVAS_H)
 
 
 def render_deck(deck: dict, root: Path) -> Presentation:
-    if not isinstance(deck, dict) or not deck.get("pages"):
-        raise PptError("deck 必须是 {style, pages: [...]} 结构，且至少有一页")
     pages = prepare_pages(deck, root)
     style = load_style(root, deck.get("style", "default"))
     prs = Presentation()

@@ -177,3 +177,8 @@ def test_cli_exits_nonzero_and_prints_pointer_on_invalid_data(deck, tmp_path, mo
     assert main(["render", str(deck_path), "-o", str(tmp_path / "out.pptx")]) == 1
     assert "/pages/0/data/title" in capsys.readouterr().err
     assert not (tmp_path / "out.pptx").exists()
+
+
+def test_deck_structure_errors_are_reported(root):
+    with pytest.raises(PptError, match="deck 结构错误"):
+        render_deck({"pages": []}, root)
