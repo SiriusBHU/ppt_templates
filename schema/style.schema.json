@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "风格（style.yaml）",
+  "type": "object",
+  "required": ["fonts", "colors", "text_styles", "frame"],
+  "additionalProperties": false,
+  "properties": {
+    "master": {"type": "string"},
+    "master_layout": {"type": "string"},
+    "fonts": {
+      "type": "object",
+      "required": ["cjk", "latin"],
+      "additionalProperties": false,
+      "properties": {
+        "cjk": {"const": "微软雅黑"},
+        "latin": {"const": "微软雅黑"}
+      }
+    },
+    "colors": {
+      "type": "object",
+      "required": ["primary", "accent", "text", "muted", "line", "surface", "bg", "on_primary", "highlight", "highlight_strong"],
+      "additionalProperties": false,
+      "properties": {
+        "primary": {"$ref": "#/$defs/hex"},
+        "accent": {"$ref": "#/$defs/hex"},
+        "text": {"$ref": "#/$defs/hex"},
+        "muted": {"$ref": "#/$defs/hex"},
+        "line": {"$ref": "#/$defs/hex"},
+        "surface": {"$ref": "#/$defs/hex"},
+        "bg": {"$ref": "#/$defs/hex"},
+        "on_primary": {"$ref": "#/$defs/hex"},
+        "highlight": {"$ref": "#/$defs/hex"},
+        "highlight_strong": {"$ref": "#/$defs/hex"}
+      }
+    },
+    "text_styles": {
+      "type": "object",
+      "required": ["title", "title_suffix", "subtitle", "emphasis", "body", "body_strong", "detail", "caption", "footnote", "kpi"],
+      "additionalProperties": false,
+      "properties": {
+        "title": {"$ref": "#/$defs/text_style", "properties": {"size": {"const": 24}}},
+        "title_suffix": {"$ref": "#/$defs/text_style", "properties": {"size": {"const": 18}}},
+        "subtitle": {"$ref": "#/$defs/text_style", "properties": {"size": {"const": 18}}},
+        "emphasis": {"$ref": "#/$defs/text_style", "properties": {"size": {"const": 14}}},
+        "body": {"$ref": "#/$defs/text_style", "properties": {"size": {"const": 12}}},
+        "body_strong": {"$ref": "#/$defs/text_style", "properties": {"size": {"const": 12}}},
+        "detail": {"$ref": "#/$defs/text_style", "properties": {"size": {"const": 10}}},
+        "caption": {"$ref": "#/$defs/text_style", "properties": {"size": {"const": 9}}},
+        "footnote": {"$ref": "#/$defs/text_style", "properties": {"size": {"const": 8}}},
+        "kpi": {"$ref": "#/$defs/text_style", "properties": {"size": {"const": 24}}}
+      }
+    },
+    "frame": {
+      "type": "object",
+      "required": ["title", "takeaway", "body"],
+      "additionalProperties": false,
+      "properties": {
+        "title": {"$ref": "#/$defs/region"},
+        "takeaway": {"$ref": "#/$defs/region"},
+        "body": {
+          "type": "object",
+          "required": ["box"],
+          "additionalProperties": false,
+          "properties": {"box": {"$ref": "#/$defs/box"}}
+        },
+        "decorations": {"type": "array", "items": {"$ref": "#/$defs/decoration"}}
+      }
+    }
+  },
+  "$defs": {
+    "hex": {"type": "string", "pattern": "^#[0-9A-Fa-f]{6}$"},
+    "box": {"type": "array", "minItems": 4, "maxItems": 4, "items": {"type": "number"}},
+    "text_style": {
+      "type": "object",
+      "required": ["size", "color"],
+      "additionalProperties": false,
+      "properties": {
+        "size": {"type": "number"},
+        "bold": {"type": "boolean"},
+        "color": {"type": "string"}
+      }
+    },
+    "region": {
+      "type": "object",
+      "required": ["box", "style"],
+      "additionalProperties": false,
+      "properties": {
+        "box": {"$ref": "#/$defs/box"},
+        "style": {"type": "string"},
+        "suffix_style": {"type": "string"},
+        "align": {"enum": ["left", "center", "right"]},
+        "valign": {"enum": ["top", "middle", "bottom"]}
+      }
+    },
+    "decoration": {
+      "type": "object",
+      "required": ["type", "box", "fill"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {"const": "shape"},
+        "box": {"$ref": "#/$defs/box"},
+        "fill": {"type": "string"},
+        "line": {"type": "string"},
+        "shape": {"enum": ["rect", "rounded"]}
+      }
+    }
+  }
+}

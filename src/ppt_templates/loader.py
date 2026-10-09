@@ -5,6 +5,7 @@ from pathlib import Path
 import yaml
 
 from .errors import PptError
+from .schemas import errors, load_schema
 
 
 def find_repo_root(start: Path | None = None) -> Path:
@@ -23,23 +24,14 @@ def load_yaml(path: Path):
 
 
 FONT = "微软雅黑"
-# 所有模板、所有风格统一的字号（pt）：风格只能改颜色等，不能改字号
-TEXT_SIZES = {
-    "title": 24, "title_suffix": 18, "subtitle": 18, "emphasis": 14, "body": 12, "body_strong": 12,
-    "detail": 10, "caption": 9, "footnote": 8, "kpi": 24,
-}
 
 
 def load_style(root: Path, name: str) -> dict:
-    """读取风格并检查硬性约束：字体统一为微软雅黑，文字样式集合与字号与 TEXT_SIZES 完全一致。"""
+    """读取风格，并按 schema/style.schema.json 检查：字体固定微软雅黑，文字样式与字号固定。"""
     style = load_yaml(root / "styles" / name / "style.yaml")
-    if any(style["fonts"].get(k) != FONT for k in ("cjk", "latin")):
-        raise PptError(f"风格 {name}: fonts.cjk / fonts.latin 必须都是{FONT}")
-    if set(style["text_styles"]) != set(TEXT_SIZES):
-        raise PptError(f"风格 {name}: 文字样式必须正好是 {sorted(TEXT_SIZES)}")
-    for token, ts in style["text_styles"].items():
-        if ts["size"] != TEXT_SIZES[token]:
-            raise PptError(f"风格 {name}: 文字样式 {token} 的字号必须是 {TEXT_SIZES[token]}，实际是 {ts['size']}")
+    problems = errors(load_schema(root, "style"), style)
+    if problems:
+        raise PptError(f"风格 {name} 不合规：\n" + "\n".join(problems))
     return style
 
 

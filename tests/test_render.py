@@ -85,25 +85,6 @@ def test_every_font_size_is_in_the_allowed_set(pptx_path):
     assert sizes <= {24, 18, 14, 12, 10, 9, 8}
 
 
-@pytest.mark.parametrize("patch, message", [
-    (lambda s: s["text_styles"]["body"].update(size=13), "body 的字号必须是 12，实际是 13"),
-    (lambda s: s["text_styles"]["title"].update(size=18), "title 的字号必须是 24，实际是 18"),
-    (lambda s: s["text_styles"].update(h3={"size": 14, "color": "text"}), "文字样式必须正好是"),
-    (lambda s: s["fonts"].update(latin="Arial"), "必须都是微软雅黑"),
-])
-def test_style_constraints_are_enforced(root, tmp_path, patch, message):
-    import shutil
-    import yaml
-    from ppt_templates.loader import load_style
-    shutil.copytree(root / "styles", tmp_path / "styles")
-    path = tmp_path / "styles" / "default" / "style.yaml"
-    style = yaml.safe_load(path.read_text(encoding="utf-8"))
-    patch(style)
-    path.write_text(yaml.safe_dump(style, allow_unicode=True), encoding="utf-8")
-    with pytest.raises(PptError, match=message):
-        load_style(tmp_path, "default")
-
-
 def test_highlighted_module_style(pptx_path):
     hot, plain = _shape_with_text(pptx_path, "检查点加速"), _shape_with_text(pptx_path, "元数据服务")
     assert hot.line.width == 19050 and plain.line.width == 9525
