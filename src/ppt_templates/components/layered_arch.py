@@ -27,6 +27,12 @@ SCHEMA = {
     },
 }
 
+PROPS_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "properties": {"legend": {"type": "string"}},
+}
+
 
 def _text_width(style: dict, text: str, text_style: str) -> float:
     """粗估单行文字宽度（px）：全角字符 1 em，其余 0.55 em，外加 8 px 余量。"""

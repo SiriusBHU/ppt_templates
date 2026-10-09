@@ -6,10 +6,10 @@ from pptx.oxml.ns import nsdecls
 from pptx.util import Pt
 
 from ..draw import add_shape, add_text, rgb
-from ..errors import PptError
 from ..geometry import EMU_PER_PX
 
 GAP_X, GAP_Y = 72, 32        # 节点之间的水平 / 垂直间距（px），留给连线和标签
+MIN_W, MIN_H = 40, 24        # 节点宽 / 高的下限（px），再小文字就放不下了
 LABEL_W, LABEL_H = 120, 16   # 连线标签的文字框
 TOP, LEFT, BOTTOM, RIGHT = 0, 1, 2, 3  # 矩形的连接点编号
 
@@ -41,6 +41,7 @@ SCHEMA = {
         },
     },
 }
+PROPS_SCHEMA = {"type": "object", "additionalProperties": False}  # 没有可调选项
 
 
 def _sites(src, dst) -> tuple[int, int]:
@@ -51,31 +52,41 @@ def _sites(src, dst) -> tuple[int, int]:
     return (BOTTOM, TOP) if r2 > r1 else (TOP, BOTTOM)
 
 
-def _check(nodes, edges) -> dict:
-    by_id, cells = {}, set()
-    for n in nodes:
+def _grid(nodes, box) -> tuple[int, int, float, float]:
+    """(行数, 列数, 节点宽, 节点高)：节点按 pos 的最大行列数等分 box，扣掉间距。"""
+    rows = max(n["pos"][0] for n in nodes) + 1
+    cols = max(n["pos"][1] for n in nodes) + 1
+    _, _, w, h = box
+    return rows, cols, (w - GAP_X * (cols - 1)) / cols, (h - GAP_Y * (rows - 1)) / rows
+
+
+def check(data, box) -> list[tuple[tuple, str]]:
+    """id 和位置不能重复，连线端点必须存在，节点不能小于 MIN_W×MIN_H。"""
+    problems, ids, cells = [], set(), set()
+    for i, n in enumerate(data["nodes"]):
         pos = tuple(n["pos"])
-        if n["id"] in by_id:
-            raise PptError(f"框图节点 id 重复: {n['id']}")
+        if n["id"] in ids:
+            problems.append((("nodes", i, "id"), f"节点 id 重复: {n['id']}"))
         if pos in cells:
-            raise PptError(f"框图节点位置重复: {list(pos)}")
-        by_id[n["id"]] = n
+            problems.append((("nodes", i, "pos"), f"节点位置重复: {list(pos)}"))
+        ids.add(n["id"])
         cells.add(pos)
-    for e in edges:
+    for i, e in enumerate(data.get("edges", [])):
         for end in ("from", "to"):
-            if e[end] not in by_id:
-                raise PptError(f"框图连线引用了不存在的节点: {e[end]}")
-    return by_id
+            if e[end] not in ids:
+                problems.append((("edges", i, end), f"连线引用了不存在的节点: {e[end]}"))
+    rows, cols, nw, nh = _grid(data["nodes"], box)
+    if nw < MIN_W or nh < MIN_H:
+        problems.append((("nodes",), f"{rows} 行 {cols} 列的节点只有 {nw:.0f}×{nh:.0f} px，"
+                                     f"小于下限 {MIN_W}×{MIN_H}，请减少行列数"))
+    return problems
 
 
 def render(slide, style, box, data, props):
     nodes, edges = data["nodes"], data.get("edges", [])
-    by_id = _check(nodes, edges)
-    rows = max(n["pos"][0] for n in nodes) + 1
-    cols = max(n["pos"][1] for n in nodes) + 1
-    x, y, w, h = box
-    nw = (w - GAP_X * (cols - 1)) / cols
-    nh = (h - GAP_Y * (rows - 1)) / rows
+    by_id = {n["id"]: n for n in nodes}
+    _, _, nw, nh = _grid(nodes, box)
+    x, y, _, _ = box
 
     shapes = {}
     for n in nodes:

@@ -38,3 +38,11 @@ def test_stale_catalog_is_an_error(make_repo):
     assert validate_repo(repo).errors == []
     (repo / "catalog.json").write_text("[]\n", encoding="utf-8")
     assert validate_repo(repo).errors == ["catalog.json 不是最新的（运行 uv run ppt catalog）"]
+
+
+def test_catalog_ignores_dot_directories(make_repo):
+    repo = make_repo({"common.summary-note": mini_template()})
+    hidden = repo / "templates" / "common" / ".draft"
+    hidden.mkdir()
+    (hidden / "template.yaml").write_text("id: common.draft\n", encoding="utf-8")
+    assert [e["id"] for e in build_catalog(repo)] == ["common.summary-note"]

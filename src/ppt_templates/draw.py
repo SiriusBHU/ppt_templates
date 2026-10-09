@@ -57,13 +57,10 @@ def _setup_frame(tf, valign: str, inset: float):
 
 def set_text(tf, style: dict, text, text_style: str, *, color=None, bold=None, align="left", valign="top", inset=0):
     """写入文字并设置文本框属性；按换行拆成段落，每段一个 run。"""
-    ts = _text_style(style, text_style)
     _setup_frame(tf, valign, inset)
     for i, line in enumerate(str(text).split("\n")):
         p = tf.paragraphs[0] if i == 0 else tf.add_paragraph()
         p.alignment = ALIGN[align]
-        if "line_spacing" in ts:
-            p.line_spacing = ts["line_spacing"]
         add_run(p, style, line, text_style, color, bold)
 
 

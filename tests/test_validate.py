@@ -165,3 +165,80 @@ def test_component_data_in_example_must_pass_component_schema(make_repo):
     repo = make_repo({"common.summary-note": (template, example)})
     assert ("templates/common/summary-note/example.yaml  /layers/0  缺少必填字段 modules（组件 layered-arch）"
             in validate_repo(repo).errors)
+
+
+BULLETS = {"type": "bullets", "box": [0, 100, 600, 100], "bind": "points", "style": "body"}
+BULLETS_MESSAGE = "bullets 只能绑定 string 数组，或含 string 字段 text 的对象数组"
+LEVEL_MESSAGE = "bullets 的 level 必须是 type: integer 且 minimum: 0"
+
+
+def _bullet_items(**props):
+    return {"type": "object", "required": ["text"], "properties": {"text": {"type": "string"}, **props}}
+
+
+@pytest.mark.parametrize("items, expected", [
+    ({"type": "object", "properties": {"text": {"type": "string"}}}, BULLETS_MESSAGE),                # text 非必填
+    ({"type": "object", "required": ["text"], "properties": {"text": {"type": "integer"}}}, BULLETS_MESSAGE),
+    (_bullet_items(level={"type": "number", "minimum": 0}), LEVEL_MESSAGE),                           # 0.5 级
+    (_bullet_items(level={"type": "integer"}), LEVEL_MESSAGE),                                        # 可以是负数
+    (_bullet_items(level={"type": "integer", "minimum": -1}), LEVEL_MESSAGE),
+    (_bullet_items(level=True), LEVEL_MESSAGE),
+    (_bullet_items(level={"type": "integer", "minimum": 0, "maximum": 2}), None),
+    ({"type": "string"}, None),
+])
+def test_bullets_item_schema(make_repo, items, expected):
+    slots = _slots(points={"type": "array", "maxItems": 6, "items": items})
+    errs = _errors(make_repo, slots=slots, layout=[NOTE, BULLETS])
+    assert errs == ([] if expected is None else [f"/layout/1/bind  {expected}"])
+
+
+@pytest.mark.parametrize("component, slot_type, props, expected", [
+    ("table", "object", {"first_column_width": "200"}, "/props/first_column_width  类型应为 number"),
+    ("table", "object", {"first_column_width": 0}, "/props/first_column_width  取值 0，必须大于 0"),
+    ("table", "object", {"width": 200}, "/props  不允许的字段 width"),
+    ("layered-arch", "array", {"legend": 1}, "/props/legend  类型应为 string"),
+    ("block-diagram", "object", {"legend": "x"}, "/props  不允许的字段 legend"),
+])
+def test_component_props_are_validated(make_repo, component, slot_type, props, expected):
+    layout = [NOTE, {"type": "component", "component": component, "box": [0, 100, 600, 300], "bind": "c", "props": props}]
+    assert f"/layout/1{expected}（组件 {component}）" in _errors(
+        make_repo, slots=_slots(c={"type": slot_type}), layout=layout)
+
+
+def test_valid_component_props_pass(make_repo):
+    layout = [NOTE, {"type": "component", "component": "table", "box": [0, 100, 600, 300], "bind": "c",
+                     "props": {"first_column_width": 120.5}}]
+    errs = _errors(make_repo, slots=_slots(c={"type": "object"}), layout=layout)
+    assert not [e for e in errs if "props" in e]
+
+
+@pytest.mark.parametrize("slots, layout, expected", [
+    (_slots(note=True), [NOTE], "/layout/0/bind  槽位必须是对象 schema"),
+    (_slots(takeaway=False), [NOTE], "/slots/properties/takeaway  页框槽位必须是 type: string"),
+    (_slots(points={"type": "array", "maxItems": 3, "items": True}), [NOTE, BULLETS], f"/layout/1/bind  {BULLETS_MESSAGE}"),
+    (_slots(points=True), [NOTE, {"type": "grid", "box": [0, 100, 600, 100], "bind": "points", "columns": 2, "item": []}],
+     "/layout/1/bind  槽位必须是对象 schema"),
+    (_slots(points={"type": "array", "maxItems": 3, "items": True}),
+     [NOTE, {"type": "grid", "box": [0, 100, 600, 100], "bind": "points", "columns": 2,
+             "item": [{"type": "text", "box": [0, 0, 100, 20], "bind": ".", "style": "body"}]}],
+     "/layout/1/item/0/bind  text 只能绑定 string 槽位，实际是 None"),
+])
+def test_boolean_subschemas_are_reported_not_crashed(make_repo, slots, layout, expected):
+    assert expected in _errors(make_repo, slots=slots, layout=layout)
+
+
+def test_grid_cells_must_be_positive(make_repo):
+    slots = _slots(points={"type": "array", "maxItems": 6, "items": {"type": "string"}})
+    grid = {"type": "grid", "box": [0, 100, 100, 100], "bind": "points", "columns": 3, "gap": 60,
+            "item": [{"type": "text", "box": [0, 0, 10, 10], "bind": ".", "style": "body"}]}
+    errs = _errors(make_repo, slots=slots, layout=[NOTE, grid])
+    assert "/layout/1/box  按 maxItems=6 计算的单元格 -7×20 不是正数（gap 过大或 box 过小）" in errs
+    assert not [e for e in errs if "/item/" in e]
+
+
+def test_grid_item_with_negative_width_does_not_fit(make_repo):
+    slots = _slots(points={"type": "array", "maxItems": 3, "items": {"type": "string"}})
+    grid = {"type": "grid", "box": [0, 100, 40, 100], "bind": "points", "columns": 3, "gap": 5,
+            "item": [{"type": "text", "box": [0, 0, "100%-14", 20], "bind": ".", "style": "body"}]}
+    assert "/layout/1/item/0/box  按 maxItems=3 计算的单元格 10×100 放不下" in _errors(
+        make_repo, slots=slots, layout=[NOTE, grid])

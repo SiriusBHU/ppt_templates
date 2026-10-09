@@ -4,12 +4,15 @@ import json
 from pathlib import Path
 
 from .errors import PptError
-from .loader import load_yaml
+from .loader import load_yaml, template_dirs
 
 
 def build_catalog(root: Path) -> list[dict]:
     entries = []
-    for path in sorted((root / "templates").glob("*/*/template.yaml")):
+    for tdir in template_dirs(root):
+        path = tdir / "template.yaml"
+        if not path.is_file():
+            continue  # 缺少 template.yaml 由 ppt validate 报告
         tpl = load_yaml(path)
         slots = tpl["slots"]
         required = list(slots.get("required", []))

@@ -11,6 +11,7 @@ from .errors import PptError
 from .geometry import CANVAS_H, CANVAS_W, REF_H, REF_W, Transform, grid_cells, px_to_emu, resolve_box
 from .loader import load_style
 from .paths import lookup
+from .schemas import pointer
 from .slots import prepare_pages
 
 BLANK_LAYOUT = 6
@@ -79,6 +80,11 @@ def _render_elements(slide, style, elements, area, scope, tf):
                 raise PptError(f"未知组件: {el['component']}")
             data = lookup(scope, el["bind"])
             if data is not None:
-                COMPONENTS[el["component"]].render(slide, style, tf(ref_box), data, el.get("props", {}))
+                component, box = COMPONENTS[el["component"]], tf(ref_box)
+                # prepare_pages 已按参考尺寸检查过；这里按实际画布尺寸兜底，免得画出损坏的形状
+                problems = [f"组件 {el['component']}  {pointer(path)}  {msg}" for path, msg in component.check(data, box)]
+                if problems:
+                    raise PptError("\n".join(problems))
+                component.render(slide, style, box, data, el.get("props", {}))
         else:
             raise PptError(f"不支持的布局元素类型: {kind}")

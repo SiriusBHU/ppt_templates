@@ -8,7 +8,7 @@ from pathlib import Path
 
 from .catalog import filter_catalog, load_catalog, write_catalog
 from .errors import PptError
-from .loader import find_repo_root, load_deck, load_example, load_style, template_dir
+from .loader import find_repo_root, load_deck, load_example, load_style, template_dir, template_dirs
 from .preview import render_pngs
 from .render import render_deck
 from .slots import prepare_pages
@@ -58,7 +58,7 @@ def _validate(args) -> None:
         print(f"警告  {warning}", file=sys.stderr)
     if report.errors:
         raise PptError("\n".join(report.errors))
-    print(f"校验通过：{len(list((root / 'templates').glob('*/*/template.yaml')))} 个模板")
+    print(f"校验通过：{len(template_dirs(root))} 个模板")
 
 
 def _catalog(args) -> None:

@@ -5,7 +5,6 @@ from pptx.oxml.ns import qn
 from pptx.util import Emu
 
 from ..draw import ALIGN, add_run, emu_box, rgb
-from ..errors import PptError
 from ..geometry import px_to_emu
 
 NO_STYLE_NO_GRID = "{2D5ABB26-0587-4C30-8999-92F81FD0307C}"  # 去掉内置表格样式，颜色全部由风格 token 决定
@@ -20,6 +19,19 @@ SCHEMA = {
         "highlight_column": {"type": "integer", "minimum": 0},
     },
 }
+
+PROPS_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "properties": {"first_column_width": {"type": "number", "exclusiveMinimum": 0}},
+}
+
+
+def check(data, box) -> list[tuple[tuple, str]]:
+    """每行格数必须等于表头列数。"""
+    n = len(data["columns"])
+    return [(("rows", i), f"第 {i + 1} 行有 {len(row)} 格，表头有 {n} 列")
+            for i, row in enumerate(data["rows"]) if len(row) != n]
 
 
 def _cell(cell, style, text, text_style, fill, *, color=None, bold=None, align="left"):
@@ -42,9 +54,6 @@ def _widths(total: float, n: int, first) -> list[float]:
 
 def render(slide, style, box, data, props):
     columns, rows = data["columns"], data["rows"]
-    for i, row in enumerate(rows):
-        if len(row) != len(columns):
-            raise PptError(f"表格第 {i + 1} 行有 {len(row)} 格，表头有 {len(columns)} 列")
     hot = data.get("highlight_column")
     _, _, w, h = box
     shape = slide.shapes.add_table(len(rows) + 1, len(columns), *emu_box(box))

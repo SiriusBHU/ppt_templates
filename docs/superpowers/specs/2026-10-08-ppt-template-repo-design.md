@@ -267,7 +267,7 @@ Schema 里的 `default` 只是注解。渲染前，渲染器先用 `default` 补
 - `layered-arch`：分层架构图。每层左侧是 120px 的层名块（`primary` 底、`on_primary` 字），右侧是模块区（`surface` 底），模块等宽排成一行。`highlight: true` 的模块用 `highlight` 填充、`highlight_strong` 描边和文字。`props.legend` 有值且存在高亮模块时，在右下角画图例。
 - `block-diagram`：框图 / 流程图。节点位置由内容给出（`pos: [row, col]`），边是节点间的直线连接；v1 不做自动图布局。
 
-每个组件在代码里声明自己接受的数据 Schema，校验器用它检查模板 `example.yaml` 中被绑定的数据。
+每个组件在代码里声明自己接受的数据 Schema、`props` Schema，以及 Schema 表达不了的语义检查；校验器用它们检查模板 `example.yaml` 和 deck 中被绑定的数据，以及 layout 里的 `props`。
 
 **grid 规则**：
 
@@ -426,13 +426,13 @@ pages:
    - `frame: standard` 时，`title` 必须出现在 `required` 中；`title`、`title_suffix`、`takeaway` 若存在，必须是 `type: string`，由页框渲染，`layout` 不得再绑定它们。
    - 其余每个顶层属性必须被 `layout` 中的元素绑定（绑定它或它的子路径都算）；同一路径不能被两个顶层元素重复绑定。绑定一个对象或数组即视为渲染了它的全部子字段。
    - 未被渲染的顶层属性、指向不存在槽位的 `bind`，都报错。
-   - `bind` 的槽位类型必须符合 4.3 的表格；绑定组件时，槽位的顶层类型必须与组件 Schema 一致，并且 `example.yaml` 里对应的数据必须通过组件 Schema（用示例数据代替 Schema 之间的兼容性推导）。
+   - `bind` 的槽位类型必须符合 4.3 的表格；绑定组件时，槽位的顶层类型必须与组件 Schema 一致，并且 `example.yaml` 里对应的数据必须通过组件 Schema 和语义检查（用示例数据代替 Schema 之间的兼容性推导）；元素的 `props` 必须通过组件的 props Schema。
 6. 所有 box 必须落在绘制区域内：`frame: standard` 为参考 body 区 1216×560，`frame: none` 为画布 1280×720；`grid` 按 4.3 的规则检查。
 7. 布局引用的 token 都在 `style.schema.json` 规定的集合内；每个 `styles/*/style.yaml` 都通过 `style.schema.json` 校验。
 8. `example.yaml` 通过 `slots` 校验。
 9. `catalog.json` 与模板内容一致。
 
-deck 校验：`style` 存在；每页的模板存在；`data` 通过对应 `slots` 校验。错误信息包括人看的页码（从 1 开始）、模板 id、JSON Pointer 路径（从 0 开始）和具体约束，例如：
+deck 校验：`style` 存在；每页的模板存在；`data` 通过对应 `slots` 校验；绑定到组件的数据还要通过组件自己的 Schema 和语义检查（如表格每行格数等于列数、框图节点 id / 位置不重复且连线端点存在、节点不小于 40×24 px），即使 `slots` 写得比组件宽松也一样。错误信息包括人看的页码（从 1 开始）、模板 id、JSON Pointer 路径（从 0 开始）和具体约束，例如：
 
 ```
 第 4 页 software.solution-layered-arch  /pages/3/data/layers/1/name  长度 11，超过上限 8

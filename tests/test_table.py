@@ -4,6 +4,7 @@ from pptx import Presentation
 from factories import deck_of, table_template
 from ppt_templates.errors import PptError
 from ppt_templates.render import render_deck
+from ppt_templates.slots import prepare_pages
 from ppt_templates.validate import validate_repo
 
 
@@ -29,9 +30,39 @@ def test_table_renders_native_table_with_header_and_highlight(make_repo, tmp_pat
     assert frame._element.xpath(".//a:r/a:rPr/a:ea/@typeface") == ["微软雅黑"] * len(runs)
 
 
+def _prepare_error(repo, template, data) -> str:
+    with pytest.raises(PptError) as exc:
+        prepare_pages(deck_of(template["id"], data), repo)
+    return str(exc.value)
+
+
 def test_table_row_length_must_match_columns(make_repo):
     template, example = table_template()
     example["matrix"]["rows"][1] = ["延迟"]
     repo = make_repo({"common.overview-table": (template, example)})
-    with pytest.raises(PptError, match="表格第 2 行有 1 格，表头有 4 列"):
-        render_deck(deck_of("common.overview-table", example), repo)
+    assert ("第 1 页 common.overview-table  /pages/0/data/matrix/rows/1  第 2 行有 1 格，表头有 4 列（组件 table）"
+            in _prepare_error(repo, template, example))
+    assert ("templates/common/overview-table/example.yaml  /matrix/rows/1  第 2 行有 1 格，表头有 4 列（组件 table）"
+            in validate_repo(repo).errors)
+
+
+def test_deck_data_is_checked_against_the_component_schema_even_if_the_slot_is_loose(make_repo):
+    template, example = table_template()
+    template["slots"]["properties"]["matrix"] = {"type": "object"}
+    repo = make_repo({"common.overview-table": (template, example)})
+    bad = {"title": "表", "matrix": {"columns": ["a"], "rows": "x"}}
+    assert ("第 1 页 common.overview-table  /pages/0/data/matrix/rows  类型应为 array（组件 table）"
+            in _prepare_error(repo, template, bad))
+    assert "缺少必填字段 rows（组件 table）" in _prepare_error(repo, template, {"title": "表", "matrix": {"columns": ["a"]}})
+
+
+def test_component_inside_grid_reports_item_pointer(make_repo):
+    template, example = table_template()
+    template["slots"]["properties"]["matrix"] = {"type": "array", "maxItems": 2, "items": {"type": "object"}}
+    template["layout"] = [{"type": "grid", "box": [0, 0, 1216, 360], "bind": "matrix", "columns": 2, "gap": 16, "item": [
+        {"type": "component", "component": "table", "box": [0, 0, "100%", "100%"], "bind": "."}]}]
+    repo = make_repo({"common.overview-table": (template, example)})
+    cell = {"columns": ["a", "b"], "rows": [["x", "y"]]}
+    data = {"title": "表", "matrix": [cell, {**cell, "rows": [["x"]]}]}
+    assert ("/pages/0/data/matrix/1/rows/0  第 1 行有 1 格，表头有 2 列（组件 table）"
+            in _prepare_error(repo, template, data))

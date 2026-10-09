@@ -4,7 +4,7 @@ import pytest
 from pptx import Presentation
 
 from factories import deck_of
-from ppt_templates.loader import find_repo_root, load_example
+from ppt_templates.loader import find_repo_root, load_example, template_dirs
 from ppt_templates.render import render_deck
 from ppt_templates.validate import validate_repo
 
@@ -14,7 +14,7 @@ def test_repository_is_valid(root):
 
 
 def _template_ids(root):
-    return [f"{p.parent.parent.name}.{p.parent.name}" for p in sorted((root / "templates").glob("*/*/template.yaml"))]
+    return [f"{d.parent.name}.{d.name}" for d in template_dirs(root)]
 
 
 @pytest.mark.parametrize("tid", _template_ids(find_repo_root()))

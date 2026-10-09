@@ -36,9 +36,29 @@ def message(e: ValidationError) -> str:
         return f"{inst} 不符合格式 {limit}"
     if v == "type":
         return f"类型应为 {limit}"
+    if v == "minimum":
+        return f"取值 {inst}，低于下限 {limit}"
+    if v == "maximum":
+        return f"取值 {inst}，超过上限 {limit}"
+    if v == "exclusiveMinimum":
+        return f"取值 {inst}，必须大于 {limit}"
+    if v == "exclusiveMaximum":
+        return f"取值 {inst}，必须小于 {limit}"
+    if v == "multipleOf":
+        return f"取值 {inst} 必须是 {limit} 的整数倍"
+    if v == "uniqueItems":
+        return "数组中有重复项"
+    if v == "minProperties":
+        return f"共 {len(inst)} 个字段，低于下限 {limit}"
+    if v == "maxProperties":
+        return f"共 {len(inst)} 个字段，超过上限 {limit}"
     if v == "oneOf":
         return "以下写法必须且只能满足一种：" + " / ".join(json.dumps(s, ensure_ascii=False) for s in limit)
-    return e.message
+    if v == "anyOf":
+        return "必须至少满足以下写法之一：" + " / ".join(json.dumps(s, ensure_ascii=False) for s in limit)
+    if v == "not":
+        return f"不能是 {json.dumps(limit, ensure_ascii=False)} 这种写法"
+    return f"不满足约束 {v}" if v else "不允许出现该值"
 
 
 def pointer(parts) -> str:
@@ -48,5 +68,5 @@ def pointer(parts) -> str:
 def errors(schema: dict, instance, prefix=()) -> list[str]:
     """「<JSON Pointer>  <中文消息>」列表，按路径、消息排序；没有错误时返回空列表。"""
     found = [(list(e.absolute_path), message(e)) for e in Draft202012Validator(schema).iter_errors(instance)]
-    found.sort(key=lambda f: ([str(p) for p in f[0]], f[1]))
+    found.sort(key=lambda f: ([(0, p, "") if isinstance(p, int) else (1, 0, p) for p in f[0]], f[1]))
     return [f"{pointer([*prefix, *path])}  {msg}" for path, msg in found]

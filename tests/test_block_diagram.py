@@ -1,10 +1,12 @@
 import pytest
+import yaml
 from pptx import Presentation
 from pptx.oxml.ns import qn
 
 from factories import deck_of, diagram_template
 from ppt_templates.errors import PptError
 from ppt_templates.render import render_deck
+from ppt_templates.slots import prepare_pages
 from ppt_templates.validate import validate_repo
 
 
@@ -27,14 +29,46 @@ def test_nodes_and_arrow_connectors(make_repo, tmp_path):
     assert str(nvme.fill.fore_color.rgb) == "FFF1E6"
 
 
-@pytest.mark.parametrize("mutate, message", [
-    (lambda f: f["edges"].append({"from": "gpu", "to": "ghost"}), "框图连线引用了不存在的节点: ghost"),
-    (lambda f: f["nodes"].append({"id": "x", "name": "重叠", "pos": [0, 0]}), r"框图节点位置重复: \[0, 0\]"),
-    (lambda f: f["nodes"].append({"id": "gpu", "name": "重复", "pos": [1, 0]}), "框图节点 id 重复: gpu"),
+FLOW = "system.solution-flow"
+
+
+def _prepare_error(repo, example) -> str:
+    with pytest.raises(PptError) as exc:
+        prepare_pages(deck_of(FLOW, example), repo)
+    return str(exc.value)
+
+
+@pytest.mark.parametrize("mutate, where, message", [
+    (lambda f: f["edges"].append({"from": "gpu", "to": "ghost"}), "edges/3/to", "连线引用了不存在的节点: ghost"),
+    (lambda f: f["nodes"].append({"id": "x", "name": "重叠", "pos": [0, 0]}), "nodes/4/pos", "节点位置重复: [0, 0]"),
+    (lambda f: f["nodes"].append({"id": "gpu", "name": "重复", "pos": [1, 0]}), "nodes/4/id", "节点 id 重复: gpu"),
 ])
-def test_bad_references_are_rejected(make_repo, mutate, message):
+def test_bad_references_are_reported_with_page_and_pointer(make_repo, mutate, where, message):
     template, example = diagram_template()
     mutate(example["flow"])
-    repo = make_repo({"system.solution-flow": (template, example)})
-    with pytest.raises(PptError, match=message):
-        render_deck(deck_of("system.solution-flow", example), repo)
+    repo = make_repo({FLOW: (template, example)})
+    assert f"第 1 页 {FLOW}  /pages/0/data/flow/{where}  {message}（组件 block-diagram）" in _prepare_error(repo, example)
+    assert f"templates/system/solution-flow/example.yaml  /flow/{where}  {message}（组件 block-diagram）" in validate_repo(repo).errors
+
+
+@pytest.mark.parametrize("nodes, expected", [
+    ([("a", [0, 0]), ("b", [0, 20])], "1 行 21 列的节点只有 -11×400 px，小于下限 40×24"),     # 宽度为负
+    ([(f"n{i}", [i, 0]) for i in range(12)], "12 行 1 列的节点只有 1216×4 px，小于下限 40×24"),  # 高度只剩 4px
+])
+def test_nodes_smaller_than_minimum_are_rejected(make_repo, nodes, expected):
+    template, example = diagram_template()
+    example["flow"] = {"nodes": [{"id": i, "name": i, "pos": pos} for i, pos in nodes]}
+    repo = make_repo({FLOW: (template, example)})
+    assert f"/pages/0/data/flow/nodes  {expected}，请减少行列数（组件 block-diagram）" in _prepare_error(repo, example)
+    assert any(f"example.yaml  /flow/nodes  {expected}" in e for e in validate_repo(repo).errors)
+
+
+def test_render_rechecks_node_size_against_the_actual_body_area(make_repo):
+    template, example = diagram_template()
+    repo = make_repo({FLOW: (template, example)})
+    style_path = repo / "styles" / "default" / "style.yaml"
+    style = yaml.safe_load(style_path.read_text(encoding="utf-8"))
+    style["frame"]["body"]["box"] = [32, 128, 200, 560]    # body 区比参考尺寸窄得多
+    style_path.write_text(yaml.safe_dump(style, allow_unicode=True), encoding="utf-8")
+    with pytest.raises(PptError, match="组件 block-diagram  /nodes  2 行 3 列的节点只有"):
+        render_deck(deck_of(FLOW, example), repo)

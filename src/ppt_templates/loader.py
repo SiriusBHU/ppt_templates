@@ -20,7 +20,12 @@ def find_repo_root(start: Path | None = None) -> Path:
 def load_yaml(path: Path):
     if not path.is_file():
         raise PptError(f"文件不存在: {path}")
-    return yaml.safe_load(path.read_text(encoding="utf-8"))
+    try:
+        return yaml.safe_load(path.read_text(encoding="utf-8"))
+    except yaml.YAMLError as e:
+        mark = getattr(e, "problem_mark", None)
+        where = f"第 {mark.line + 1} 行第 {mark.column + 1} 列：" if mark else ""
+        raise PptError(f"{path}  /  YAML 语法错误：{where}{getattr(e, 'problem', None) or e}") from e
 
 
 FONT = "微软雅黑"
@@ -33,6 +38,12 @@ def load_style(root: Path, name: str) -> dict:
     if problems:
         raise PptError(f"风格 {name} 不合规：\n" + "\n".join(problems))
     return style
+
+
+def template_dirs(root: Path) -> list[Path]:
+    """templates/<主题>/<模板名>/ 目录，排序；跳过任何以 . 开头的目录。"""
+    return sorted(p for p in (root / "templates").glob("*/*")
+                  if p.is_dir() and not p.name.startswith(".") and not p.parent.name.startswith("."))
 
 
 def template_dir(root: Path, template_id: str) -> Path:

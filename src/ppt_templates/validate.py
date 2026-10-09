@@ -11,10 +11,11 @@ from .catalog import catalog_is_current
 from .components import COMPONENTS
 from .errors import PptError
 from .geometry import CANVAS_H, CANVAS_W, REF_H, REF_W, resolve_box
-from .loader import load_yaml
-from .paths import lookup, slot_at
+from .loader import load_yaml, template_dirs
+from .paths import slot_at
 from .schemas import errors as schema_errors
 from .schemas import load_schema
+from .slots import component_errors
 from .taxonomy import Taxonomy, load_taxonomy
 
 LEVEL_TOPICS = {"system", "hardware", "software"}
@@ -80,15 +81,26 @@ def check_meta(f: str, topic: str, name: str, tpl: dict, tax: Taxonomy) -> list[
     return errs
 
 
+def _obj(schema) -> dict:
+    """子 schema 可能是布尔值（true / false），当作没有任何约束的空 schema。"""
+    return schema if isinstance(schema, dict) else {}
+
+
 def _type_error(el: dict, slot: dict) -> str | None:
     """bind 的槽位类型是否符合元素要求（spec 4.3 表格）；符合返回 None。"""
     kind, t = el["type"], slot.get("type")
     if kind == "text":
         return None if t == "string" else f"text 只能绑定 string 槽位，实际是 {t}"
     if kind == "bullets":
-        items = slot.get("items") or {}
-        text_ok = (items.get("properties") or {}).get("text", {}).get("type") == "string"
-        if t == "array" and (items.get("type") == "string" or (items.get("type") == "object" and text_ok)):
+        items = _obj(slot.get("items"))
+        props = _obj(items.get("properties"))
+        if t == "array" and items.get("type") == "string":
+            return None
+        text_required = "text" in items.get("required", []) and _obj(props.get("text")).get("type") == "string"
+        if t == "array" and items.get("type") == "object" and text_required:
+            level = _obj(props.get("level"))
+            if "level" in props and (level.get("type") != "integer" or level.get("minimum", -1) < 0):
+                return "bullets 的 level 必须是 type: integer 且 minimum: 0"
             return None
         return "bullets 只能绑定 string 数组，或含 string 字段 text 的对象数组"
     if kind == "grid":
@@ -112,7 +124,7 @@ def check_layout(f: str, tpl: dict, colors: set[str], texts: set[str]) -> list[s
         if "title" not in slots.get("required", []):
             err("/slots/required", "frame: standard 的模板必须把 title 列为必填")
         for name in FRAME_SLOTS:
-            if name in props and props[name].get("type") != "string":
+            if name in props and _obj(props[name]).get("type") != "string":
                 err(f"/slots/properties/{name}", "页框槽位必须是 type: string")
 
     top_paths = set()
@@ -125,15 +137,22 @@ def check_layout(f: str, tpl: dict, colors: set[str], texts: set[str]) -> list[s
                     err(f"{p}/{key}", f"未知颜色 token {el[key]}")
             if "style" in el and el["style"] not in texts:
                 err(f"{p}/style", f"未知文字样式 token {el['style']}")
-            if el["type"] == "component" and el["component"] not in COMPONENTS:
-                err(f"{p}/component", f"未知组件 {el['component']}")
-                continue
+            if el["type"] == "component":
+                if el["component"] not in COMPONENTS:
+                    err(f"{p}/component", f"未知组件 {el['component']}")
+                    continue
+                prefix = (*p[1:].split("/"), "props")
+                errs.extend(f"{f}  {e}（组件 {el['component']}）" for e in
+                            schema_errors(COMPONENTS[el["component"]].props_schema, el.get("props", {}), prefix=prefix))
             if "bind" not in el:
                 continue
             path = el["bind"]
             slot = slot_at(scope, path)
             if slot is None:
                 err(f"{p}/bind", f"槽位 {path} 不存在")
+                continue
+            if not isinstance(slot, dict):
+                err(f"{p}/bind", "槽位必须是对象 schema")
                 continue
             if top:
                 head = path.split(".")[0]
@@ -146,7 +165,7 @@ def check_layout(f: str, tpl: dict, colors: set[str], texts: set[str]) -> list[s
             if problem:
                 err(f"{p}/bind", problem)
             elif el["type"] == "grid":
-                walk(el["item"], slot.get("items") or {}, f"{p}/item", False)
+                walk(el["item"], _obj(slot.get("items")), f"{p}/item", False)
 
     walk(tpl["layout"], slots, "/layout", True)
     rendered = {path.split(".")[0] for path in top_paths}
@@ -158,7 +177,7 @@ def check_layout(f: str, tpl: dict, colors: set[str], texts: set[str]) -> list[s
 
 def _fits(box, w: float, h: float) -> bool:
     x, y, bw, bh = box
-    return x >= -EPS and y >= -EPS and x + bw <= w + EPS and y + bh <= h + EPS
+    return bw >= 0 and bh >= 0 and x >= -EPS and y >= -EPS and x + bw <= w + EPS and y + bh <= h + EPS
 
 
 def check_geometry(f: str, tpl: dict) -> list[str]:
@@ -173,13 +192,16 @@ def check_geometry(f: str, tpl: dict) -> list[str]:
             errs.append(f"{f}  /layout/{i}/box  超出 {area} {w}×{h}")
         if el["type"] != "grid":
             continue
-        n = (slot_at(tpl["slots"], el["bind"]) or {}).get("maxItems")
+        n = _obj(slot_at(tpl["slots"], el["bind"])).get("maxItems")
         if not n:
             continue  # 缺 maxItems 已由 check_layout 报告
         cols, gap = el["columns"], el.get("gap", 0)
         rows = math.ceil(n / cols)
         cw = (box[2] - gap * (cols - 1)) / cols
         ch = (box[3] - gap * (rows - 1)) / rows
+        if cw <= 0 or ch <= 0:
+            errs.append(f"{f}  /layout/{i}/box  按 maxItems={n} 计算的单元格 {cw:.0f}×{ch:.0f} 不是正数（gap 过大或 box 过小）")
+            continue
         for j, sub in enumerate(el["item"]):
             if not _fits(resolve_box(sub["box"], cw, ch), cw, ch):
                 errs.append(f"{f}  /layout/{i}/item/{j}/box  按 maxItems={n} 计算的单元格 {cw:.0f}×{ch:.0f} 放不下")
@@ -187,31 +209,10 @@ def check_geometry(f: str, tpl: dict) -> list[str]:
 
 
 def check_example(rel: str, tpl: dict, example) -> list[str]:
-    """spec 7.1 第 8 条：example 通过 slots；绑定到组件的数据还要通过组件自己的 schema。"""
+    """spec 7.1 第 8 条：example 通过 slots；绑定到组件的数据还要通过组件自己的 schema 和语义检查。"""
     f = f"{rel}/example.yaml"
-    problems = [f"{f}  {e}" for e in schema_errors(tpl["slots"], example)]
-    if problems:
-        return problems
-
-    def walk(elements, scope, prefix):
-        for el in elements:
-            if "bind" not in el:
-                continue
-            value = lookup(scope, el["bind"])
-            here = prefix if el["bind"] == "." else (*prefix, *el["bind"].split("."))
-            if el["type"] == "component" and el["component"] in COMPONENTS and value is not None:
-                problems.extend(f"{f}  {e}（组件 {el['component']}）"
-                                for e in schema_errors(COMPONENTS[el["component"]].schema, value, prefix=here))
-            elif el["type"] == "grid" and isinstance(value, list):
-                for j, item in enumerate(value):
-                    walk(el["item"], item, (*here, j))
-
-    walk(tpl["layout"], example, ())
-    return problems
-
-
-def _template_dirs(root: Path) -> list[Path]:
-    return sorted(p for p in (root / "templates").glob("*/*") if p.is_dir() and not p.name.startswith("."))
+    problems = schema_errors(tpl["slots"], example) or component_errors(tpl, example)
+    return [f"{f}  {e}" for e in problems]
 
 
 def validate_repo(root: Path) -> Report:
@@ -231,7 +232,7 @@ def validate_repo(root: Path) -> Report:
         report.errors += problems or check_style_refs(rel, style, colors, texts)
 
     template_schema = load_schema(root, "template")
-    for tdir in _template_dirs(root):
+    for tdir in template_dirs(root):
         topic, name = tdir.parent.name, tdir.name
         rel = f"templates/{topic}/{name}"
         f = f"{rel}/template.yaml"
