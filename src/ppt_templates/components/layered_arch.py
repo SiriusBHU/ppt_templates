@@ -6,6 +6,27 @@ LABEL_W, LABEL_GAP = 120, 8
 ROW_GAP, PAD, MODULE_GAP = 10, 10, 10
 LEGEND_H, SWATCH, SWATCH_GAP = 28, 14, 6
 
+SCHEMA = {
+    "type": "array",
+    "minItems": 1,
+    "items": {
+        "type": "object",
+        "required": ["name", "modules"],
+        "properties": {
+            "name": {"type": "string"},
+            "modules": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                    "type": "object",
+                    "required": ["name"],
+                    "properties": {"name": {"type": "string"}, "highlight": {"type": "boolean"}},
+                },
+            },
+        },
+    },
+}
+
 
 def _text_width(style: dict, text: str, text_style: str) -> float:
     """粗估单行文字宽度（px）：全角字符 1 em，其余 0.55 em，外加 8 px 余量。"""

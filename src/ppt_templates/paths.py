@@ -1,0 +1,25 @@
+"""点号路径：在数据里取值（lookup），在 JSON Schema 里找对应的子 schema（slot_at）。"""
+
+
+def lookup(scope, path: str):
+    """相对 scope 解析点号路径；"." 是 scope 本身；路径不存在（可选槽位未填）返回 None。"""
+    if path == ".":
+        return scope
+    for key in path.split("."):
+        if not isinstance(scope, dict) or key not in scope:
+            return None
+        scope = scope[key]
+    return scope
+
+
+def slot_at(schema: dict, path: str) -> dict | None:
+    """点号路径在 object schema 里对应的子 schema；"." 是 schema 本身；不存在返回 None。"""
+    if path == ".":
+        return schema
+    for key in path.split("."):
+        if not isinstance(schema, dict):
+            return None
+        schema = (schema.get("properties") or {}).get(key)
+        if schema is None:
+            return None
+    return schema

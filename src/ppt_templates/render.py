@@ -10,6 +10,7 @@ from .draw import add_runs, add_shape, add_text
 from .errors import PptError
 from .geometry import CANVAS_H, CANVAS_W, REF_H, REF_W, Transform, grid_cells, px_to_emu, resolve_box
 from .loader import load_style
+from .paths import lookup
 from .slots import prepare_pages
 
 BLANK_LAYOUT = 6
@@ -51,17 +52,6 @@ def _render_frame(slide, style, data):
             add_text(slide, style, box, text, text_style, align=align, valign=valign)
 
 
-def _lookup(scope, path: str):
-    """点号路径相对 scope 解析；"." 是 scope 本身；缺失（可选槽位未填）返回 None。"""
-    if path == ".":
-        return scope
-    for key in path.split("."):
-        if not isinstance(scope, dict) or key not in scope:
-            return None
-        scope = scope[key]
-    return scope
-
-
 def _render_elements(slide, style, elements, area, scope, tf):
     """area = 父区域 (x, y, w, h)，在参考坐标系中；tf 把参考坐标映射到画布。"""
     ax, ay, aw, ah = area
@@ -72,19 +62,19 @@ def _render_elements(slide, style, elements, area, scope, tf):
         if kind == "shape":
             add_shape(slide, style, tf(ref_box), el["fill"], line=el.get("line"), rounded=el.get("shape") == "rounded")
         elif kind == "text":
-            text = el["value"] if "value" in el else _lookup(scope, el["bind"])
+            text = el["value"] if "value" in el else lookup(scope, el["bind"])
             if text is not None:
                 add_text(slide, style, tf(ref_box), text, el["style"], color=el.get("color"),
                          align=el.get("align", "left"), valign=el.get("valign", "top"))
         elif kind == "grid":
-            items = _lookup(scope, el["bind"]) or []
+            items = lookup(scope, el["bind"]) or []
             for item, cell in zip(items, grid_cells(ref_box, el["columns"], el.get("gap", 0), len(items))):
                 _render_elements(slide, style, el["item"], cell, item, tf)
         elif kind == "component":
             if el["component"] not in COMPONENTS:
                 raise PptError(f"未知组件: {el['component']}")
-            data = _lookup(scope, el["bind"])
+            data = lookup(scope, el["bind"])
             if data is not None:
-                COMPONENTS[el["component"]](slide, style, tf(ref_box), data, el.get("props", {}))
+                COMPONENTS[el["component"]].render(slide, style, tf(ref_box), data, el.get("props", {}))
         else:
             raise PptError(f"不支持的布局元素类型: {kind}")

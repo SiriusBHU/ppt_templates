@@ -1,5 +1,17 @@
-"""内置组件注册表：组件名 → render(slide, style, box, data, props)。"""
+"""内置组件注册表：组件名 → Component(render, schema)。"""
 
-from .layered_arch import render as _layered_arch
+from collections.abc import Callable
+from dataclasses import dataclass
 
-COMPONENTS = {"layered-arch": _layered_arch}
+from . import layered_arch
+
+
+@dataclass(frozen=True)
+class Component:
+    render: Callable  # render(slide, style, box, data, props)
+    schema: dict      # 组件接受的数据（JSON Schema）；校验器用它检查模板的 example
+
+
+COMPONENTS = {
+    "layered-arch": Component(layered_arch.render, layered_arch.SCHEMA),
+}

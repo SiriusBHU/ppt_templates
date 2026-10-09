@@ -56,3 +56,82 @@ def test_missing_example_is_an_error_and_missing_preview_a_warning(make_repo):
     report = validate_repo(repo)
     assert "templates/common/summary-note  缺少 example.yaml" in report.errors
     assert report.warnings == ["templates/common/summary-note  缺少 preview.png（运行 uv run ppt preview common.summary-note --write）"]
+
+
+def _errors(make_repo, **overrides):
+    repo = make_repo({"common.summary-note": mini_template(**overrides)})
+    return [e.removeprefix(f"{F}  ") for e in validate_repo(repo).errors if e.startswith(F)]
+
+
+def _slots(**extra):
+    props = {"title": {"type": "string", "maxLength": 14}, "note": {"type": "string", "maxLength": 60}, **extra}
+    return {"type": "object", "required": ["title"], "properties": props}
+
+
+NOTE = {"type": "text", "box": [0, 0, 600, 80], "bind": "note", "style": "body"}
+
+
+def test_unbound_slot(make_repo):
+    assert "/slots/properties/extra  槽位没有被 layout 渲染" in _errors(
+        make_repo, slots=_slots(extra={"type": "string"}))
+
+
+def test_bind_to_missing_slot(make_repo):
+    assert "/layout/1/bind  槽位 nope 不存在" in _errors(
+        make_repo, layout=[NOTE, {**NOTE, "bind": "nope"}])
+
+
+def test_layout_cannot_bind_frame_slots(make_repo):
+    assert "/layout/1/bind  title 由页框渲染，layout 不能再绑定" in _errors(
+        make_repo, layout=[NOTE, {**NOTE, "bind": "title"}])
+
+
+def test_standard_frame_requires_title(make_repo):
+    slots = _slots()
+    slots["required"] = ["note"]
+    assert "/slots/required  frame: standard 的模板必须把 title 列为必填" in _errors(make_repo, slots=slots)
+
+
+def test_frame_slots_must_be_strings(make_repo):
+    assert "/slots/properties/takeaway  页框槽位必须是 type: string" in _errors(
+        make_repo, slots=_slots(takeaway={"type": "array"}))
+
+
+def test_unknown_tokens(make_repo):
+    errs = _errors(make_repo, layout=[{**NOTE, "style": "h3", "color": "red"},
+                                      {"type": "shape", "box": [0, 100, 10, 10], "fill": "blue"}])
+    assert "/layout/0/style  未知文字样式 token h3" in errs
+    assert "/layout/0/color  未知颜色 token red" in errs
+    assert "/layout/1/fill  未知颜色 token blue" in errs
+
+
+def test_duplicate_binding(make_repo):
+    assert "/layout/1/bind  槽位 note 被重复绑定" in _errors(make_repo, layout=[NOTE, NOTE])
+
+
+def test_bind_type_must_match_element(make_repo):
+    slots = _slots(items={"type": "array", "items": {"type": "string"}})
+    errs = _errors(make_repo, slots=slots, layout=[
+        NOTE,
+        {"type": "text", "box": [0, 100, 600, 80], "bind": "items", "style": "body"},
+        {"type": "grid", "box": [0, 200, 600, 80], "bind": "items", "columns": 2, "item": []},
+    ])
+    assert "/layout/1/bind  text 只能绑定 string 槽位，实际是 array" in errs
+    assert "/layout/2/bind  grid 绑定的数组必须声明 maxItems" in errs
+
+
+def test_unknown_component(make_repo):
+    assert "/layout/1/component  未知组件 pie" in _errors(
+        make_repo, layout=[NOTE, {"type": "component", "component": "pie", "box": [0, 100, 10, 10], "bind": "note"}])
+
+
+def test_component_slot_type_must_match(make_repo):
+    errs = _errors(make_repo, layout=[
+        NOTE, {"type": "component", "component": "layered-arch", "box": [0, 100, 600, 300], "bind": "title"}])
+    assert "/layout/1/bind  组件 layered-arch 需要 array 类型的槽位，实际是 string" in errs
+
+
+def test_frame_none_renders_title_through_layout(make_repo):
+    layout = [{"type": "text", "box": [32, 32, 1216, 40], "bind": "title", "style": "title"},
+              {"type": "text", "box": [32, 100, 1216, 80], "bind": "note", "style": "body"}]
+    assert _errors(make_repo, frame="none", layout=layout) == []

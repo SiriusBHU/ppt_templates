@@ -6,13 +6,16 @@ from pathlib import Path
 from jsonschema import Draft202012Validator
 from jsonschema.exceptions import SchemaError
 
+from .components import COMPONENTS
 from .errors import PptError
 from .loader import load_yaml
+from .paths import slot_at
 from .schemas import errors as schema_errors
 from .schemas import load_schema
 from .taxonomy import Taxonomy, load_taxonomy
 
 LEVEL_TOPICS = {"system", "hardware", "software"}
+FRAME_SLOTS = ("title", "title_suffix", "takeaway")
 
 
 @dataclass
@@ -73,6 +76,82 @@ def check_meta(f: str, topic: str, name: str, tpl: dict, tax: Taxonomy) -> list[
     return errs
 
 
+def _type_error(el: dict, slot: dict) -> str | None:
+    """bind 的槽位类型是否符合元素要求（spec 4.3 表格）；符合返回 None。"""
+    kind, t = el["type"], slot.get("type")
+    if kind == "text":
+        return None if t == "string" else f"text 只能绑定 string 槽位，实际是 {t}"
+    if kind == "bullets":
+        items = slot.get("items") or {}
+        text_ok = (items.get("properties") or {}).get("text", {}).get("type") == "string"
+        if t == "array" and (items.get("type") == "string" or (items.get("type") == "object" and text_ok)):
+            return None
+        return "bullets 只能绑定 string 数组，或含 string 字段 text 的对象数组"
+    if kind == "grid":
+        if t != "array":
+            return f"grid 只能绑定数组槽位，实际是 {t}"
+        return None if "maxItems" in slot else "grid 绑定的数组必须声明 maxItems"
+    want = COMPONENTS[el["component"]].schema.get("type")
+    return None if t == want else f"组件 {el['component']} 需要 {want} 类型的槽位，实际是 {t}"
+
+
+def check_layout(f: str, tpl: dict, colors: set[str], texts: set[str]) -> list[str]:
+    """spec 7.1 第 5、7 条：槽位都被渲染、bind 存在且类型匹配、页框槽位规则、只引用风格 token。"""
+    errs = []
+    slots, standard = tpl["slots"], tpl["frame"] == "standard"
+    props = slots.get("properties") or {}
+
+    def err(ptr, msg):
+        errs.append(f"{f}  {ptr}  {msg}")
+
+    if standard:
+        if "title" not in slots.get("required", []):
+            err("/slots/required", "frame: standard 的模板必须把 title 列为必填")
+        for name in FRAME_SLOTS:
+            if name in props and props[name].get("type") != "string":
+                err(f"/slots/properties/{name}", "页框槽位必须是 type: string")
+
+    top_paths = set()
+
+    def walk(elements, scope, ptr, top):
+        for i, el in enumerate(elements):
+            p = f"{ptr}/{i}"
+            for key in ("fill", "line", "color"):
+                if key in el and el[key] not in colors:
+                    err(f"{p}/{key}", f"未知颜色 token {el[key]}")
+            if "style" in el and el["style"] not in texts:
+                err(f"{p}/style", f"未知文字样式 token {el['style']}")
+            if el["type"] == "component" and el["component"] not in COMPONENTS:
+                err(f"{p}/component", f"未知组件 {el['component']}")
+                continue
+            if "bind" not in el:
+                continue
+            path = el["bind"]
+            slot = slot_at(scope, path)
+            if slot is None:
+                err(f"{p}/bind", f"槽位 {path} 不存在")
+                continue
+            if top:
+                head = path.split(".")[0]
+                if path in top_paths:
+                    err(f"{p}/bind", f"槽位 {path} 被重复绑定")
+                top_paths.add(path)
+                if standard and head in FRAME_SLOTS:
+                    err(f"{p}/bind", f"{head} 由页框渲染，layout 不能再绑定")
+            problem = _type_error(el, slot)
+            if problem:
+                err(f"{p}/bind", problem)
+            elif el["type"] == "grid":
+                walk(el["item"], slot.get("items") or {}, f"{p}/item", False)
+
+    walk(tpl["layout"], slots, "/layout", True)
+    rendered = {path.split(".")[0] for path in top_paths}
+    for name in props:
+        if not (standard and name in FRAME_SLOTS) and name not in rendered:
+            err(f"/slots/properties/{name}", "槽位没有被 layout 渲染")
+    return errs
+
+
 def _template_dirs(root: Path) -> list[Path]:
     return sorted(p for p in (root / "templates").glob("*/*") if p.is_dir() and not p.name.startswith("."))
 
@@ -114,6 +193,7 @@ def validate_repo(root: Path) -> Report:
             report.errors += problems
             continue
         report.errors += check_meta(f, topic, name, tpl, tax)
+        report.errors += check_layout(f, tpl, colors, texts)
         if not (tdir / "example.yaml").is_file():
             report.errors.append(f"{rel}  缺少 example.yaml")
         if not (tdir / "preview.png").is_file():
