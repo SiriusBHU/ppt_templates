@@ -4,7 +4,7 @@
 
 ## 当前状态
 
-已实现最小链路：`ppt render`、`ppt preview`，布局元素 `text` / `shape` / `grid`，组件 `layered-arch`，以及按 `slots` 校验内容。只有一个模板 `system.solution-layered-arch`，用于确认效果。仓库级校验、catalog、`ppt list/show/validate/catalog/mcp`、`bullets` 元素、`table` / `block-diagram` 组件、母版支持、skill 都还没有实现。
+已实现：`ppt render / preview / validate / catalog / list / show`；布局元素 `text` / `bullets` / `shape` / `grid`；组件 `layered-arch` / `table` / `block-diagram`；仓库级校验（spec 7.1 全部规则）和 catalog。模板目前只有 `system.solution-layered-arch`。尚未实现：母版（`master.pptx`）支持、skill、`ppt mcp`。
 
 ## 术语（不要混用）
 

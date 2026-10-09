@@ -108,3 +108,68 @@ def table_template():
         },
     }
     return template, example
+
+
+def diagram_template():
+    """system.solution-flow：数据流框图（block-diagram 组件）。"""
+    template = {
+        "id": "system.solution-flow",
+        "name": "数据流框图",
+        "roles": ["solution"],
+        "when_to_use": "测试用：数据流框图",
+        "frame": "standard",
+        "slots": {
+            "type": "object",
+            "required": ["title", "flow"],
+            "properties": {
+                "title": {"type": "string", "maxLength": 14},
+                "flow": {
+                    "type": "object",
+                    "required": ["nodes"],
+                    "properties": {
+                        "nodes": {
+                            "type": "array", "minItems": 2, "maxItems": 12,
+                            "items": {
+                                "type": "object",
+                                "required": ["id", "name", "pos"],
+                                "properties": {
+                                    "id": {"type": "string"},
+                                    "name": {"type": "string", "maxLength": 10},
+                                    "pos": {"type": "array", "minItems": 2, "maxItems": 2,
+                                            "items": {"type": "integer", "minimum": 0}},
+                                    "highlight": {"type": "boolean", "default": False},
+                                },
+                            },
+                        },
+                        "edges": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "required": ["from", "to"],
+                                "properties": {"from": {"type": "string"}, "to": {"type": "string"},
+                                               "label": {"type": "string", "maxLength": 8}},
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        "layout": [{"type": "component", "component": "block-diagram", "box": [0, 0, 1216, 400], "bind": "flow"}],
+    }
+    example = {
+        "title": "检查点写入路径",
+        "flow": {
+            "nodes": [
+                {"id": "gpu", "name": "训练进程", "pos": [0, 0]},
+                {"id": "nvme", "name": "本地 NVMe", "pos": [0, 1], "highlight": True},
+                {"id": "store", "name": "存储集群", "pos": [0, 2]},
+                {"id": "meta", "name": "元数据服务", "pos": [1, 2]},
+            ],
+            "edges": [
+                {"from": "gpu", "to": "nvme", "label": "同步写"},
+                {"from": "nvme", "to": "store", "label": "异步下刷"},
+                {"from": "store", "to": "meta"},
+            ],
+        },
+    }
+    return template, example
