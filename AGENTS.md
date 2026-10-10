@@ -4,7 +4,7 @@
 
 ## 当前状态
 
-已实现：`ppt render / preview / validate / catalog / list / show / import / sync-skill / mcp`；布局元素 `text` / `bullets` / `shape` / `grid` / `image`；组件 `layered-arch` / `partitioned-arch` / `lane-roadmap` / `capability-map` / `table` / `block-diagram`；仓库级校验（spec 7.1 全部规则，外加 skill 副本一致性）和 catalog；skill（`.agents/skills/ppt-templates`）和 MCP server。模板清单见 `catalog.json`。尚未实现：母版（`master.pptx`）支持。
+已实现：`ppt render / preview / validate / catalog / list / show / import / sync-skill / mcp`；布局元素 `text` / `bullets` / `shape` / `grid` / `image`；组件 `layered-arch` / `partitioned-arch` / `lane-roadmap` / `capability-map` / `table` / `block-diagram`；仓库级校验（spec 7.1 全部规则，外加 skill 副本一致性）和 catalog；skill（`.agents/skills/ppt-templates`、`.agents/skills/pptx-to-template`）和 MCP server。模板清单见 `catalog.json`。尚未实现：母版（`master.pptx`）支持。
 
 ## 术语（不要混用）
 
@@ -95,6 +95,7 @@ uv run pytest tests/test_render.py::test_name   # 单个测试
 
 ## Skill 与多模型适配
 
-- Skill 的正本是 `.agents/skills/ppt-templates/SKILL.md`（Codex、Cursor、Gemini CLI 读这里）。Claude Code 只读 `.claude/skills/`，对软链目录的发现不稳定，所以 `.claude/skills/ppt-templates/SKILL.md` 是一份真实副本。只改正本，改完运行 `uv run ppt sync-skill` 同步；`ppt validate` 会检查正本的 frontmatter 合法、副本与正本逐字节一致（仓库里没有 `.agents/skills` 时跳过）。新增别的工具的副本位置，加到 `src/ppt_templates/skill.py` 的 `COPIES`。
+- 仓库有两个 skill：`ppt-templates`（选模板写 deck）和 `pptx-to-template`（把样板页做成模板）。正本是 `.agents/skills/<name>/SKILL.md`（Codex、Cursor、Gemini CLI 读这里）。Claude Code 只读 `.claude/skills/`，对软链目录的发现不稳定，所以 `.claude/skills/<name>/SKILL.md` 是真实副本。只改正本，改完运行 `uv run ppt sync-skill` 同步全部 skill；`ppt validate` 会检查每个正本的 frontmatter 合法（`name` 与目录名一致）、副本与正本逐字节一致（仓库里没有 `.agents/skills` 时跳过）。新增 skill，把目录名加到 `src/ppt_templates/skill.py` 的 `SKILLS`。
+- `pptx-to-template` 把样板或骨架 pptx 做成模板（用 `ppt import` 读形状和原图）；公司内部侧脱敏的工具是 `tools/ppt-skeleton/`，由用户拷出去用，这里不同步、不运行。
 - SKILL.md 只描述流程（排页功能顺序 → 读 catalog 挑模板 → `ppt show` → 写 deck → validate → render → preview），不要把模板内容复制进去。
 - 本文件是仓库规则的规范来源，Codex、Cursor 直接读取；`CLAUDE.md` 只是引用本文件；Gemini CLI 通过 `.gemini/settings.json` 指向本文件。
