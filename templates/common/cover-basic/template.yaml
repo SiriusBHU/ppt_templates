@@ -57,7 +57,7 @@ layout:                         # frame: none，坐标以画布左上角为原�
       - { type: shape, box: [0, 0, "100%", "100%"], fill: bg }
       - { type: shape, box: [0, 0, 4, "100%"], fill: accent }
       - { type: text, box: [28, "50%-34", "100%-52", 28], bind: name, style: emphasis, color: primary, valign: middle }
-      - { type: text, box: [28, "50%+2", "100%-52", 40], bind: detail, style: body, color: muted }
+      - { type: text, box: [28, "50%+2", "100%-52", 40], bind: detail, style: body }
 
   # 左：深色标题区
   - { type: shape, box: [0, 0, 576, 720], fill: primary }

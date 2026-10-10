@@ -1,5 +1,7 @@
 """点号路径：在数据里取值（lookup），在 JSON Schema 里找对应的子 schema（slot_at）。"""
 
+INDEX_BIND = "#"  # grid item 内的特殊 bind：当前项的 1 起序号（字符串），不是点号路径
+
 
 def lookup(scope, path: str):
     """相对 scope 解析点号路径；"." 是 scope 本身；路径不存在（可选槽位未填）返回 None。"""

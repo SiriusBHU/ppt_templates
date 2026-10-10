@@ -27,7 +27,7 @@ slots:
 layout:                         # frame: none，坐标以画布左上角为原点，画布 1280×720
   - { type: shape, box: [0, 0, 1280, 720], fill: primary }
   - { type: shape, box: [0, 0, 16, 720], fill: accent }
-  - { type: text, box: [96, 270, 600, 32], bind: num, style: kpi, color: line }
+  - { type: text, box: [96, 270, 600, 32], bind: num, style: kpi, color: on_primary }
   - { type: text, box: [96, 318, 1088, 36], bind: title, style: title, color: on_primary }
   - { type: shape, box: [96, 376, 64, 4], fill: accent }
   - { type: text, box: [96, 404, 1088, 30], bind: subtitle, style: subtitle, color: on_primary }

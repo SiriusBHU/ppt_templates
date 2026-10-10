@@ -1,0 +1,26 @@
+title: 产品线路线图
+title_suffix: 2026至2031年
+takeaway: 2028至2030年的重点是智算芯片迭代，通算与存储配套演进
+roadmap:
+  periods: ["-2026", "2027", "2028", "2029", "2030", "2031~"]
+  lanes:
+    - name: 智算
+      items:
+        - { name: 智算芯片A, from: "-2026" }
+        - { name: 智算芯片B, from: "2027" }
+        - { name: 智算芯片C, from: "2028", highlight: true, notes: [IP已确定, SoC已确定, 系统架构可优化] }
+        - { name: 智算芯片D, from: "2029", highlight: true, notes: [IP已确定, SoC待评审] }
+        - { name: 智算芯片E, from: "2030", highlight: true, notes: [架构方案已冻结] }
+        - { name: 智算芯片F, from: "2031~" }
+    - name: 通算
+      items:
+        - { name: 通算芯片G1, from: "-2026", to: "2027" }
+        - { name: 通算芯片G2, from: "2028", to: "2030", highlight: true, notes: [IP已确定, SoC已确定] }
+        - { name: 通算芯片G3, from: "2031~" }
+    - name: 存储
+      items:
+        - { name: 存储控制器, from: "2027", to: "2030", highlight: true, notes: [方案已评审, 与智算芯片联合优化] }
+  eras:
+    - { name: LLM时代, note: 训练规模扩张, from: "-2026", to: "2027" }
+    - { name: Agentic AI时代, note: 长上下文与工具调用, from: "2028", to: "2030", highlight: true }
+    - { name: Physical AI时代, note: 端侧与实时推理, from: "2031~", highlight: true }

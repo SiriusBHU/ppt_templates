@@ -1,0 +1,147 @@
+id: product.roadmap-capability-map
+name: 能力地图与关键举措
+roles: [roadmap, overview]
+also_fits: [system, software]
+density: talk
+tags: [能力地图, 沙盘, 举措, 策略, 分组, 落地节奏]
+when_to_use: 左边用一张分组的能力地图摊开要做的事（条目按落地节奏分两类标注），右边列出对应的关键举措，一页讲清「做什么」和「怎么做」，适合整体策略和总体方案
+when_not_to_use: 客户或场景 × 产品的覆盖矩阵 → product.overview-sandbox；按时间轴排各产品线的规划 → product.roadmap-lanes；单条主线的分阶段演进 → system.roadmap-stages
+frame: standard
+
+slots:
+  type: object
+  required: [title, map_label, map, measures_label, measures]
+  properties:
+    title:
+      type: string
+      maxLength: 36
+      description: 标题（24 号加粗，一行），写一句话结论，点明整体策略的取舍和目标；没有副标题，正文紧贴标题
+    map_label:
+      type: string
+      maxLength: 8
+      description: 左栏小节标题（14 号加粗，红色，居中），说明这张图是什么
+    map:
+      type: object
+      required: [groups]
+      description: 能力地图：分组面板自上而下排开，组内的条目按行排成网格；底部左侧画图例
+      properties:
+        title:
+          type: string
+          maxLength: 20
+          description: 地图标题（14 号加粗，一行），写这张图覆盖的范围；不需要可不写
+        groups:
+          type: array
+          minItems: 2
+          maxItems: 3
+          description: 自上而下的分组，高度随行数分配
+          items:
+            type: object
+            required: [name, items]
+            properties:
+              name: { type: string, maxLength: 16, description: 组名（14 号加粗，蓝色，一行） }
+              columns:
+                type: integer
+                minimum: 1
+                maximum: 3
+                description: 每行排几个条目；省略时 4 个条目排 2 × 2，其余每行最多 3 个（不足 3 个则占满一行）
+              items:
+                type: array
+                minItems: 1
+                maxItems: 6
+                description: 组内的条目，按顺序排成行；wide 条目和分组框各占一整行
+                items:
+                  type: object
+                  required: [name]
+                  properties:
+                    name: { type: string, maxLength: 10, description: 条目名称（短语，加粗）；写了 items 时是分组框的标题 }
+                    tag: { type: string, maxLength: 12, description: 条目的类别，取自 legend 的 tag；省略等同第一类 }
+                    wide: { type: boolean, default: false, description: 设为 true 让条目占满一整行 }
+                    columns:
+                      type: integer
+                      minimum: 1
+                      maximum: 3
+                      description: 仅分组框用：框内每行排几个，省略规则同组的 columns
+                    items:
+                      type: array
+                      minItems: 2
+                      maxItems: 4
+                      description: 分组框里的条目（只嵌一层）；有它的条目是分组框，不能再写 tag / wide
+                      items:
+                        type: object
+                        required: [name]
+                        properties:
+                          name: { type: string, maxLength: 10, description: 条目名称（短语，加粗） }
+                          tag: { type: string, maxLength: 12, description: 条目的类别，取自 legend 的 tag }
+                          wide: { type: boolean, default: false, description: 设为 true 让条目占满框内一整行 }
+        legend:
+          type: array
+          maxItems: 2
+          description: 图例，对应条目的两种底色：第 1 项白底、第 2 项浅色底；不分类可不写
+          items:
+            type: object
+            required: [tag, label]
+            properties:
+              tag: { type: string, maxLength: 12, description: 类别标识，条目的 tag 写它 }
+              label: { type: string, maxLength: 12, description: 图例说明 }
+    measures_label:
+      type: string
+      maxLength: 8
+      description: 右栏小节标题（14 号加粗，红色，居中），说明这栏是什么
+    measures:
+      type: array
+      minItems: 2
+      maxItems: 3
+      description: 自上而下的举措小节，对应左侧的能力分组，高度均分
+      items:
+        type: object
+        required: [title, items]
+        properties:
+          title: { type: string, maxLength: 16, description: 小节标题（14 号加粗，红色），点明对应哪组能力 }
+          items:
+            type: array
+            minItems: 2
+            maxItems: 3
+            description: 该小节的举措，每条「名称：说明」连排，最多折两行
+            items:
+              type: object
+              required: [name, detail]
+              properties:
+                name: { type: string, maxLength: 8, description: 举措名称（短语），加粗 }
+                detail: { type: string, maxLength: 52, description: 怎么做 + 达到什么效果 }
+
+layout:                         # 参考 body 区 1216×560（没有 takeaway，正文区纵向拉伸到 600）；卡片间距、卡片内边距都是 16
+  # 左：能力地图（图例在组件里，位于卡片内的左下角）
+  - { type: text, box: [0, 0, 608, 24], bind: map_label, style: emphasis, color: accent, align: center, valign: middle }
+  - { type: shape, box: [0, 32, 608, 528], fill: bg, shadow: true }
+  - { type: component, component: capability-map, box: [16, 48, 576, 496], bind: map }
+
+  # 右：关键举措（白色卡片，小节均分高度）
+  - { type: text, box: [624, 0, 592, 24], bind: measures_label, style: emphasis, color: accent, align: center, valign: middle }
+  - { type: shape, box: [624, 32, 592, 528], fill: bg, shadow: true }
+  - type: grid
+    box: [640, 48, 560, 496]
+    bind: measures
+    columns: 1
+    gap: 8
+    item:
+      - { type: text, box: [0, 0, "100%", 24], bind: title, style: emphasis, color: accent, valign: middle }
+      - type: grid
+        box: [0, 32, "100%", "100%-32"]
+        bind: items
+        columns: 1
+        item:                   # 不设 row_height：举措均分小节剩余的高度，从各自格子的顶部排起
+          - { type: text, box: [0, 0, 16, "100%"], value: "•", style: body }
+          - type: text
+            box: [16, 0, "100%-16", "100%"]
+            style: body
+            runs:
+              - { bind: name, style: body_strong }
+              - { value: "：", style: body_strong }
+              - { bind: detail }
+
+guidance:
+  - 标题写一句话结论，不是主题词；右侧每个小节对应左侧一个分组，举措名称直接点出左侧的能力名，读者才能把「做什么」和「怎么做」对上
+  - 图例只分两类，通常按落地节奏分（当前要落地的用第一类，提前预埋的用第二类）；条目的 tag 必须取自 legend，不写 tag 等同第一类
+  - 条目名称是短语，不写句子；一行放不下就拆条目或精简，不要靠缩小字号
+  - 带 items 的条目是组内的分组框，用来表示一个能力下面还有子能力，只嵌一层；wide 条目适合写总括性的一项
+  - 举措写「名称：说明」，名称说要做什么，说明写怎么做、达到什么效果

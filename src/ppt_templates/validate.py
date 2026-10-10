@@ -11,16 +11,18 @@ from .catalog import catalog_is_current
 from .components import COMPONENTS
 from .errors import PptError
 from .geometry import CANVAS_H, CANVAS_W, REF_H, REF_W, grid_cells, resolve_box
+from .images import ImageSource
 from .loader import load_yaml, template_dirs
-from .paths import slot_at
+from .paths import INDEX_BIND, slot_at
 from .schemas import errors as schema_errors
 from .schemas import load_schema
 from .skill import check_skill
-from .slots import component_errors
+from .slots import bound_errors
 from .taxonomy import Taxonomy, load_taxonomy
 
 LEVEL_TOPICS = {"system", "hardware", "software"}
 FRAME_SLOTS = ("title", "title_suffix", "takeaway")
+TEXT_COLORS = ("accent", "highlight_strong", "primary", "text", "on_primary")  # 文字只用这几种颜色；muted 等只给非文字元素
 EPS = 0.5  # 坐标比较容差（px）
 
 
@@ -36,12 +38,24 @@ def style_tokens(root: Path) -> tuple[set[str], set[str]]:
     return set(props["colors"]["required"]), set(props["text_styles"]["required"])
 
 
+def text_color_error(token: str, colors: set[str]) -> str | None:
+    """文字颜色 token 不在允许的几种之内时返回错误消息；未知 token 由别处报告，这里返回 None。"""
+    if token in colors and token not in TEXT_COLORS:
+        return f"文字颜色只能用 {' / '.join(TEXT_COLORS)}，实际是 {token}"
+    return None
+
+
 def check_style_refs(rel: str, style: dict, colors: set[str], texts: set[str]) -> list[str]:
-    """风格内部引用的 token 都要存在：文字样式的颜色、页框区域的文字样式、装饰的颜色。"""
+    """风格内部引用的 token 都要存在：文字样式的颜色、阴影的颜色、页框区域的文字样式、装饰的颜色。"""
     errs = []
+    shadow_color = style.get("shadow", {}).get("color")
+    if shadow_color is not None and shadow_color not in colors:
+        errs.append(f"{rel}  /shadow/color  未知颜色 token {shadow_color}")
     for token, ts in style["text_styles"].items():
         if ts["color"] not in colors:
             errs.append(f"{rel}  /text_styles/{token}/color  未知颜色 token {ts['color']}")
+        elif problem := text_color_error(ts["color"], colors):
+            errs.append(f"{rel}  /text_styles/{token}/color  {problem}")
     for region in ("title", "takeaway"):
         for key in ("style", "suffix_style"):
             value = style["frame"][region].get(key)
@@ -104,6 +118,8 @@ def _type_error(el: dict, slot: dict) -> str | None:
                 return "bullets 的 level 必须是 type: integer 且 minimum: 0"
             return None
         return "bullets 只能绑定 string 数组，或含 string 字段 text 的对象数组"
+    if kind == "image":
+        return None if t == "string" else f"image 只能绑定 string 槽位（图片路径），实际是 {t}"
     if kind == "grid":
         if t != "array":
             return f"grid 只能绑定数组槽位，实际是 {t}"
@@ -135,6 +151,11 @@ def check_layout(f: str, tpl: dict, colors: set[str], texts: set[str]) -> list[s
         if slot_at(scope, el[key]) is None:
             err(f"{p}/{key}", f"槽位 {el[key]} 不存在")
 
+    def check_text_color(ptr, token):
+        problem = text_color_error(token, colors)
+        if problem:
+            err(ptr, problem)
+
     def check_maps(scope, p, el):
         """color_map / fill_map / line_map：值是颜色 token，键在取值槽位的 enum 内，shape 的映射必须有 by。"""
         maps = [key for key in ("color_map", "fill_map", "line_map") if key in el]
@@ -155,6 +176,35 @@ def check_layout(f: str, tpl: dict, colors: set[str], texts: set[str]) -> list[s
                     if str(k) not in allowed:
                         err(f"{p}/{key}/{k}", f"键 {k} 不在槽位 {path} 的可选取值 {enum} 内")
 
+    def check_bind(p, el, scope, top):
+        """检查 el 的 bind（text 的 run 按 text 处理）：槽位存在、类型匹配，顶层不重复。通过返回槽位 schema，否则返回 None。"""
+        path = el["bind"]
+        if path == INDEX_BIND:  # grid item 的序号，不对应任何槽位
+            if top:
+                err(f"{p}/bind", f"{INDEX_BIND} 只能用在 grid 的 item 内")
+            elif el["type"] != "text":
+                err(f"{p}/bind", f"{INDEX_BIND} 只能绑定给 text，实际是 {el['type']}")
+            return None
+        slot = slot_at(scope, path)
+        if slot is None:
+            err(f"{p}/bind", f"槽位 {path} 不存在")
+            return None
+        if not isinstance(slot, dict):
+            err(f"{p}/bind", "槽位必须是对象 schema")
+            return None
+        if top:
+            head = path.split(".")[0]
+            if path in top_paths:
+                err(f"{p}/bind", f"槽位 {path} 被重复绑定")
+            top_paths.add(path)
+            if standard and head in FRAME_SLOTS:
+                err(f"{p}/bind", f"{head} 由页框渲染，layout 不能再绑定")
+        problem = _type_error(el, slot)
+        if problem:
+            err(f"{p}/bind", problem)
+            return None
+        return slot
+
     def walk(elements, scope, ptr, top):
         for i, el in enumerate(elements):
             p = f"{ptr}/{i}"
@@ -167,6 +217,25 @@ def check_layout(f: str, tpl: dict, colors: set[str], texts: set[str]) -> list[s
                 if key in el:
                     check_ref(scope, p, el, key)
             check_maps(scope, p, el)
+            if el["type"] in ("text", "bullets"):
+                if "color" in el:
+                    check_text_color(f"{p}/color", el["color"])
+                for k, token in el.get("color_map", {}).items():
+                    check_text_color(f"{p}/color_map/{k}", token)
+            if "runs" in el:
+                for key in ("color_map", "by"):
+                    if key in el:
+                        err(f"{p}/{key}", f"runs 不支持 {key}，请在 run 上写 color")
+                for k, run in enumerate(el["runs"]):
+                    rp = f"{p}/runs/{k}"
+                    if "color" in run and run["color"] not in colors:
+                        err(f"{rp}/color", f"未知颜色 token {run['color']}")
+                    elif "color" in run:
+                        check_text_color(f"{rp}/color", run["color"])
+                    if "style" in run and run["style"] not in texts:
+                        err(f"{rp}/style", f"未知文字样式 token {run['style']}")
+                    if "bind" in run:
+                        check_bind(rp, {"type": "text", "bind": run["bind"]}, scope, top)
             if el["type"] == "component":
                 if el["component"] not in COMPONENTS:
                     err(f"{p}/component", f"未知组件 {el['component']}")
@@ -176,25 +245,8 @@ def check_layout(f: str, tpl: dict, colors: set[str], texts: set[str]) -> list[s
                             schema_errors(COMPONENTS[el["component"]].props_schema, el.get("props", {}), prefix=prefix))
             if "bind" not in el:
                 continue
-            path = el["bind"]
-            slot = slot_at(scope, path)
-            if slot is None:
-                err(f"{p}/bind", f"槽位 {path} 不存在")
-                continue
-            if not isinstance(slot, dict):
-                err(f"{p}/bind", "槽位必须是对象 schema")
-                continue
-            if top:
-                head = path.split(".")[0]
-                if path in top_paths:
-                    err(f"{p}/bind", f"槽位 {path} 被重复绑定")
-                top_paths.add(path)
-                if standard and head in FRAME_SLOTS:
-                    err(f"{p}/bind", f"{head} 由页框渲染，layout 不能再绑定")
-            problem = _type_error(el, slot)
-            if problem:
-                err(f"{p}/bind", problem)
-            elif el["type"] == "grid":
+            slot = check_bind(p, el, scope, top)
+            if slot is not None and el["type"] == "grid":
                 walk(el["item"], _obj(slot.get("items")), f"{p}/item", False)
 
     walk(tpl["layout"], slots, "/layout", True)
@@ -211,41 +263,46 @@ def _fits(box, w: float, h: float) -> bool:
 
 
 def check_geometry(f: str, tpl: dict) -> list[str]:
-    """spec 7.1 第 6 条：元素落在绘制区域内；grid 的 item 按 maxItems 算出的最小单元格放得下。"""
+    """spec 7.1 第 6 条：元素落在绘制区域内；grid 的 item 按 maxItems 算出的最小单元格放得下，嵌套的 grid 逐层往下查。"""
     errs = []
     standard = tpl["frame"] == "standard"
     w, h = (REF_W, REF_H) if standard else (CANVAS_W, CANVAS_H)
     area = "body 区" if standard else "画布"
-    for i, el in enumerate(tpl["layout"]):
-        box = resolve_box(el["box"], w, h)
-        if not _fits(box, w, h):
-            errs.append(f"{f}  /layout/{i}/box  超出 {area} {w}×{h}")
-        if el["type"] != "grid":
-            continue
-        n = _obj(slot_at(tpl["slots"], el["bind"])).get("maxItems")
-        if not n:
-            continue  # 缺 maxItems 已由 check_layout 报告
-        gap, row_height = el.get("gap", 0), el.get("row_height")
-        cw, ch = grid_cells(box, el["columns"], gap, n, row_height)[0][2:]  # 项数越多单元格越小：maxItems 是最坏情况
-        if cw <= 0 or ch <= 0:
-            errs.append(f"{f}  /layout/{i}/box  按 maxItems={n} 计算的单元格 {cw:.0f}×{ch:.0f} 不是正数（gap 过大或 box 过小）")
-            continue
-        if row_height is not None:
-            rows = math.ceil(n / min(el["columns"], n))
-            need = rows * row_height + gap * (rows - 1)
-            if need > box[3] + EPS:
-                errs.append(f"{f}  /layout/{i}/row_height  按 maxItems={n} 排 {rows} 行，需要 {need:g}px"
-                            f"（{rows}×{row_height:g} + 间距 {gap * (rows - 1):g}），超过 box 高 {box[3]:g}px")
-        for j, sub in enumerate(el["item"]):
-            if not _fits(resolve_box(sub["box"], cw, ch), cw, ch):
-                errs.append(f"{f}  /layout/{i}/item/{j}/box  按 maxItems={n} 计算的单元格 {cw:.0f}×{ch:.0f} 放不下")
+
+    def walk(elements, scope, ptr, w, h, outside):
+        """scope = 当前作用域的 schema；(w, h) = 父区域尺寸；outside = 元素超出父区域时的说明。"""
+        for i, el in enumerate(elements):
+            p = f"{ptr}/{i}"
+            box = resolve_box(el["box"], w, h)
+            if not _fits(box, w, h):
+                errs.append(f"{f}  {p}/box  {outside}")
+            if el["type"] != "grid":
+                continue
+            slot = _obj(slot_at(scope, el["bind"]))
+            n = slot.get("maxItems")
+            if not n:
+                continue  # 缺 maxItems 已由 check_layout 报告
+            gap, row_height = el.get("gap", 0), el.get("row_height")
+            cw, ch = grid_cells(box, el["columns"], gap, n, row_height)[0][2:]  # 项数越多单元格越小：maxItems 是最坏情况
+            if cw <= 0 or ch <= 0:
+                errs.append(f"{f}  {p}/box  按 maxItems={n} 计算的单元格 {cw:.0f}×{ch:.0f} 不是正数（gap 过大或 box 过小）")
+                continue
+            if row_height is not None:
+                rows = math.ceil(n / min(el["columns"], n))
+                need = rows * row_height + gap * (rows - 1)
+                if need > box[3] + EPS:
+                    errs.append(f"{f}  {p}/row_height  按 maxItems={n} 排 {rows} 行，需要 {need:g}px"
+                                f"（{rows}×{row_height:g} + 间距 {gap * (rows - 1):g}），超过 box 高 {box[3]:g}px")
+            walk(el["item"], _obj(slot.get("items")), f"{p}/item", cw, ch, f"按 maxItems={n} 计算的单元格 {cw:.0f}×{ch:.0f} 放不下")
+
+    walk(tpl["layout"], tpl["slots"], "/layout", w, h, f"超出 {area} {w}×{h}")
     return errs
 
 
-def check_example(rel: str, tpl: dict, example) -> list[str]:
-    """spec 7.1 第 8 条：example 通过 slots；绑定到组件的数据还要通过组件自己的 schema 和语义检查。"""
+def check_example(rel: str, tpl: dict, example, images: ImageSource) -> list[str]:
+    """spec 7.1 第 8 条：example 通过 slots；绑定到组件的数据还要通过组件自己的 schema 和语义检查；image 的路径要能找到图片。"""
     f = f"{rel}/example.yaml"
-    problems = schema_errors(tpl["slots"], example) or component_errors(tpl, example)
+    problems = schema_errors(tpl["slots"], example) or bound_errors(tpl, example, images)
     return [f"{f}  {e}" for e in problems]
 
 
@@ -289,7 +346,7 @@ def validate_repo(root: Path) -> Report:
         report.errors += check_layout(f, tpl, colors, texts)
         report.errors += check_geometry(f, tpl)
         if (tdir / "example.yaml").is_file():
-            report.errors += check_example(rel, tpl, load_yaml(tdir / "example.yaml"))
+            report.errors += check_example(rel, tpl, load_yaml(tdir / "example.yaml"), ImageSource(tdir))
         else:
             report.errors.append(f"{rel}  缺少 example.yaml")
         if not (tdir / "preview.png").is_file():

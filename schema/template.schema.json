@@ -32,24 +32,26 @@
     "element": {
       "type": "object",
       "required": ["type"],
-      "properties": {"type": {"enum": ["text", "bullets", "shape", "grid", "component"]}},
+      "properties": {"type": {"enum": ["text", "bullets", "shape", "grid", "image", "component"]}},
       "allOf": [
         {"if": {"properties": {"type": {"const": "text"}}}, "then": {"$ref": "#/$defs/text"}},
         {"if": {"properties": {"type": {"const": "bullets"}}}, "then": {"$ref": "#/$defs/bullets"}},
         {"if": {"properties": {"type": {"const": "shape"}}}, "then": {"$ref": "#/$defs/shape"}},
         {"if": {"properties": {"type": {"const": "grid"}}}, "then": {"$ref": "#/$defs/grid"}},
+        {"if": {"properties": {"type": {"const": "image"}}}, "then": {"$ref": "#/$defs/image"}},
         {"if": {"properties": {"type": {"const": "component"}}}, "then": {"$ref": "#/$defs/component"}}
       ]
     },
     "text": {
       "required": ["box", "style"],
-      "oneOf": [{"required": ["bind"]}, {"required": ["value"]}],
+      "oneOf": [{"required": ["bind"]}, {"required": ["value"]}, {"required": ["runs"]}],
       "additionalProperties": false,
       "properties": {
         "type": {},
         "box": {"$ref": "#/$defs/box"},
         "bind": {"type": "string"},
         "value": {"type": "string"},
+        "runs": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/run"}},
         "style": {"type": "string"},
         "color": {"type": "string"},
         "by": {"type": "string"},
@@ -57,6 +59,17 @@
         "align": {"enum": ["left", "center", "right"]},
         "valign": {"enum": ["top", "middle", "bottom"]},
         "when": {"type": "string"}
+      }
+    },
+    "run": {
+      "type": "object",
+      "oneOf": [{"required": ["bind"]}, {"required": ["value"]}],
+      "additionalProperties": false,
+      "properties": {
+        "bind": {"type": "string"},
+        "value": {"type": "string"},
+        "style": {"type": "string"},
+        "color": {"type": "string"}
       }
     },
     "bullets": {
@@ -79,7 +92,8 @@
         "box": {"$ref": "#/$defs/box"},
         "fill": {"type": "string"},
         "line": {"type": "string"},
-        "shape": {"enum": ["rect", "rounded"]},
+        "shape": {"enum": ["rect", "rounded", "oval"]},
+        "shadow": {"type": "boolean"},
         "by": {"type": "string"},
         "fill_map": {"$ref": "#/$defs/token_map"},
         "line_map": {"$ref": "#/$defs/token_map"},
@@ -97,6 +111,18 @@
         "gap": {"type": "number", "minimum": 0},
         "row_height": {"type": "number", "exclusiveMinimum": 0},
         "item": {"$ref": "#/$defs/elements"},
+        "when": {"type": "string"}
+      }
+    },
+    "image": {
+      "required": ["box", "bind", "placeholder"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {},
+        "box": {"$ref": "#/$defs/box"},
+        "bind": {"type": "string"},
+        "placeholder": {"type": "string", "minLength": 1},
+        "fit": {"enum": ["contain", "cover"]},
         "when": {"type": "string"}
       }
     },

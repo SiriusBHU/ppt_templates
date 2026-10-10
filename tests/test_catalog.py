@@ -4,18 +4,21 @@ from ppt_templates.validate import validate_repo
 
 
 def test_catalog_entry_for_real_template(root):
-    entry = next(e for e in build_catalog(root) if e["id"] == "system.solution-layered-arch")
+    entry = next(e for e in build_catalog(root) if e["id"] == "system.solution-arch-overview")
     assert entry == {
-        "id": "system.solution-layered-arch",
+        "id": "system.solution-arch-overview",
         "topic": "system",
         "also_fits": ["software", "hardware"],
-        "name": "分层系统架构方案",
+        "name": "分区架构方案总览",
         "roles": ["solution", "feature"],
         "density": "talk",
         "level": "system",
-        "tags": ["架构", "分层", "方案"],
-        "when_to_use": "介绍系统整体的分层架构，标出本次新增或改动的模块，并配上关键设计和预期收益",
-        "slots": {"required": ["title", "layers", "design_points", "benefits"], "optional": ["title_suffix", "takeaway"]},
+        "tags": ["架构", "分区", "方案", "挑战", "关键技术"],
+        "when_to_use": "用一页讲清系统方案的全貌：面临的核心挑战、设计理念、分区分层的整体架构，以及支撑它的关键技术",
+        "slots": {
+            "required": ["title", "takeaway", "challenges", "principles", "arch", "key_techs"],
+            "optional": ["title_suffix"],
+        },
     }
 
 

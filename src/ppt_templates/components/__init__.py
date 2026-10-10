@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from . import block_diagram, layered_arch, table
+from . import block_diagram, capability_map, lane_roadmap, layered_arch, partitioned_arch, table
 
 
 def _no_problems(data, box) -> list:
@@ -21,6 +21,10 @@ class Component:
 
 COMPONENTS = {
     "layered-arch": Component(layered_arch.render, layered_arch.SCHEMA, layered_arch.PROPS_SCHEMA),
+    "partitioned-arch": Component(partitioned_arch.render, partitioned_arch.SCHEMA, partitioned_arch.PROPS_SCHEMA,
+                                  partitioned_arch.check),
+    "lane-roadmap": Component(lane_roadmap.render, lane_roadmap.SCHEMA, lane_roadmap.PROPS_SCHEMA, lane_roadmap.check),
+    "capability-map": Component(capability_map.render, capability_map.SCHEMA, capability_map.PROPS_SCHEMA, capability_map.check),
     "table": Component(table.render, table.SCHEMA, table.PROPS_SCHEMA, table.check),
     "block-diagram": Component(block_diagram.render, block_diagram.SCHEMA, block_diagram.PROPS_SCHEMA, block_diagram.check),
 }

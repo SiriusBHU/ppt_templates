@@ -1,0 +1,80 @@
+title: 方案名称：点明是什么系统
+title_suffix: 副标题：点明方案的核心特点或定位
+takeaway: 一句话目标：支撑哪些场景，带来多少量化收益（如 TPS/TCO 提升 N 倍）
+challenges:
+  - name: 挑战一（短语）
+    detail: 现象 + 量化影响，说明现有方案为何撑不住
+  - name: 挑战二（短语）
+    detail: 瓶颈位置 + 量化差距，说明为什么现状不够用
+  - name: 挑战三（短语）
+    detail: 矛盾或约束 + 量化代价，说明为何难以兼顾
+principles:
+  - name: 理念一（短语）
+    detail: 这条理念怎么做，并解决哪个挑战
+  - name: 理念二（短语）
+    detail: 概括做法，并指出它回应了哪条挑战
+  - name: 理念三（短语）
+    detail: 用一句话说清做法，及其对应的挑战
+arch:
+  partitions:
+    - name: 分区一：说明分区负责做什么（via CPU）
+      layers:
+        - name: 第一层名称
+          modules:
+            - { name: 模块名称（一） }
+            - { name: 模块名称（二） }
+        - name: 第二层名称
+          modules:
+            - { name: 模块名称（三） }
+            - { name: 新增模块（一）, highlight: true }
+            - { name: 模块名称（四） }
+        - name: 第三层名称
+          modules:
+            - { name: 模块名称（五） }
+            - { name: 模块名称（六） }
+            - { name: 模块名称（七） }
+    - name: 分区二：说明分区负责做什么（via NPU）
+      layers:
+        - name: 第一层名称
+          modules:
+            - { name: 模块名称（八） }
+            - { name: 模块名称（九） }
+        - name: 第二层名称
+          modules:
+            - { name: 模块名称（十） }
+            - { name: 改动模块（二）, highlight: true }
+            - { name: 模块名称（一一） }
+        - name: 第三层名称
+          modules:
+            - { name: 模块名称（一二） }
+            - { name: 新增模块（三）, highlight: true }
+            - { name: 模块名称（一三） }
+  shared:
+    - name: 共享层一
+      modules:
+        - { name: 共享模块（一） }
+        - { name: 共享模块（二） }
+        - { name: 新增模块（四）, highlight: true }
+        - { name: 共享模块（三） }
+    - name: 共享层二
+      modules:
+        - { name: 共享模块名称（四） }
+        - { name: 共享模块名称（五） }
+        - { name: 共享模块名称（六） }
+key_techs:
+  - name: 关键技术一：核心技术名称
+    points:
+      - 怎么做：采用的关键手段与机制，落在架构图哪个模块
+      - 效果：量化收益或解决的问题，如延迟降低 N%
+  - name: 关键技术二：核心技术名称
+    points:
+      - 怎么做：采用的关键手段与机制，落在架构图哪个模块
+      - 效果：量化收益或解决的问题，如吞吐提升 N 倍
+  - name: 关键技术三：核心技术名称
+    points:
+      - 怎么做：采用的关键手段与机制，落在架构图哪个模块
+      - 效果：量化收益或解决的问题，如成本下降 N%
+  - name: 关键技术四：核心技术名称
+    points:
+      - 怎么做：采用的关键手段与机制，落在架构图哪个模块
+      - 效果：量化收益或解决的问题，如规模扩展 N 倍

@@ -5,7 +5,7 @@ also_fits: [workload]
 density: talk
 tags: [模型, 结构, 参数]
 when_to_use: 用框图展示模型的整体结构和关键模块，并配上参数规格与补充说明
-when_not_to_use: 要从模型特征推导对系统的需求 → workload.requirement-matrix；展示软硬件系统的分层架构 → system.solution-layered-arch
+when_not_to_use: 要从模型特征推导对系统的需求 → workload.requirement-matrix；展示软硬件系统的分区分层架构 → system.solution-arch-overview
 frame: standard
 
 slots:

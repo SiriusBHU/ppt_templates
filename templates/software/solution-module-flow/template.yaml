@@ -6,7 +6,7 @@ density: talk
 level: module
 tags: [模块, 流程, 方案]
 when_to_use: 介绍单个软件模块的内部处理流程，标出本次新增或改动的节点，并配上关键设计
-when_not_to_use: 讲系统整体的分层架构 → system.solution-layered-arch；只讲问题、不讲方案 → software.problem-pain-points
+when_not_to_use: 讲系统整体的分区分层架构 → system.solution-arch-overview；只讲问题、不讲方案 → software.problem-pain-points
 frame: standard
 
 slots:

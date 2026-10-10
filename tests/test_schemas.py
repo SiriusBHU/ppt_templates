@@ -27,7 +27,7 @@ def test_root_pointer_is_slash():
 
 def test_deck_schema(root):
     schema = load_schema(root, "deck")
-    ok = {"style": "default", "pages": [{"template": "system.solution-layered-arch", "data": {}}]}
+    ok = {"style": "default", "pages": [{"template": "system.solution-arch-overview", "data": {}}]}
     assert errors(schema, ok) == []
     assert errors(schema, {"pages": []}) == ["/pages  共 0 项，低于下限 1"]
     assert errors(schema, {"style": "../x", "pages": [ok["pages"][0]]}) == ["/style  ../x 不符合格式 ^[a-z0-9]+(-[a-z0-9]+)*$"]

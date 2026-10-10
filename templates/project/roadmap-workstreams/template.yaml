@@ -1,0 +1,82 @@
+id: project.roadmap-workstreams
+name: 领域工作项规划
+roles: [roadmap, overview]
+also_fits: [product]
+density: talk
+tags: [业务规划, 工作项, 分工, 接口人, 领域]
+when_to_use: 把一项业务规划按领域拆成若干行，每个领域下并排几个工作项，每个工作项写清做什么、达到什么指标，并标出接口人
+when_not_to_use: 已完成和未完成的里程碑进展 → project.overview-milestones；按时间轴排各条产品线的规划 → product.roadmap-lanes；只有一条线的分阶段演进 → system.roadmap-stages
+frame: standard
+
+slots:
+  type: object
+  required: [title, rows]
+  properties:
+    title:
+      type: string
+      maxLength: 36
+      description: 标题（24 号加粗，一行），直接写这页的结论，如「某某业务规划的主线和重点」；本模板没有副标题
+    rows:
+      type: array
+      minItems: 2
+      maxItems: 4
+      description: 从上到下的领域行，行高均分页面
+      items:
+        type: object
+        required: [name, cards]
+        properties:
+          name: { type: string, maxLength: 12, description: 领域名称，写在行首的灰色标签里，超过 6 个字会折成两行 }
+          cards:
+            type: array
+            minItems: 1
+            maxItems: 4
+            description: 该领域下并排的工作项，卡片等宽，一行只有一张时占满整行
+            items:
+              type: object
+              required: [name, detail, owners]
+              properties:
+                name: { type: string, maxLength: 14, description: 工作项名称（短语），蓝色加粗，一行写完 }
+                detail: { type: string, maxLength: 120, description: 做什么 + 达成什么指标；一行的卡片越少、每张越宽，可写越长，上限随该行卡片数收紧：1 张 120 字、2 张 80 字、3 张 56 字、4 张 40 字 }
+                owners: { type: string, maxLength: 10, description: 接口人姓名，用「、」隔开，不含「接口人：」前缀 }
+        allOf:                  # detail 的字数上限随该行卡片数收紧（卡片越多越窄）
+          - if: { properties: { cards: { minItems: 2 } } }
+            then: { properties: { cards: { items: { properties: { detail: { maxLength: 80 } } } } } }
+          - if: { properties: { cards: { minItems: 3 } } }
+            then: { properties: { cards: { items: { properties: { detail: { maxLength: 56 } } } } } }
+          - if: { properties: { cards: { minItems: 4 } } }
+            then: { properties: { cards: { items: { properties: { detail: { maxLength: 40 } } } } } }
+
+layout:                         # 参考 body 区 1216×560（本页无 takeaway，正文区自动上移并纵向拉伸到 600）
+  - type: grid
+    box: [0, 0, 1216, 560]
+    bind: rows
+    columns: 1
+    gap: 12
+    item:
+      # 行首：灰色领域标签
+      - { type: shape, box: [0, 0, 112, "100%"], fill: surface, shadow: true }
+      - { type: text, box: [8, 0, 96, "100%"], bind: name, style: body_strong, align: center, valign: middle }
+      # 行内：工作项卡片，列数 = 该行卡片数（最多 4），等宽占满整行
+      - type: grid
+        box: [128, 0, "100%-128", "100%"]
+        bind: cards
+        columns: 4
+        gap: 16
+        item:
+          - { type: shape, box: [0, 0, "100%", "100%"], fill: bg, shadow: true }
+          - { type: text, box: [14, 8, "100%-28", 20], bind: name, style: body_strong, color: primary, valign: middle }
+          - { type: text, box: [14, 30, "100%-28", "100%-60"], bind: detail, style: body, valign: middle }
+          - type: text
+            box: [14, "100%-28", "100%-28", 20]
+            style: body_strong
+            color: accent
+            valign: middle
+            runs:
+              - { value: "接口人：" }
+              - { bind: owners }
+
+guidance:
+  - 标题直接写结论（这块业务规划要把什么做成），不需要副标题；领域按重要程度或价值链顺序从上到下排
+  - 一行的工作项按重要程度从左到右排；detail 写成「做什么 + 达成什么指标」，指标要可检验
+  - 一行 1–2 张卡片时卡片很宽，detail 要写得更完整（给方法或分步骤），不要只写一句
+  - 同一行的工作项并列、互不包含；一个领域下超过 4 个工作项就拆成两个领域行

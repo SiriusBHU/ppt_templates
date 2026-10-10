@@ -6,7 +6,7 @@ density: talk
 level: system
 tags: [路线, 演进, 时间轴]
 when_to_use: 按时间顺序展示系统分几个阶段演进，每个阶段给出时间、名称和要达成的要点
-when_not_to_use: 已完成与未完成的里程碑进展 → project.overview-milestones；只讲过去的演进回顾、不展望未来 → 对应主题的 history 页
+when_not_to_use: 多条产品线并行、要按年份排泳道 → product.roadmap-lanes；已完成与未完成的里程碑进展 → project.overview-milestones；只讲过去的演进回顾、不展望未来 → 对应主题的 history 页
 frame: standard
 
 slots:

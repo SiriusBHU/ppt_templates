@@ -6,8 +6,9 @@ from pathlib import Path
 from .components import COMPONENTS
 from .errors import PptError
 from .geometry import CANVAS_H, CANVAS_W, REF_H, REF_W, grid_cells, resolve_box
+from .images import ImageSource
 from .loader import load_template
-from .paths import is_empty, lookup
+from .paths import INDEX_BIND, is_empty, lookup
 from .schemas import errors, load_schema, pointer
 
 
@@ -27,14 +28,14 @@ def fill_defaults(schema: dict, value):
     return deepcopy(value)
 
 
-def component_errors(template: dict, data, prefix=()) -> list[str]:
-    """layout 里绑定到组件的值要通过组件的 schema 和语义检查；返回「<JSON Pointer>  <消息>（组件 <名>）」列表。
-    data 须已通过 template 的 slots；prefix 是 data 在整份文档里的路径。"""
+def bound_errors(template: dict, data, images: ImageSource, prefix=()) -> list[str]:
+    """layout 里绑定的值再查一遍 slots 管不到的部分：组件的数据要通过组件的 schema 和语义检查，返回「<JSON Pointer>  <消息>（组件 <名>）」；
+    image 的路径要能解析到图片，返回「<JSON Pointer>  <消息>」。data 须已通过 template 的 slots；prefix 是 data 在整份文档里的路径。"""
     problems = []
 
     def walk(elements, scope, here, area):
         for el in elements:
-            if "bind" not in el or ("when" in el and is_empty(lookup(scope, el["when"]))):
+            if "bind" not in el or el["bind"] == INDEX_BIND or ("when" in el and is_empty(lookup(scope, el["when"]))):
                 continue  # 不渲染的元素不检查它的数据
             value = lookup(scope, el["bind"])
             at = here if el["bind"] == "." else (*here, *el["bind"].split("."))
@@ -44,6 +45,11 @@ def component_errors(template: dict, data, prefix=()) -> list[str]:
                 found = errors(comp.schema, value, prefix=at) or [
                     f"{pointer([*at, *path])}  {msg}" for path, msg in comp.check(value, box)]
                 problems.extend(f"{e}（组件 {el['component']}）" for e in found)
+            elif el["type"] == "image" and not is_empty(value):
+                try:
+                    images.resolve(value)
+                except PptError as e:
+                    problems.append(f"{pointer(at)}  {e}")
             elif el["type"] == "grid" and isinstance(value, list):
                 cells = grid_cells(box, el["columns"], el.get("gap", 0), len(value), el.get("row_height"))
                 for j, (item, cell) in enumerate(zip(value, cells)):
@@ -54,8 +60,10 @@ def component_errors(template: dict, data, prefix=()) -> list[str]:
     return problems
 
 
-def prepare_pages(deck, root: Path) -> list[tuple[dict, dict]]:
-    """校验 deck 结构和每页内容，返回 [(template, 补全默认值后的 data)]；有错则汇总后抛 PptError。"""
+def prepare_pages(deck, root: Path, images: ImageSource | None = None) -> list[tuple[dict, dict]]:
+    """校验 deck 结构和每页内容，返回 [(template, 补全默认值后的 data)]；有错则汇总后抛 PptError。
+    images 决定 image 元素的路径怎么解析；省略则相对当前目录、不限制。"""
+    images = images or ImageSource(Path.cwd())
     structure = errors(load_schema(root, "deck"), deck)
     if structure:
         raise PptError("deck 结构错误：\n" + "\n".join(structure))
@@ -69,7 +77,7 @@ def prepare_pages(deck, root: Path) -> list[tuple[dict, dict]]:
             problems.append(f"{where}  /pages/{i}/template  {e}")
             continue
         found = errors(template["slots"], page["data"], prefix=("pages", i, "data"))
-        found = found or component_errors(template, page["data"], ("pages", i, "data"))
+        found = found or bound_errors(template, page["data"], images, ("pages", i, "data"))
         problems += [f"{where}  {e}" for e in found]
         if not found:
             pages.append((template, fill_defaults(template["slots"], page["data"])))

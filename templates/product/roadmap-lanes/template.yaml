@@ -1,0 +1,98 @@
+id: product.roadmap-lanes
+name: 多产品线泳道路线图
+roles: [roadmap]
+also_fits: [system, hardware]
+density: talk
+tags: [路线, 泳道, 时间轴, 产品规划]
+when_to_use: 按时间轴把多条产品线的规划放在一页：每条泳道一个产品线，条目跨若干年份，突出本次规划的重点，底部可串起技术时代的演进
+when_not_to_use: 只有一条线的分阶段演进 → system.roadmap-stages；已完成与未完成的里程碑进展 → project.overview-milestones
+frame: standard
+
+slots:
+  type: object
+  required: [title, roadmap]
+  properties:
+    title:
+      type: string
+      maxLength: 14
+      description: 标题主体（24 号加粗），说明是什么路线图
+    title_suffix:
+      type: string
+      maxLength: 16
+      description: 与标题同一行的后半句（18 号），补充时间跨度或范围
+    takeaway:
+      type: string
+      maxLength: 40
+      description: 副标题，一句话结论，说明路线的主线逻辑或本次规划的重点
+    roadmap:
+      type: object
+      required: [periods, lanes]
+      description: 泳道路线图；条目和时代用 from / to 指明占用 periods 中的哪几列
+      properties:
+        periods:
+          type: array
+          minItems: 3
+          maxItems: 6
+          uniqueItems: true
+          description: 时间轴上从早到晚的各列，如 -2026、2027、2031~；不足 6 列时各列自动变宽
+          items: { type: string, maxLength: 8 }
+        lanes:
+          type: array
+          minItems: 1
+          maxItems: 4
+          description: 从上到下的泳道，每条对应一个产品线
+          items:
+            type: object
+            required: [name, items]
+            properties:
+              name: { type: string, maxLength: 6, description: 产品线名称 }
+              items:
+                type: array
+                minItems: 1
+                maxItems: 6
+                description: 该产品线的规划条目；同一泳道里的条目不能占用同一列
+                items:
+                  type: object
+                  required: [name, from]
+                  properties:
+                    name: { type: string, maxLength: 10 }
+                    from: { type: string, maxLength: 8, description: 起始列，取自 periods }
+                    to: { type: string, maxLength: 8, description: 结束列，取自 periods 且不早于 from；省略则只占 from 一列 }
+                    notes:
+                      type: array
+                      maxItems: 3
+                      description: 状态备注，每条一行，如「IP已确定」
+                      items: { type: string, maxLength: 12 }
+                    highlight:
+                      type: boolean
+                      default: false
+                      description: 本次规划的重点条目设为 true
+        eras:
+          type: array
+          maxItems: 4
+          description: 底部的时代带，首尾相接的箭头从左到右排开；不需要可不写
+          items:
+            type: object
+            required: [name, from]
+            properties:
+              name: { type: string, maxLength: 13 }
+              note: { type: string, maxLength: 10, description: 一句话说明该时代的特征 }
+              from: { type: string, maxLength: 8, description: 起始列，取自 periods }
+              to: { type: string, maxLength: 8, description: 结束列，取自 periods 且不早于 from；省略则只占 from 一列 }
+              highlight:
+                type: boolean
+                default: false
+                description: 本次规划面向的时代设为 true
+
+layout:                         # 参考 body 区 1216×560
+  - type: component
+    component: lane-roadmap
+    box: [0, 0, 1216, 560]
+    bind: roadmap
+    props: { legend: 本次规划重点 }
+
+guidance:
+  - highlight 只给本次规划真正要推进的条目，一般每条泳道一两个，其余作为背景用来看全貌
+  - 条目名称写产品或版本名，备注写「当前状态」（如「IP已确定」「待评审」），不写目标和描述
+  - 一个条目是一段连续的开发周期，跨年份就用 from / to，不要拆成每年一个
+  - 时代带写外部环境的演进，高亮的时代要和高亮条目所在的列对得上

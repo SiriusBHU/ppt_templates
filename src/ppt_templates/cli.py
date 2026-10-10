@@ -1,4 +1,4 @@
-"""ppt 命令行：render / preview / validate / catalog / list / show / sync-skill / mcp。"""
+"""ppt 命令行：render / preview / validate / catalog / list / show / import / sync-skill / mcp。"""
 
 import argparse
 import shutil
@@ -8,6 +8,8 @@ from pathlib import Path
 
 from .catalog import filter_catalog, load_catalog, write_catalog
 from .errors import PptError
+from .images import ImageSource
+from .importer import import_skeleton
 from .loader import find_repo_root, load_deck, load_example, load_style, template_dir, template_dirs
 from .preview import render_pngs
 from .render import render_deck
@@ -19,7 +21,8 @@ from .validate import validate_repo
 def _render(args) -> None:
     out = Path(args.output)
     out.parent.mkdir(parents=True, exist_ok=True)
-    render_deck(load_deck(Path(args.deck)), find_repo_root()).save(out)
+    deck_path = Path(args.deck)
+    render_deck(load_deck(deck_path), find_repo_root(), ImageSource(deck_path.resolve().parent)).save(out)
     print(out)
 
 
@@ -29,10 +32,12 @@ def _preview(args) -> None:
         if args.write or args.style:
             raise PptError("--write / --style 只用于模板 id，不用于 deck 文件")
         deck = load_deck(Path(args.target))
+        images = ImageSource(Path(args.target).resolve().parent)
     else:
         deck = {"style": args.style or "default",
                 "pages": [{"template": args.target, "data": load_example(root, args.target)}]}
-    prs = render_deck(deck, root)
+        images = ImageSource(template_dir(root, args.target))  # example.yaml 里的图片路径相对模板目录
+    prs = render_deck(deck, root, images)
 
     with tempfile.TemporaryDirectory() as tmp:
         out_dir = Path(args.output or (tmp if args.write else "preview"))
@@ -49,8 +54,9 @@ def _preview(args) -> None:
 def _validate(args) -> None:
     root = find_repo_root()
     if args.deck:
-        deck = load_deck(Path(args.deck))
-        pages = prepare_pages(deck, root)
+        deck_path = Path(args.deck)
+        deck = load_deck(deck_path)
+        pages = prepare_pages(deck, root, ImageSource(deck_path.resolve().parent))
         load_style(root, deck.get("style", "default"))
         print(f"deck 校验通过：{len(pages)} 页")
         return
@@ -79,6 +85,14 @@ def _show(args) -> None:
             raise PptError(f"模板 {args.id} 缺少 {name}")
         print(f"# ---- {name} ----")
         print(path.read_text(encoding="utf-8").rstrip())
+
+
+def _import(args) -> None:
+    dirs, warnings = import_skeleton(find_repo_root(), Path(args.skeleton), Path(args.output), args.slide)
+    for warning in warnings:
+        print(f"警告  {warning}", file=sys.stderr)
+    for d in dirs:
+        print(d)
 
 
 def _sync_skill(args) -> None:
@@ -126,6 +140,12 @@ def main(argv=None) -> int:
     p = sub.add_parser("show", help="输出模板定义和示例内容")
     p.add_argument("id", help="<主题>.<模板名>")
     p.set_defaults(run=_show)
+
+    p = sub.add_parser("import", help="骨架 pptx → 每页的 shapes.yaml 草稿和 original.png，供照着写模板")
+    p.add_argument("skeleton", help="骨架 .pptx；同目录的 manifest.yaml 里的 purpose 会写进 shapes.yaml")
+    p.add_argument("--slide", type=int, nargs="+", action="extend", metavar="N", help="只导这几页（从 1 起），默认全部")
+    p.add_argument("-o", "--output", required=True, help="输出目录，每页写到 <目录>/slide-<N>/")
+    p.set_defaults(run=_import)
 
     p = sub.add_parser("sync-skill", help="把 .agents/skills 里的 skill 正本复制到各工具读取的位置")
     p.set_defaults(run=_sync_skill)

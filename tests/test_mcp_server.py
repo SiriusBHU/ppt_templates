@@ -7,9 +7,10 @@ from mcp import Client
 from mcp.server.mcpserver import Image
 from PIL import Image as PilImage
 from pptx import Presentation
+from pptx.enum.shapes import MSO_SHAPE_TYPE
 
 from conftest import TEMPLATE_ID
-from factories import deck_of, mini_template
+from factories import deck_of, image_template, mini_template
 from ppt_templates import mcp_server
 from ppt_templates.errors import PptError
 from ppt_templates.loader import load_example
@@ -60,7 +61,7 @@ def test_get_template_returns_contract_without_layout(in_repo, root):
     assert "layout" not in t
 
 
-@pytest.mark.parametrize("bad", ["system.nope", "../etc.passwd", "system.solution-layered-arch/../../x", "nodot", ""])
+@pytest.mark.parametrize("bad", ["system.nope", "../etc.passwd", "system.solution-arch-overview/../../x", "nodot", ""])
 def test_get_template_rejects_unknown_or_malformed_id(in_repo, bad):
     with pytest.raises(PptError, match=r"模板 .* 不存在|模板 id"):
         mcp_server.get_template(bad)
@@ -137,6 +138,62 @@ def test_preview_deck_without_soffice_is_a_clear_error(mini_repo, monkeypatch):
 def test_preview_deck_validates_first(mini_repo):
     with pytest.raises(PptError, match="长度 61，超过上限 60"):
         mcp_server.preview_deck(mini_deck(note="长" * 61))
+
+
+# ---- 图片路径：相对仓库根目录，且只能引用仓库之内的文件 ----
+
+PHOTO_ID = "common.overview-photo"
+
+
+@pytest.fixture
+def photo_repo(make_repo, monkeypatch, tmp_path):
+    """含 image 模板的临时仓库（tmp_path/repo）；仓库内有 assets/in.png，仓库外有 tmp_path/out.png 和指向它的符号链接 link.png。"""
+    repo = make_repo({PHOTO_ID: image_template()})
+    for path in (repo / "assets" / "in.png", tmp_path / "out.png"):
+        path.parent.mkdir(exist_ok=True)
+        PilImage.new("RGB", (40, 20), "red").save(path)
+    (repo / "link.png").symlink_to(tmp_path / "out.png")
+    monkeypatch.chdir(repo)
+    return repo
+
+
+def photo_deck(photo):
+    return deck_of(PHOTO_ID, {"title": "图", "photo": photo})
+
+
+def test_images_inside_the_repo_resolve_against_the_repo_root(photo_repo, tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)  # 工作目录不影响：相对路径从仓库根起算（find_repo_root 靠包所在位置找到仓库）
+    monkeypatch.setattr(mcp_server, "find_repo_root", lambda: photo_repo)
+    for photo in ("assets/in.png", str(photo_repo / "assets" / "in.png")):
+        assert mcp_server.validate_deck(photo_deck(photo)) == {"ok": True, "errors": []}
+    prs = Presentation(mcp_server.render_deck(photo_deck("assets/in.png")))
+    assert len([sh for sh in prs.slides[0].shapes if sh.shape_type == MSO_SHAPE_TYPE.PICTURE]) == 1
+
+
+@pytest.mark.parametrize("photo", ["../out.png", "link.png", "OUTSIDE", "/etc/passwd.png"])
+def test_images_outside_the_repo_are_rejected(photo_repo, tmp_path, photo):
+    photo = str(tmp_path / "out.png") if photo == "OUTSIDE" else photo
+    result = mcp_server.validate_deck(photo_deck(photo))
+    assert result["ok"] is False
+    assert any("/pages/0/data/photo  图片" in e and "不在允许的目录内" in e for e in result["errors"])
+    with pytest.raises(PptError, match="不在允许的目录内"):
+        mcp_server.render_deck(photo_deck(photo))
+    assert not (photo_repo / "out").exists()
+    with pytest.raises(PptError, match="不在允许的目录内"):
+        mcp_server.preview_deck(photo_deck(photo))
+
+
+def test_images_in_the_repo_still_need_a_supported_extension_and_must_exist(photo_repo):
+    (photo_repo / "assets" / "notes.txt").write_text("x", encoding="utf-8")
+    errors = mcp_server.validate_deck(photo_deck("assets/notes.txt"))["errors"]
+    assert any("格式不支持" in e for e in errors)
+    errors = mcp_server.validate_deck(photo_deck("assets/none.png"))["errors"]
+    assert any("图片 assets/none.png 不存在" in e for e in errors)
+
+
+@needs_soffice
+def test_preview_deck_draws_a_placeholder_when_no_image_is_given(photo_repo):
+    assert len(mcp_server.preview_deck(deck_of(PHOTO_ID, {"title": "图"}))) == 1
 
 
 # ---- 经 MCP 协议（内存连接）调用 ----

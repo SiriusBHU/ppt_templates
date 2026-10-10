@@ -1,13 +1,20 @@
 import pytest
+import yaml
 from pptx import Presentation
 from pptx.enum.dml import MSO_FILL
+from pptx.enum.shapes import MSO_SHAPE
+from pptx.enum.text import PP_ALIGN
 
-from factories import cards_template, deck_of, mini_template
+from factories import cards_template, deck_of, mini_template, rows_template
 from ppt_templates.cli import main
 from ppt_templates.errors import PptError
 from ppt_templates.loader import load_style
 from ppt_templates.render import render_deck
 from ppt_templates.slots import fill_defaults, prepare_pages
+
+
+def _arch_layers(data):
+    return [layer for part in data["arch"]["partitions"] for layer in part["layers"]] + data["arch"].get("shared", [])
 
 
 @pytest.fixture
@@ -25,14 +32,20 @@ def test_render_example_reopens_with_one_slide_of_16_9(pptx_path):
 
 def test_render_contains_title_and_every_module_name(deck, pptx_path):
     data = deck["pages"][0]["data"]
-    texts = {sh.text_frame.text for sh in Presentation(pptx_path).slides[0].shapes if sh.has_text_frame}
+    all_texts = [sh.text_frame.text for sh in Presentation(pptx_path).slides[0].shapes if sh.has_text_frame]
+    texts = set(all_texts)
     assert f"{data['title']}　{data['title_suffix']}" in texts
     assert data["takeaway"] in texts
-    assert "1" not in texts  # 不画页码
-    for layer in data["layers"]:
+    for layer in _arch_layers(data):
         assert layer["name"] in texts
         for module in layer["modules"]:
             assert module["name"] in texts
+    for part in data["arch"]["partitions"]:
+        assert part["name"] in texts
+    for item in data["challenges"] + data["principles"]:
+        assert f"{item['name']}：{item['detail']}" in texts  # runs：名称、冒号、说明连排在同一个文本框里
+    assert {str(i) for i in range(1, len(data["key_techs"]) + 1)} <= texts  # bind: "#" 渲染出的序号
+    assert all_texts.count("1") == 1  # 只有关键技术的序号，不画页码
 
 
 def test_every_run_has_cjk_and_cs_fonts(pptx_path):
@@ -47,18 +60,49 @@ def _shape_with_text(pptx_path, text):
     return next(sh for sh in Presentation(pptx_path).slides[0].shapes if sh.has_text_frame and sh.text_frame.text == text)
 
 
-def test_frame_decorations_have_no_outline_and_no_shadow(pptx_path):
-    decoration = Presentation(pptx_path).slides[0].shapes[0]  # 标题区下的分隔线：先于其他内容绘制
+def _title_text(deck):
+    data = deck["pages"][0]["data"]
+    return f"{data['title']}　{data['title_suffix']}"
+
+
+def test_default_style_draws_nothing_before_the_title(pptx_path):
+    first = Presentation(pptx_path).slides[0].shapes[0]  # 页框不画标题下的分隔线：第一个形状就是标题
+    assert first.has_text_frame and first.top == 32 * 9525
+
+
+@pytest.mark.parametrize("decorations", [None, []])
+def test_style_without_or_with_empty_decorations_is_valid(make_repo, decorations):
+    template, example = mini_template()
+    repo = make_repo({template["id"]: (template, example)})
+    path = repo / "styles" / "default" / "style.yaml"
+    style = yaml.safe_load(path.read_text(encoding="utf-8"))
+    style["frame"].pop("decorations", None)
+    if decorations is not None:
+        style["frame"]["decorations"] = decorations
+    path.write_text(yaml.safe_dump(style, allow_unicode=True), encoding="utf-8")
+    slide = render_deck(deck_of(template["id"], example), repo).slides[0]
+    assert [sh.text_frame.text for sh in slide.shapes] == [example["title"], example["note"]]  # 只有页框和内容，没有装饰
+
+
+def test_frame_decorations_have_no_outline_and_no_shadow(make_repo):
+    template, example = mini_template()
+    repo = make_repo({template["id"]: (template, example)})
+    path = repo / "styles" / "default" / "style.yaml"
+    style = yaml.safe_load(path.read_text(encoding="utf-8"))
+    style["frame"]["decorations"] = [{"type": "shape", "box": [32, 116, 1216, 1], "fill": "line"}]
+    path.write_text(yaml.safe_dump(style, allow_unicode=True), encoding="utf-8")
+    decoration = render_deck(deck_of(template["id"], example), repo).slides[0].shapes[0]  # 装饰先于其他内容绘制
     assert (decoration.left, decoration.top, decoration.width, decoration.height) == (32 * 9525, 116 * 9525, 1216 * 9525, 9525)
     assert decoration._element.xpath("./p:spPr/a:ln/a:noFill")
-    assert decoration._element.xpath("./p:spPr/a:effectLst")
+    assert decoration._element.xpath("./p:spPr/a:effectLst[not(a:outerShdw)]")
 
 
-def test_positions_follow_frame_regions_and_body_origin(pptx_path):
-    title = _shape_with_text(pptx_path, "检查点加速方案　引入近计算缓存")
+def test_positions_follow_frame_regions_and_body_origin(deck, pptx_path):
+    title = _shape_with_text(pptx_path, _title_text(deck))
     assert (title.left, title.top, title.width, title.height) == (32 * 9525, 32 * 9525, 1216 * 9525, 40 * 9525)
-    label = _shape_with_text(pptx_path, "接入层")  # layered-arch 的 box 原点 = body 左上角 (32, 128)
-    assert (label.left, label.top, label.width) == (32 * 9525, 128 * 9525, 120 * 9525)
+    label = _shape_with_text(pptx_path, _arch_layers(deck["pages"][0]["data"])[0]["name"])  # 第 1 个分区第 1 层的层名；
+    # partitioned-arch 的 box 原点 = body 左上角 (32, 128 + 108)；页签 28 + 间距 4 + 内边距 8
+    assert (label.left, label.top, label.width) == ((32 + 8) * 9525, (128 + 108 + 28 + 4 + 8) * 9525, 56 * 9525)
 
 
 def test_margins_are_equal_on_all_sides(root):
@@ -69,16 +113,16 @@ def test_margins_are_equal_on_all_sides(root):
     assert (x, 1280 - x - w, 720 - y - h) == (32, 32, 32)
 
 
-def test_title_and_suffix_share_one_line_with_24_and_18_pt(pptx_path):
-    runs = _shape_with_text(pptx_path, "检查点加速方案　引入近计算缓存").text_frame.paragraphs[0].runs
-    assert [(r.font.size.pt, bool(r.font.bold)) for r in runs] == [(24, True), (18, False)]
+def test_title_and_suffix_share_one_line_with_24_and_18_pt(deck, pptx_path):
+    runs = _shape_with_text(pptx_path, _title_text(deck)).text_frame.paragraphs[0].runs
+    assert [(r.font.size.pt, bool(r.font.bold)) for r in runs] == [(24, True), (18, True)]
 
 
 def test_title_without_suffix_is_a_single_run(deck, root, tmp_path):
     del deck["pages"][0]["data"]["title_suffix"]
     path = tmp_path / "t.pptx"
     render_deck(deck, root).save(path)
-    runs = _shape_with_text(path, "检查点加速方案").text_frame.paragraphs[0].runs
+    runs = _shape_with_text(path, deck["pages"][0]["data"]["title"]).text_frame.paragraphs[0].runs
     assert len(runs) == 1 and runs[0].font.size.pt == 24
 
 
@@ -88,13 +132,15 @@ def test_every_font_size_is_in_the_allowed_set(pptx_path):
     assert sizes <= {24, 18, 14, 12, 10, 9, 8}
 
 
-def test_highlighted_module_style(pptx_path):
-    hot, plain = _shape_with_text(pptx_path, "检查点加速"), _shape_with_text(pptx_path, "元数据服务")
+def test_highlighted_module_style(deck, pptx_path):
+    modules = deck["pages"][0]["data"]["arch"]["shared"][0]["modules"]
+    name_of = lambda hot: next(m["name"] for m in modules if m.get("highlight", False) == hot)  # noqa: E731
+    hot, plain = _shape_with_text(pptx_path, name_of(True)), _shape_with_text(pptx_path, name_of(False))
     assert hot.line.width == 19050 and plain.line.width == 9525
-    assert str(hot.line.color.rgb) == "EA7317" and str(hot.fill.fore_color.rgb) == "FFF1E6"
+    assert str(hot.line.color.rgb) == "C00000" and str(hot.fill.fore_color.rgb) == "FFF1E6"
     run = hot.text_frame.paragraphs[0].runs[0]
-    assert run.font.bold and str(run.font.color.rgb) == "EA7317"
-    assert not plain.text_frame.paragraphs[0].runs[0].font.bold
+    assert run.font.bold and str(run.font.color.rgb) == "C00000"
+    assert plain.text_frame.paragraphs[0].runs[0].font.bold
 
 
 def test_legend_only_when_a_module_is_highlighted(deck, root, tmp_path):
@@ -104,7 +150,7 @@ def test_legend_only_when_a_module_is_highlighted(deck, root, tmp_path):
         return {sh.text_frame.text for sh in Presentation(path).slides[0].shapes if sh.has_text_frame}
 
     assert "本次新增 / 改动" in texts(deck)
-    for layer in deck["pages"][0]["data"]["layers"]:
+    for layer in _arch_layers(deck["pages"][0]["data"]):
         for module in layer["modules"]:
             module["highlight"] = False
     assert "本次新增 / 改动" not in texts(deck)
@@ -114,15 +160,15 @@ def test_title_over_limit_is_rejected_with_json_pointer(deck, root):
     deck["pages"][0]["data"]["title"] = "标" * 30
     with pytest.raises(PptError) as exc:
         render_deck(deck, root)
-    assert "第 1 页 system.solution-layered-arch  /pages/0/data/title  长度 30，超过上限 14" in str(exc.value)
+    assert "第 1 页 system.solution-arch-overview  /pages/0/data/title  长度 30，超过上限 14" in str(exc.value)
 
 
 def test_nested_error_pointer_and_page_number(deck, root):
-    deck["pages"].append({"template": deck["pages"][0]["template"], "data": {"title": "x", "layers": []}})
+    deck["pages"].append({"template": deck["pages"][0]["template"], "data": {"title": "x", "challenges": []}})
     with pytest.raises(PptError) as exc:
         prepare_pages(deck, root)
-    assert "第 2 页 system.solution-layered-arch  /pages/1/data/layers  共 0 项，低于下限 3" in str(exc.value)
-    assert "/pages/1/data  缺少必填字段 design_points、benefits" in str(exc.value)
+    assert "第 2 页 system.solution-arch-overview  /pages/1/data/challenges  共 0 项，低于下限 2" in str(exc.value)
+    assert "/pages/1/data  缺少必填字段 takeaway、principles、arch、key_techs" in str(exc.value)
 
 
 def test_unknown_template_is_reported(deck, root):
@@ -133,11 +179,11 @@ def test_unknown_template_is_reported(deck, root):
 
 def test_fill_defaults_recurses_into_arrays_and_objects(deck, root):
     template, data = prepare_pages(deck, root)[0]
-    modules = [m for layer in data["layers"] for m in layer["modules"]]
+    modules = [m for layer in _arch_layers(data) for m in layer["modules"]]
     assert all("highlight" in m for m in modules)
     assert modules[0]["highlight"] is False
     # 不修改调用方传入的数据
-    assert "highlight" not in deck["pages"][0]["data"]["layers"][0]["modules"][0]
+    assert "highlight" not in deck["pages"][0]["data"]["arch"]["partitions"][0]["layers"][0]["modules"][0]
     assert fill_defaults({"type": "object", "properties": {"a": {"default": 1}}}, {}) == {"a": 1}
 
 
@@ -207,6 +253,16 @@ def test_grid_row_height_fixes_cell_height_and_stacks_from_top(make_repo):
     assert _text_px(shapes, "丙") == (32, 128 + 80, 590, 60)
 
 
+def test_grid_index_bind_renders_one_based_numbers_in_item_order(make_repo):
+    template, _ = cards_template()
+    template["layout"][0]["item"].append({"type": "text", "box": [0, 0, 20, 20], "bind": "#", "style": "body"})
+    shapes = _shapes(make_repo, template, {"title": "t", "cards": ["甲", "乙", "丙"]})
+    numbers = {sh.text_frame.text: _px(sh) for sh in shapes if sh.has_text_frame and sh.text_frame.text.isdigit()}
+    assert list(numbers) == ["1", "2", "3"]
+    cell_w = (1200 - 2 * 20) / 3  # 3 项 → 3 列
+    assert [numbers[n][0] for n in numbers] == pytest.approx([32 + i * (cell_w + 20) for i in range(3)])
+
+
 def _when_template(layout, **props):
     slots = {"type": "object", "required": ["title"],
              "properties": {"title": {"type": "string"}, "note": {}, **props}}
@@ -224,6 +280,14 @@ def test_when_hides_element_for_empty_values(make_repo, note, shown):
     data = {"title": "t", "note": note}
     shapes = _shapes(make_repo, _when_template([FLAG]), data)
     assert ((32, 228, 50, 50) in [_px(sh) for sh in shapes]) is shown
+
+
+@pytest.mark.parametrize("kind, expected", [
+    (None, MSO_SHAPE.RECTANGLE), ("rect", MSO_SHAPE.RECTANGLE), ("rounded", MSO_SHAPE.ROUNDED_RECTANGLE), ("oval", MSO_SHAPE.OVAL)])
+def test_shape_kind_maps_to_autoshape_type(make_repo, kind, expected):
+    shape = {"type": "shape", "box": [0, 100, 50, 50], "fill": "accent", **({"shape": kind} if kind else {})}
+    shapes = _shapes(make_repo, _when_template([shape]), {"title": "t"})
+    assert next(sh for sh in shapes if _px(sh) == (32, 228, 50, 50)).auto_shape_type == expected
 
 
 def test_when_is_skipped_for_a_missing_slot(make_repo):
@@ -308,3 +372,114 @@ def test_shape_line_map_adds_a_line_only_on_match(make_repo, root):
     hot, plain = _swatch(render, "高"), _swatch(render, "中")
     assert str(hot.line.color.rgb) == _color(root, "highlight_strong")
     assert plain.line.fill.type == MSO_FILL.BACKGROUND  # 无描边
+
+
+def _run_info(shape):
+    paragraphs = shape.text_frame.paragraphs
+    assert len(paragraphs) == 1  # runs 连排在同一个段落里，自然折行
+    return [(r.text, bool(r.font.bold), str(r.font.color.rgb)) for r in paragraphs[0].runs]
+
+
+def _runs_template(runs, **text):
+    layout = [{"type": "text", "box": [0, 0, 400, 40], "style": "body", "runs": runs, **text}]
+    return _when_template(layout, name={"type": "string"}, detail={"type": "string"})
+
+
+def test_runs_are_consecutive_runs_in_one_paragraph_with_own_style_and_color(make_repo, root):
+    runs = [{"bind": "name", "style": "body_strong"}, {"value": "："}, {"bind": "detail", "color": "accent"}]
+    shapes = _shapes(make_repo, _runs_template(runs), {"title": "t", "name": "名称", "detail": "说明"})
+    shape = next(sh for sh in shapes if sh.has_text_frame and sh.text_frame.text == "名称：说明")
+    assert _run_info(shape) == [("名称", True, _color(root, "text")), ("：", False, _color(root, "text")),
+                                ("说明", False, _color(root, "accent"))]
+    assert [r.font.size.pt for r in shape.text_frame.paragraphs[0].runs] == [12, 12, 12]
+
+
+def test_runs_fall_back_to_the_element_color_and_keep_alignment(make_repo, root):
+    shapes = _shapes(make_repo, _runs_template([{"bind": "name"}], color="primary", align="center", valign="middle"),
+                     {"title": "t", "name": "名称"})
+    shape = next(sh for sh in shapes if sh.has_text_frame and sh.text_frame.text == "名称")
+    assert _run_info(shape) == [("名称", False, _color(root, "primary"))]
+    assert shape.text_frame.paragraphs[0].alignment == PP_ALIGN.CENTER
+
+
+def test_runs_skip_missing_values(make_repo):
+    shapes = _shapes(make_repo, _runs_template([{"bind": "name"}, {"value": "："}, {"bind": "detail"}]), {"title": "t", "name": "名称"})
+    assert "名称：" in [sh.text_frame.text for sh in shapes if sh.has_text_frame]
+
+
+def test_runs_draw_nothing_when_every_run_is_missing(make_repo):
+    shapes = _shapes(make_repo, _runs_template([{"bind": "name"}, {"bind": "detail"}]), {"title": "t"})
+    assert [sh.text_frame.text for sh in shapes if sh.has_text_frame] == ["t"]  # 只有页框的标题
+
+
+def test_runs_resolve_in_the_grid_item_scope_and_support_the_index_bind(make_repo):
+    item = [{"type": "text", "box": [0, 0, "100%", 20], "style": "body",
+             "runs": [{"bind": "#", "style": "body_strong"}, {"value": ". "}, {"bind": "."}]}]
+    grid = {"type": "grid", "box": [0, 0, 400, 100], "bind": "cards", "columns": 1, "item": item}
+    template = _when_template([grid], cards={"type": "array", "maxItems": 4, "items": {"type": "string"}})
+    shapes = _shapes(make_repo, template, {"title": "t", "cards": ["甲", "乙"]})
+    assert [sh.text_frame.text for sh in shapes if sh.has_text_frame][-2:] == ["1. 甲", "2. 乙"]
+
+
+def test_shape_shadow_follows_the_style_and_is_off_by_default(make_repo, root):
+    card = {"type": "shape", "box": [0, 100, 50, 50], "fill": "bg", "shadow": True}
+    plain = {"type": "shape", "box": [0, 200, 50, 50], "fill": "bg"}
+    shapes = _shapes(make_repo, _when_template([card, plain]), {"title": "t"})
+    on, off = (next(sh for sh in shapes if _px(sh) == (32, 128 + y, 50, 50)) for y in (100, 200))
+    spec = load_style(root, "default")["shadow"]
+    (shdw,) = on._element.xpath("./p:spPr/a:effectLst/a:outerShdw")
+    assert (shdw.get("blurRad"), shdw.get("dist"), shdw.get("dir")) == (
+        str(round(spec["blur"] * 9525)), str(round(spec["distance"] * 9525)), str(round(spec["angle"] * 60000)))
+    assert on._element.xpath("./p:spPr/a:effectLst/a:outerShdw/a:srgbClr/@val") == [_color(root, spec["color"])]
+    assert on._element.xpath("./p:spPr/a:effectLst/a:outerShdw/a:srgbClr/a:alpha/@val") == [str(round(spec["alpha"] * 100000))]
+    assert on._element.xpath("./p:style/a:effectRef/@idx") == ["0"]
+    assert off._element.xpath("./p:spPr/a:effectLst") and not off._element.xpath("./p:spPr/a:effectLst/*")
+
+
+def test_shadow_without_a_style_shadow_section_is_a_clear_error(make_repo):
+    card = {"type": "shape", "box": [0, 100, 50, 50], "fill": "bg", "shadow": True}
+    template, example = mini_template(layout=[card])
+    repo = make_repo({template["id"]: (template, example)})
+    path = repo / "styles" / "default" / "style.yaml"
+    style = yaml.safe_load(path.read_text(encoding="utf-8"))
+    del style["shadow"]
+    path.write_text(yaml.safe_dump(style, allow_unicode=True), encoding="utf-8")
+    with pytest.raises(PptError, match="风格没有定义 shadow"):
+        render_deck(deck_of(template["id"], example), repo)
+
+
+# ---- 嵌套 grid：外层每行一个领域，内层是该行的卡片 ----
+
+def _rows_shapes(make_repo, rows):
+    template, _ = rows_template()
+    return _shapes(make_repo, template, {"title": "t", "rows": rows})
+
+
+def test_nested_grid_resolves_binds_per_level_and_columns_per_row(make_repo):
+    shapes = _rows_shapes(make_repo, [
+        {"label": "行一", "cards": [{"name": "甲"}]},
+        {"label": "行二", "cards": [{"name": "乙"}, {"name": "丙"}, {"name": "丁"}]},
+    ])
+    # 外层：1 列、row_height 100、gap 10，body 原点 (32, 128)，grid box 原点 (0, 0)；内层 box 从行内 x=110 起、宽 1000-110
+    assert _text_px(shapes, "行一") == (32, 128, 100, 100)
+    assert _text_px(shapes, "行二") == (32, 128 + 110, 100, 100)
+    assert _text_px(shapes, "甲") == (32 + 110 + 4, 128 + 4, 890 - 8, 20)            # 1 张卡片：占满内层整行（列数 = min(4, 1)）
+    cw = (890 - 2 * 8) / 3                                                           # 3 张卡片 → 3 列
+    for k, name in enumerate("乙丙丁"):
+        assert _text_px(shapes, name) == pytest.approx((32 + 110 + k * (cw + 8) + 4, 128 + 110 + 4, cw - 8, 20))
+
+
+def test_nested_grid_index_bind_counts_the_inner_grid_from_one_in_every_row(make_repo):
+    shapes = _rows_shapes(make_repo, [
+        {"label": "行一", "cards": [{"name": "甲"}, {"name": "乙"}]},
+        {"label": "行二", "cards": [{"name": "丙"}, {"name": "丁"}, {"name": "戊"}]},
+    ])
+    numbers = [sh.text_frame.text for sh in shapes if sh.has_text_frame and sh.text_frame.text.isdigit()]
+    assert numbers == ["1", "2", "1", "2", "3"]
+
+
+def test_nested_grid_draws_every_inner_cell_with_its_own_elements(make_repo):
+    shapes = _rows_shapes(make_repo, [{"label": "行一", "cards": [{"name": "甲"}, {"name": "乙"}]}])
+    cards = [_px(sh) for sh in shapes if sh.width == 441 * 9525]  # 内层 2 列：(890 - 8) / 2 宽的 surface 卡片底
+    assert cards == [(32 + 110, 128, 441, 100), (32 + 110 + 449, 128, 441, 100)]
+    assert [sh.text_frame.text for sh in shapes if sh.has_text_frame and sh.text_frame.text == "配图"] == ["配图", "配图"]

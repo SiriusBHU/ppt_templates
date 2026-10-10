@@ -19,8 +19,8 @@ def test_table_renders_native_table_with_header_and_highlight(make_repo, tmp_pat
     assert (len(table.rows), len(table.columns)) == (4, 4)
     assert frame._element.xpath(".//a:tableStyleId/text()") == ["{2D5ABB26-0587-4C30-8999-92F81FD0307C}"]
     assert table.columns[0].width == 200 * 9525
-    assert str(table.cell(0, 1).fill.fore_color.rgb) == "1F3A5F"   # 表头
-    assert str(table.cell(0, 2).fill.fore_color.rgb) == "EA7317"   # 高亮列的表头
+    assert str(table.cell(0, 1).fill.fore_color.rgb) == "283593"   # 表头
+    assert str(table.cell(0, 2).fill.fore_color.rgb) == "C00000"   # 高亮列的表头
     hot = table.cell(1, 2)
     assert str(hot.fill.fore_color.rgb) == "FFF1E6"
     assert hot.text_frame.paragraphs[0].runs[0].font.bold

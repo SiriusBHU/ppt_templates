@@ -61,7 +61,7 @@ layout:                         # 参考 body 区 1216×560；每个特征一行
       - { type: shape, box: [0, 0, 4, "100%"], fill: accent }
       - { type: text, box: [20, 0, 236, "100%"], bind: feature, style: body_strong, valign: middle }
       - { type: text, box: [270, 0, 260, "100%"], bind: value, style: body_strong, color: accent, valign: middle }
-      - { type: text, box: [544, 0, 32, "100%"], value: "→", style: emphasis, color: muted, align: center, valign: middle }
+      - { type: text, box: [544, 0, 32, "100%"], value: "→", style: emphasis, align: center, valign: middle }
       - { type: text, box: [600, 0, 600, "100%"], bind: requirement, style: body, valign: middle }
 
 guidance:

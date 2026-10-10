@@ -61,8 +61,8 @@ layout:                         # 参考 body 区 1216×560
       - { type: shape, box: [0, 0, "100%", "100%"], fill: surface }
       - { type: shape, box: [0, 0, 4, "100%"], fill: accent }
       - { type: text, box: [24, 0, 300, "100%"], bind: name, style: emphasis, color: primary, valign: middle }
-      - { type: text, box: [340, 0, 200, "100%"], bind: before, style: emphasis, color: muted, align: center, valign: middle }
-      - { type: text, box: [548, 0, 60, "100%"], value: →, style: emphasis, color: muted, align: center, valign: middle }
+      - { type: text, box: [340, 0, 200, "100%"], bind: before, style: emphasis, align: center, valign: middle }
+      - { type: text, box: [548, 0, 60, "100%"], value: →, style: emphasis, align: center, valign: middle }
       - { type: text, box: [616, 0, 200, "100%"], bind: after, style: emphasis, color: accent, align: center, valign: middle }
       - { type: shape, box: [848, 12, 1, "100%-24"], fill: line }
       - { type: text, box: [880, 0, 336, "100%"], bind: delta, style: kpi, align: center, valign: middle }

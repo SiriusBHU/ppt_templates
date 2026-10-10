@@ -1,0 +1,141 @@
+id: software.solution-dual-metrics
+name: 双问题双方案与指标
+roles: [solution, result]
+also_fits: [system, hardware]
+density: talk
+level: subsystem
+tags: [方案, 核心问题, 指标, 收益, 对比]
+when_to_use: 先点出两个核心问题，再并排给出各自对应的方案：每个方案配改进前后的示意图、指标表和关键设计要点，用一页同时讲清「问题 → 方案 → 量化收益」
+when_not_to_use: 只有一个方案、要讲模块处理流程 → software.solution-module-flow；只有改进前后的几个数字、不展开方案 → software.result-before-after；问题多于两个或方案多于两个 → 拆成多页
+frame: standard
+
+slots:
+  type: object
+  required: [title, problems, solutions]
+  properties:
+    title:
+      type: string
+      maxLength: 36
+      description: 标题（24 号加粗，一行写完），一句话结论：方案加最突出的量化收益；这页没有副标题
+    problems:
+      type: array
+      minItems: 2
+      maxItems: 2
+      description: 核心问题，从左到右排列，与下面的两个方案一一对应
+      items:
+        type: object
+        required: [name, aspect, summary]
+        properties:
+          name: { type: string, maxLength: 12, description: 问题名称（短语），红色加粗 }
+          aspect: { type: string, maxLength: 12, description: 问题所在的方面（短语），加粗 }
+          summary: { type: string, maxLength: 50, description: 一句话总结：现象加影响，最多写两行 }
+    solutions:
+      type: array
+      minItems: 2
+      maxItems: 2
+      description: 解决方案，从左到右排列，左边的方案解决左边的问题
+      items:
+        type: object
+        required: [title, metrics, points]
+        properties:
+          title: { type: string, maxLength: 22, description: 方案名称（短语），靛蓝加粗 }
+          diagram:
+            type: string
+            description: 示意图的图片路径，宽幅图（约 5:1）最合适，一般画改进前 → 改进后的机制对比；不填则画带引导文字的占位框
+          metrics:
+            type: object
+            required: [columns, rows]
+            description: 指标表，第一列是指标名；有改进前后对比时写「指标 / 改进前 / 改进后 / 来源」，只有结果时写「指标 / 结果 / 来源」；每格一行写完
+            properties:
+              columns:
+                type: array
+                minItems: 3
+                maxItems: 4
+                items: { type: string, maxLength: 6 }
+              rows:
+                type: array
+                minItems: 2
+                maxItems: 3
+                items:
+                  type: array
+                  prefixItems:
+                    - { type: string, maxLength: 9 }
+                  items: { type: string, maxLength: 10 }
+              highlight_column:
+                type: integer
+                minimum: 1
+                description: 要高亮的列序号（从 0 数起），一般是「改进后」或「结果」列
+            if:
+              properties:
+                columns: { minItems: 4 }
+            then:
+              properties:
+                rows:
+                  items:        # 4 列时除第一列外的格子更窄，只能写 6 个字
+                    prefixItems:
+                      - true
+                      - { maxLength: 6 }
+                      - { maxLength: 6 }
+                      - { maxLength: 6 }
+          points:
+            type: array
+            minItems: 2
+            maxItems: 3
+            description: 方案的关键设计，每条「名称：说明」连排
+            items:
+              type: object
+              required: [name, detail]
+              properties:
+                name: { type: string, maxLength: 10, description: 要点名称（短语），加粗 }
+                detail: { type: string, maxLength: 40, description: 怎么做、带来什么收益 }
+
+layout:                         # 参考 body 区 1216×560（没有 takeaway，实际纵向拉伸到 600）；卡片之间、卡片内边距约 16
+  # 上：核心问题（白色卡片，内部每个问题是一块浅底）
+  - { type: shape, box: [0, 0, 1216, 119], fill: bg, shadow: true }
+  - { type: text, box: [16, 0, 44, 119], value: "核心\n问题", style: emphasis, color: accent, align: center, valign: middle }
+  - type: grid
+    box: [76, 9, 1124, 101]
+    bind: problems
+    columns: 2
+    gap: 16
+    item:
+      - { type: text, box: [0, 0, "100%", 21], bind: name, style: emphasis, color: accent, valign: middle }
+      - { type: shape, box: [0, 24, "100%", "100%-24"], fill: surface }
+      - { type: text, box: [12, 29, "100%-24", 21], bind: aspect, style: emphasis, valign: middle }
+      - { type: text, box: [12, 50, "100%-24", 46], bind: summary, style: lead }
+
+  # 下：两个方案（白色卡片）：名称 / 示意图 / 指标表 / 要点
+  - type: grid
+    box: [0, 134, 1216, 426]
+    bind: solutions
+    columns: 2
+    gap: 16
+    item:
+      - { type: shape, box: [0, 0, "100%", "100%"], fill: bg, shadow: true }
+      - { type: text, box: [16, 11, "100%-32", 26], bind: title, style: title_suffix, color: primary, valign: middle }
+      - { type: image, box: [16, 43, "100%-32", 97], bind: diagram, placeholder: 方案示意图：改进前 → 改进后的机制对比 }
+      - type: component
+        component: table
+        box: [16, 147.5, "100%-32", 119.5]
+        bind: metrics
+        props: { first_column_width: 180 }
+      - type: grid
+        box: [16, 276.5, "100%-32", 138]
+        bind: points
+        columns: 1
+        item:                   # 不设 row_height：条目均分高度，文字从顶端排起；圆点对齐第一行
+          - { type: shape, box: [0, 8, 6, 6], fill: accent, shape: oval }
+          - type: text
+            box: [16, 0, "100%-16", "100%"]
+            style: lead
+            runs:
+              - { bind: name, style: emphasis }
+              - { value: "：", style: emphasis }
+              - { bind: detail }
+
+guidance:
+  - 标题写成「方案 + 量化收益」的一句结论，收益数字要在指标表里有出处
+  - 两个核心问题与两个方案左右对应；问题名点出症结，一句话总结写清现象和影响
+  - 示意图画「改进前 → 改进后」的机制对比，放在同一张宽幅图里；字小看不清时删减细节，不要缩小字号
+  - 指标表只放数值和变化幅度，每格一行写完；放不下的解释写进要点；来源列写数据出处（实测 / 估算）
+  - 要点写「名称：说明」，名称点出机制，说明写怎么做和带来什么收益

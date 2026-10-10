@@ -1,4 +1,5 @@
 # 占位风格：品牌文件到位后整体替换取值，token 名称不变。
+# 文字颜色只用三种：深红（accent / highlight_strong）、靛蓝（primary）、黑（text）；on_primary 只用在深色实心底上。
 # 坐标单位为逻辑像素（画布 1280×720），字号单位为 pt。
 
 fonts:                     # 所有文字统一使用微软雅黑（中文和西文都是），不可更改
@@ -6,33 +7,36 @@ fonts:                     # 所有文字统一使用微软雅黑（中文和西
   latin: 微软雅黑
 
 colors:
-  primary: "#1F3A5F"           # 深蓝：标题、层名底色
-  accent: "#2563EB"            # 亮蓝：副标题、强调条、指标数值
-  text: "#1F2937"              # 正文
-  muted: "#6B7280"             # 次要文字
+  primary: "#283593"           # 靛蓝：结构标签（层名底色、分区表头）
+  accent: "#C00000"            # 深红：标题、小节标题、编号、指标数值
+  text: "#000000"              # 黑：正文
+  muted: "#6B7280"             # 灰：连线等非文字元素（文字不用）
   line: "#D1D5DB"              # 分隔线、边框
   surface: "#F3F5F8"           # 浅底：卡片、层背景
   bg: "#FFFFFF"                # 页面底色
   on_primary: "#FFFFFF"        # 深色底上的文字
   highlight: "#FFF1E6"         # 高亮填充（新增 / 改动）
-  highlight_strong: "#EA7317"  # 高亮描边和文字
+  highlight_strong: "#C00000"  # 高亮描边和文字（深红）
 
 # 字号只允许 24 / 18 / 14 / 12 / 10 / 9 / 8
 text_styles:
-  title:        { size: 24, bold: true, color: primary }   # 标题主体
-  title_suffix: { size: 18, color: primary }               # 与标题同一行的后半句
-  subtitle:     { size: 18, color: accent }                # 副标题（标题下的一句话结论）
+  title:        { size: 24, bold: true, color: accent }    # 标题主体
+  title_suffix: { size: 18, bold: true, color: accent }    # 与标题同一行的后半句
+  subtitle:     { size: 18, color: text }                  # 副标题（标题下的一句话结论）
   emphasis:     { size: 14, bold: true, color: text }      # 重点 / 总结性文字、小节标题
+  lead:         { size: 14, color: text }                  # 14 号正文（不加粗），如要点说明
   body:         { size: 12, color: text }                  # 正常文字
   body_strong:  { size: 12, bold: true, color: text }      # 正常文字加粗（条目名称等）
-  detail:       { size: 10, color: muted }                 # 细节
-  caption:      { size: 9, color: muted }                  # 细节：图例、注释
-  footnote:     { size: 8, color: muted }                  # 细节：数据来源、页码
+  detail:       { size: 10, color: text }                  # 细节
+  caption:      { size: 9, color: text }                   # 细节：图例、注释
+  footnote:     { size: 8, color: text }                   # 细节：数据来源、页码
   kpi:          { size: 24, bold: true, color: accent }    # 指标数值
 
-frame:                     # 上下左右页边距统一 32px；不画页码、数据来源
-  title:       { box: [32, 32, 1216, 40], style: title, suffix_style: title_suffix }
-  takeaway:    { box: [32, 76, 1216, 30], style: subtitle }
-  body:        { box: [32, 128, 1216, 560] }
-  decorations:                 # 每个 standard 页都会画的装饰
-    - { type: shape, box: [32, 116, 1216, 1], fill: line }   # 标题区与正文之间的分隔线
+shadow:                    # 形状 shadow: true 时的投影：柔和的卡片阴影；blur / distance 是逻辑像素，angle 90 = 向下
+  { color: text, alpha: 0.22, blur: 10, distance: 3, angle: 90 }
+
+frame:                     # 上下左右页边距统一 32px；不画页码、数据来源；标题下不画分隔线
+  title:        { box: [32, 32, 1216, 40], style: title, suffix_style: title_suffix }
+  takeaway:     { box: [32, 76, 1216, 30], style: subtitle }
+  body:         { box: [32, 128, 1216, 560] }
+  body_compact: { box: [32, 88, 1216, 600] }   # 页没有 takeaway 时的 body：标题下 16px 起，下边缘不变

@@ -6,7 +6,7 @@ density: talk
 level: system
 tags: [框图, 硬件架构, 方案]
 when_to_use: 用框图说明一个硬件方案由哪些部件组成、部件之间怎么连接，标出本次新增的部件，并配上关键参数和说明
-when_not_to_use: 要展示分层关系（接入层、服务层、硬件层）→ system.solution-layered-arch；只有软件处理流程 → software.solution-module-flow
+when_not_to_use: 要展示分区分层的整体架构，并配上挑战和关键技术 → system.solution-arch-overview；只有软件处理流程 → software.solution-module-flow
 frame: standard
 
 slots:

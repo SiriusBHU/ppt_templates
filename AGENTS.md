@@ -4,7 +4,7 @@
 
 ## 当前状态
 
-已实现：`ppt render / preview / validate / catalog / list / show / sync-skill / mcp`；布局元素 `text` / `bullets` / `shape` / `grid`；组件 `layered-arch` / `table` / `block-diagram`；仓库级校验（spec 7.1 全部规则，外加 skill 副本一致性）和 catalog；skill（`.agents/skills/ppt-templates`）和 MCP server。模板清单见 `catalog.json`。尚未实现：母版（`master.pptx`）支持。
+已实现：`ppt render / preview / validate / catalog / list / show / import / sync-skill / mcp`；布局元素 `text` / `bullets` / `shape` / `grid` / `image`；组件 `layered-arch` / `partitioned-arch` / `lane-roadmap` / `capability-map` / `table` / `block-diagram`；仓库级校验（spec 7.1 全部规则，外加 skill 副本一致性）和 catalog；skill（`.agents/skills/ppt-templates`）和 MCP server。模板清单见 `catalog.json`。尚未实现：母版（`master.pptx`）支持。
 
 ## 术语（不要混用）
 
@@ -30,12 +30,23 @@
   - `frame: none`：坐标以画布左上角为原点。
 - 颜色、字体、文字样式只能引用 `style.schema.json` 规定的 token，不能写死色值或字体名——否则从不同模板拼出来的 deck 风格会不统一。
 - 所有文字统一用微软雅黑（硬性要求），每个文字 run 的 `a:latin` / `a:ea` / `a:cs` 都要写成微软雅黑。本机没有这个字体时，预览会把它固定替换为冬青黑体（见 `src/ppt_templates/preview.py`），预览图只用来检查排版。
-- `frame: standard` 的模板由页框渲染 `title` / `title_suffix` / `takeaway`，`layout` 不得再绑定这三个槽位；上下左右页边距统一 32px，不画页码、数据来源、顶部色条；封面这类整页自由布局的模板用 `frame: none`。
-- 字体和字号对所有模板、所有风格统一（硬性要求）：每个文字样式 token 的字号固定在 `schema/style.schema.json` 里，风格不能改，加载风格时检查；模板元素只能用 `style: <token>`，不能写字号或字体。字号只有 24 / 18 / 14 / 12 / 10 / 9 / 8：标题主体 24 + 同一行后半句 18（`title` + `title_suffix`），副标题 18（`subtitle`），重点或总结性文字 14（`emphasis`），正常文字 12（`body` / `body_strong`），细节 10 / 9 / 8（`detail` / `caption` / `footnote`）。模板通过这些 token 选字号，不直接写数字。
+- `frame: standard` 的模板由页框渲染 `title` / `title_suffix` / `takeaway`，`layout` 不得再绑定这三个槽位；不写 `takeaway`（槽位缺失，或这页没填 / 填了空串）时正文区上移到风格的 `frame.body_compact`（默认 `[32, 88, 1216, 600]`：标题下 16px 起，下边缘不变），layout 坐标仍按 1216×560 写、纵向拉伸到 600，字号不缩放，风格没写 `body_compact` 就还用 `body`；上下左右页边距统一 32px，不画页码、数据来源、顶部色条、标题下的分隔线；封面这类整页自由布局的模板用 `frame: none`。
+- 字体和字号对所有模板、所有风格统一（硬性要求）：每个文字样式 token 的字号固定在 `schema/style.schema.json` 里，风格不能改，加载风格时检查；模板元素只能用 `style: <token>`，不能写字号或字体。字号只有 24 / 18 / 14 / 12 / 10 / 9 / 8：标题主体 24 + 同一行后半句 18（`title` + `title_suffix`），副标题 18（`subtitle`），重点或总结性文字 14 加粗（`emphasis`），14 号不加粗的要点正文（`lead`），正常文字 12（`body` / `body_strong`），细节 10 / 9 / 8（`detail` / `caption` / `footnote`）。模板通过这些 token 选字号，不直接写数字。
 - `slots` 的每个顶层属性都必须被渲染（由页框渲染，或被 `layout` 元素绑定它或它的子路径），同一路径不能被两个顶层元素重复绑定，否则校验报错。`bind` 是点号路径，相对当前作用域解析：顶层是页的 `data`，`grid` 的 `item` 内是当前项，`.` 表示当前项本身。
 - `grid.columns` 是列数上限（实际列数 = min(columns, 项数)，项少时占满整行），`row_height` 固定行高、从顶部排起；任何元素可用 `when: <点号路径>`，值为 null / "" / [] / {} 时不渲染；颜色随数据变化用 `color_map`（text）或 `by` + `fill_map` / `line_map`（shape），形式 `{值: 颜色 token}`，值先转字符串再匹配，取值槽位有 `enum` 时键必须在其内。
+- `grid` 的 `item` 内可用 `bind: "#"` 取当前项的序号（从 1 起，字符串，只能绑定给 `text`）；在 `item` 之外使用会报错，也不算对槽位的绑定。
+- `grid` 的 `item` 里可以再放 `grid`（嵌套任意层）：内层 `bind` 相对外层当前项解析，内层 `columns` / `row_height` 各自生效，`#` 是内层 grid 的序号；校验按外层最小单元格逐层检查 box，指针形如 `/layout/0/item/1/item/0/box`。
+- `image` 元素 `{type: image, box, bind, placeholder, fit?: contain | cover, when?}`：`bind` 指向 string 槽位（图片路径），`placeholder`（必填）是引导文字。值缺失或为空串时画 `surface` 底、无阴影的矩形，居中写 `placeholder`（`detail`、`text` 色）——`example.yaml` 一般留空，预览图就是这个占位框；有值时把图片放进 box，`contain`（默认）等比缩放、居中，`cover` 等比铺满并裁掉超出部分。支持 png / jpg / jpeg / gif / bmp / tiff。路径相对 deck 文件所在目录（模板的 `example.yaml` 和 `ppt preview <id>` 相对模板目录），CLI 可写绝对路径；deck 校验时文件不存在、扩展名不支持或读不出图片会报中文错误，如 `/pages/0/data/photo  图片 a.png 不存在`。可用在 grid 的 `item` 里，槽位计入「已渲染」「不得重复绑定」。
+- `text` 除 `bind` / `value` 外可写 `runs: [{bind | value, style?, color?}]`（三者有且只有一个），在同一个段落里连排多个 run 并一起折行，如「加粗名称：」+ 正常说明；run 没写 `style` / `color` 就用元素的，run 的 `bind` 与元素的 `bind` 一样在当前作用域解析（`#` 可用）、一样计入「槽位已渲染」和「不得重复绑定」；`runs` 不支持 `color_map` / `by`，`when` 作用于整个元素。
+- `shape` 写 `shadow: true` 画卡片投影，样式（颜色 token、alpha、blur / distance 像素、angle 度）只来自风格的 `shadow` 小节，模板不能自己写；风格没有 `shadow` 时渲染报错。
 - YAML 按 1.2 读取：只有 `true` / `false` 是布尔，`yes` / `no` / `on` / `off` 都是字符串（所以 `no:` 可以当字段名，布尔字段写 `yes` 会被 schema 拒绝）。
-- 表格、架构图、框图这类复杂元素不在 YAML 里逐个画框，而是引用 `src/ppt_templates/` 中的内置组件（`table`、`layered-arch`、`block-diagram`）。组件自带数据 Schema、`props` Schema 和语义检查，模板 `example.yaml` 与 deck 的数据、layout 的 `props` 都会按它们校验。需要新的复杂元素时，新增组件，而不是在模板里堆 shape。
+- 表格、架构图、框图这类复杂元素不在 YAML 里逐个画框，而是引用 `src/ppt_templates/` 中的内置组件（`table`、`layered-arch`、`partitioned-arch`、`lane-roadmap`、`capability-map`、`block-diagram`）。组件自带数据 Schema、`props` Schema 和语义检查，模板 `example.yaml` 与 deck 的数据、layout 的 `props` 都会按它们校验。需要新的复杂元素时，新增组件，而不是在模板里堆 shape。
+- 风格约定（用户定的 house style，新模板默认遵守，不要等用户逐页再提）：
+  - 文字颜色只用三种：深红（`accent` / `highlight_strong`）、靛蓝（`primary`）、黑（`text`）；`on_primary`（白）只用在深色实心底上；文字不用 `muted` 等其他颜色。`ppt validate` 检查：layout 里 `text` / `bullets` 的 `color`、`color_map` 的值、`runs[].color`，以及风格里每个 `text_styles.*.color`，只能取 `accent` / `highlight_strong` / `primary` / `text` / `on_primary`。
+  - 标题和短语（名称、标签）加粗（`body_strong` / `emphasis`），成句的说明不加粗。
+  - 一个内容块用一张白底带阴影的卡片包住（`fill: bg` + `shadow: true`，不描边）；不画分隔线（竖线、横线、标题下横线）。
+  - 「名称：说明」写在同一行，用 `runs`（加粗名称 + 正常说明）；序号用 grid 的 `#`。
+  - `example.yaml` 写引导文字（说明这里该填什么，而不是真实内容），每个字符串用到 `maxLength` 的八成左右，让预览体现写满时的效果；文字要填满所在的框，不留半截空行。
 - `catalog.json` 是生成物，改动任何模板后都要重新生成，不要手改。
 
 ## 命令
@@ -51,6 +62,7 @@ uv run ppt catalog                       # 重新生成 catalog.json
 uv run ppt render deck.yaml -o out/x.pptx
 uv run ppt preview deck.yaml -o dir/     # 每页一张 PNG（soffice → PDF → pypdfium2）
 uv run ppt preview <id> --write          # 用 example.yaml 重新生成该模板的 preview.png
+uv run ppt import SKEL.pptx [--slide N ...] -o DIR   # 骨架 pptx → DIR/slide-N/{shapes.yaml,original.png}，供 agent 照着写模板
 uv run ppt sync-skill                    # 把 skill 正本复制到 .claude/skills/（改过正本后运行）
 uv run ppt mcp                           # 启动 stdio MCP server
 uv run pytest                            # 全部测试；找不到 soffice 时跳过预览测试
@@ -59,10 +71,12 @@ uv run pytest tests/test_render.py::test_name   # 单个测试
 
 `out/` 和 `preview/` 是本地输出目录，已加入 .gitignore。
 
+`ppt import` 的 `shapes.yaml`：`box` 是画布像素，`body_box` 已换算成相对 body 区、按 1216×560 参考尺寸的坐标，可直接写进 layout；`frame_guess.body: compact` 表示这页内容紧贴标题、正文区用 `body_compact`（`body_box` 随之按它换算）；图片和「图片」占位框带 `suggest: image`，提示用 `image` 元素。
+
 ## 新增一个模板
 
 1. 选主题和主页功能，建目录 `templates/<topic>/<roles[0]>-<形态>/`。
-2. 参照 `templates/system/solution-layered-arch/` 写 `template.yaml` 和 `example.yaml`。
+2. 参照 `templates/system/solution-arch-overview/` 写 `template.yaml` 和 `example.yaml`。
 3. `uv run ppt validate`，按报错修到没有错误。
 4. `uv run ppt preview <id> --write` 生成 `preview.png`，打开看有没有溢出、重叠、没对齐。
 5. `uv run ppt catalog` 重新生成索引。
@@ -70,7 +84,7 @@ uv run pytest tests/test_render.py::test_name   # 单个测试
 
 ## MCP
 
-`ppt mcp` 以 stdio 方式提供六个工具（实现在 `src/ppt_templates/mcp_server.py`，内部复用 CLI 的同一批函数）：`get_taxonomy`、`list_templates`、`get_template`（不含 `layout`）、`validate_deck`（返回 `{"ok", "errors"}`）、`render_deck`（只写入仓库的 `out/`，`filename` 必须是以 `.pptx` 结尾、不含路径分隔符的文件名）、`preview_deck`（每页一张宽 1280 的 PNG，需要 `soffice`）。工具失败时返回中文错误。
+`ppt mcp` 以 stdio 方式提供六个工具（实现在 `src/ppt_templates/mcp_server.py`，内部复用 CLI 的同一批函数）：`get_taxonomy`、`list_templates`、`get_template`（不含 `layout`）、`validate_deck`（返回 `{"ok", "errors"}`）、`render_deck`（只写入仓库的 `out/`，`filename` 必须是以 `.pptx` 结尾、不含路径分隔符的文件名）、`preview_deck`（每页一张宽 1280 的 PNG，需要 `soffice`）。image 槽位的图片路径在 MCP 里相对仓库根目录解析，并且只能引用仓库之内的文件（`..`、绝对路径、符号链接解析后落在仓库之外都会被拒绝），因为 deck 来自客户端，不能借它把仓库之外的文件读进 `.pptx` 或预览图。工具失败时返回中文错误。
 
 - Claude Code：仓库根目录的 `.mcp.json` 已配置，按项目加载。
 - Claude Desktop 等其他客户端，在它们的 MCP 配置里加：

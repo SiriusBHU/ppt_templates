@@ -4,6 +4,8 @@ import math
 import re
 from dataclasses import dataclass
 
+from .paths import is_empty
+
 CANVAS_W, CANVAS_H = 1280, 720
 REF_W, REF_H = 1216, 560  # frame: standard 的参考 body 尺寸
 EMU_PER_PX = 9525
@@ -52,6 +54,14 @@ def grid_cells(box: Box, columns: int, gap: float, count: int, row_height: float
     cw = (w - gap * (columns - 1)) / columns
     ch = (h - gap * (rows - 1)) / rows if row_height is None else row_height
     return [(x + (i % columns) * (cw + gap), y + (i // columns) * (ch + gap), cw, ch) for i in range(count)]
+
+
+def body_box(style: dict, data: dict) -> Box:
+    """frame: standard 页的 body 区（画布像素）：页没有 takeaway（缺失或为空）时用风格的 body_compact，风格没写就还用 body。"""
+    frame = style["frame"]
+    if is_empty(data.get("takeaway")) and "body_compact" in frame:
+        return tuple(frame["body_compact"]["box"])
+    return tuple(frame["body"]["box"])
 
 
 @dataclass(frozen=True)
