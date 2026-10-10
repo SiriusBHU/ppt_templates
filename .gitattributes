@@ -1,0 +1,4 @@
+# 文本一律用 LF 检出：Windows 上 core.autocrlf=true 会转成 CRLF，而 SKILL.md 的 frontmatter 等按 LF 处理
+* text=auto eol=lf
+*.png binary
+*.pptx binary

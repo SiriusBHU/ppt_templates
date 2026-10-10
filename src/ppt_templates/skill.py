@@ -37,6 +37,7 @@ def sync_skill(root: Path) -> list[Path]:
 def _frontmatter_errors(name: str, text: str) -> list[str]:
     """正本的 frontmatter：name 与目录名一致，description 非空且不超过 1024 字。"""
     source = source_path(name)
+    text = text.replace("\r\n", "\n")  # Windows 上编辑或检出的文件可能是 CRLF
     parts = text.split("---\n", 2) if text.startswith("---\n") else []
     if len(parts) < 3:
         return [f"{source}  /  缺少 frontmatter（文件开头应为 --- 包起来的 YAML）"]

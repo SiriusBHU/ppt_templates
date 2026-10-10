@@ -70,7 +70,7 @@ def test_sync_without_source_is_an_error(make_repo):
 def test_sync_with_one_source_missing_writes_nothing(skill_repo):
     (skill_repo / copy_path(FIRST)).unlink()
     (skill_repo / source_path(SECOND)).unlink()
-    with pytest.raises(PptError, match=f"{source_path(SECOND)}  /  正本不存在"):
+    with pytest.raises(PptError, match=re.escape(f"{source_path(SECOND)}  /  正本不存在")):
         sync_skill(skill_repo)
     assert not (skill_repo / copy_path(FIRST)).exists()
 

@@ -20,6 +20,8 @@ class ImageSource:
         shown = f"图片 {value}"
         if Path(value).suffix.lower() not in EXTENSIONS:
             raise PptError(f"{shown} 的格式不支持，只能用 {' / '.join(e.lstrip('.') for e in EXTENSIONS)}")
+        if "\0" in value:  # macOS / Linux 上 resolve 会抛 ValueError，Windows 上只会判成不存在，这里统一处理
+            raise PptError(f"{shown} 无法读取：路径里有 NUL 字符")
         try:
             path = (self.base / value).resolve()
             if self.confine is not None and not path.is_relative_to(self.confine.resolve()):
@@ -32,6 +34,6 @@ class ImageSource:
                 pass
         except PptError:
             raise
-        except (OSError, ValueError) as e:  # 含 PIL.UnidentifiedImageError、路径里有 NUL
+        except (OSError, ValueError) as e:  # 含 PIL.UnidentifiedImageError
             raise PptError(f"{shown} 无法读取：{e}") from e
         return path

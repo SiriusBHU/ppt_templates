@@ -5,6 +5,7 @@ from pptx import Presentation
 from pptx.enum.shapes import MSO_SHAPE_TYPE
 from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
 
+from conftest import CAN_SYMLINK, needs_symlink
 from factories import deck_of, image_template, rows_template
 from ppt_templates.cli import main
 from ppt_templates.errors import PptError
@@ -159,6 +160,7 @@ def test_a_directory_is_not_an_image(tmp_path):
         ImageSource(tmp_path).resolve("dir.png")
 
 
+@needs_symlink
 def test_symlink_to_a_non_image_is_rejected(tmp_path):
     (tmp_path / "secret.txt").write_text("x", encoding="utf-8")
     (tmp_path / "link.png").symlink_to(tmp_path / "secret.txt")
@@ -173,7 +175,8 @@ def confined(tmp_path):
     inside = tmp_path / "repo"
     make_png(inside / "assets" / "ok.png")
     make_png(tmp_path / "outside.png")
-    (inside / "escape.png").symlink_to(tmp_path / "outside.png")
+    if CAN_SYMLINK:
+        (inside / "escape.png").symlink_to(tmp_path / "outside.png")
     return ImageSource(inside, confine=inside), tmp_path
 
 
@@ -183,7 +186,7 @@ def test_confine_allows_files_inside(confined):
     assert images.resolve(str(tmp_path / "repo" / "assets" / "ok.png"))  # 绝对路径只要在里面也行
 
 
-@pytest.mark.parametrize("name", ["../outside.png", "assets/../../outside.png", "escape.png"])
+@pytest.mark.parametrize("name", ["../outside.png", "assets/../../outside.png", pytest.param("escape.png", marks=needs_symlink)])
 def test_confine_rejects_files_outside_even_via_dotdot_or_symlinks(confined, name):
     images, _ = confined
     with pytest.raises(PptError, match="不在允许的目录内"):

@@ -1,3 +1,5 @@
+import re
+
 import pytest
 import yaml
 
@@ -11,7 +13,7 @@ from ppt_templates.schemas import errors
 def test_yaml_syntax_error_becomes_ppt_error(tmp_path):
     path = tmp_path / "bad.yaml"
     path.write_text("pages: [\n  - a: b\n  c", encoding="utf-8")
-    with pytest.raises(PptError, match=rf"^{path}  /  YAML 语法错误："):
+    with pytest.raises(PptError, match=rf"^{re.escape(str(path))}  /  YAML 语法错误："):
         load_yaml(path)
 
 

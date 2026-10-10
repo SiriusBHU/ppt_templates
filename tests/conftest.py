@@ -1,4 +1,5 @@
 import shutil
+import tempfile
 from pathlib import Path
 
 import pytest
@@ -8,6 +9,20 @@ from ppt_templates.catalog import write_catalog
 from ppt_templates.loader import find_repo_root, load_example
 
 TEMPLATE_ID = "system.solution-arch-overview"
+
+
+def _can_symlink() -> bool:
+    """Windows 上普通用户默认不能建符号链接（WinError 1314）。"""
+    with tempfile.TemporaryDirectory() as d:
+        try:
+            (Path(d) / "link").symlink_to(Path(d) / "target")
+        except OSError:
+            return False
+    return True
+
+
+CAN_SYMLINK = _can_symlink()
+needs_symlink = pytest.mark.skipif(not CAN_SYMLINK, reason="需要建符号链接的权限（Windows 上要开开发者模式或用管理员运行）")
 
 
 @pytest.fixture(scope="session")

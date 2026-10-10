@@ -9,7 +9,7 @@ from PIL import Image as PilImage
 from pptx import Presentation
 from pptx.enum.shapes import MSO_SHAPE_TYPE
 
-from conftest import TEMPLATE_ID
+from conftest import CAN_SYMLINK, TEMPLATE_ID, needs_symlink
 from factories import deck_of, image_template, mini_template
 from ppt_templates import mcp_server
 from ppt_templates.errors import PptError
@@ -147,12 +147,13 @@ PHOTO_ID = "common.overview-photo"
 
 @pytest.fixture
 def photo_repo(make_repo, monkeypatch, tmp_path):
-    """含 image 模板的临时仓库（tmp_path/repo）；仓库内有 assets/in.png，仓库外有 tmp_path/out.png 和指向它的符号链接 link.png。"""
+    """含 image 模板的临时仓库（tmp_path/repo）；仓库内有 assets/in.png，仓库外有 tmp_path/out.png，能建符号链接时还有指向它的 link.png。"""
     repo = make_repo({PHOTO_ID: image_template()})
     for path in (repo / "assets" / "in.png", tmp_path / "out.png"):
         path.parent.mkdir(exist_ok=True)
         PilImage.new("RGB", (40, 20), "red").save(path)
-    (repo / "link.png").symlink_to(tmp_path / "out.png")
+    if CAN_SYMLINK:
+        (repo / "link.png").symlink_to(tmp_path / "out.png")
     monkeypatch.chdir(repo)
     return repo
 
@@ -170,7 +171,7 @@ def test_images_inside_the_repo_resolve_against_the_repo_root(photo_repo, tmp_pa
     assert len([sh for sh in prs.slides[0].shapes if sh.shape_type == MSO_SHAPE_TYPE.PICTURE]) == 1
 
 
-@pytest.mark.parametrize("photo", ["../out.png", "link.png", "OUTSIDE", "/etc/passwd.png"])
+@pytest.mark.parametrize("photo", ["../out.png", pytest.param("link.png", marks=needs_symlink), "OUTSIDE", "/etc/passwd.png"])
 def test_images_outside_the_repo_are_rejected(photo_repo, tmp_path, photo):
     photo = str(tmp_path / "out.png") if photo == "OUTSIDE" else photo
     result = mcp_server.validate_deck(photo_deck(photo))
