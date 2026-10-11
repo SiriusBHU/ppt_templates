@@ -6,7 +6,7 @@ density: talk
 level: system
 tags: [瓶颈, 根因, 量化指标]
 when_to_use: 说明系统当前的瓶颈：先给出现象，再用量化指标说明代价，最后拆解根因
-when_not_to_use: 只讲单个软件特性的实现缺陷、有三个并列痛点 → software.problem-pain-points；已经有解决方案、讲怎么改 → system.solution-arch-overview
+when_not_to_use: 只讲单个软件特性的实现缺陷、有三个并列痛点 → software.problem-pain-points；已经有解决方案、讲怎么改 → solution.solution-arch-overview
 frame: standard
 
 slots:

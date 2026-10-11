@@ -1,0 +1,70 @@
+title: 分层介质方案构想（主题短语）
+title_suffix: 后半句点明核心思路：以什么组合替代什么介质
+summary:
+  - media: 本代方案用的介质组合（一）
+    level: Lx.5
+    effect: 这一代方案得到的效果（描述性，黑色）
+    tone: plain
+  - media: 本代方案用的介质组合（二）
+    level: Lx.5
+    effect: 这一代方案的效果口号（可带引号）
+    tone: strong
+  - media: 本代方案用的介质组合（三）
+    level: Lx.5
+    effect: 这一代方案的效果口号（可带引号）
+    tone: strong
+scenarios:
+  - name: 业务场景或数据名称（一）
+    metrics:
+      - 容量量级：TB级
+      - 读写延时：ns级
+      - 带宽量级：GB/s
+  - name: 业务场景或数据名称（二）
+    metrics:
+      - 容量量级：TB级
+      - 读写延时：ns级
+      - 带宽量级：TB/s
+  - name: 业务场景或数据名称（三）
+    metrics:
+      - 容量量级：PB级
+      - 读写延时：us级
+      - 带宽量级：GB/s
+note: 一句话点明各种介质在关键指标上差异巨大、必须按业务场景组合使用，最多两行
+media_table:
+  columns: [介质, 指标一, 指标二, 指标三]
+  rows:
+    - [介质甲, 值（单位）, 值（单位）, 值（单位）]
+    - [介质乙, 值（单位）, 值（单位）, 值（单位）]
+    - [介质丙, 值（单位）, 值（单位）, 值（单位）]
+    - [介质丁, 值（单位）, 值（单位）, 值（单位）]
+    - [介质戊, 值（单位）, 值（单位）, 值（单位）]
+arch_name: X.5 组合介质架构名
+compute:
+  name: 计算单元名称
+  on_chip: 片上存储名称
+layers:
+  - { level: L1, media: 本层介质组合名称（一）, kind: base }
+  - { level: L1.5, media: 新增层介质组合（一）, kind: extended }
+  - { level: L2, media: 本层介质组合名称（二）, kind: base }
+  - { level: L2.5, media: 新增层介质组合（二）, kind: extended }
+  - { level: L3, media: 本层介质组合名称（三）, kind: base }
+  - { level: L3.5, media: 新增层介质组合（三）, kind: extended }
+  - { level: L4, media: 本层介质组合名称（四）, kind: base }
+features:
+  - levels: Lx / Lx.5 存储
+    stores: 数据类型（列举几类）
+    points:
+      - { name: 技术点名称（一）, text: 做法和达到的效果 }
+      - { name: 技术点名称（二）, text: 做法和达到的效果 }
+  - levels: Lx / Lx.5 存储
+    stores: 数据类型（列举几类）
+    points:
+      - { name: 技术点（一）, text: 做法一句话说完 }
+      - { name: 技术点（二）, text: 做法一句话说完 }
+      - { name: 技术点（三）, text: 做法一句话说完 }
+  - levels: Lx / Lx.5 存储
+    stores: 数据类型（列举几类）
+    points:
+      - { name: 技术点名称（三）, text: 做法和达到的效果 }
+      - { name: 技术点名称（四）, text: 做法和达到的效果 }
+banner: 一句话结论：这样的分层组合带来什么整体收益

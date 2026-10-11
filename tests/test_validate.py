@@ -30,7 +30,7 @@ def test_mini_template_is_valid(make_repo):
     ({"density": "read"}, "/density  目录名以 -read 结尾，当且仅当 density: read"),
     ({"also_fits": ["common"]}, "/also_fits/0  不能包含模板自己的主题"),
     ({"also_fits": ["galaxy"]}, "/also_fits/0  主题 galaxy 不在 taxonomy.yaml 中"),
-    ({"level": "module"}, "/level  level 只用于 hardware、software、system 主题"),
+    ({"level": "module"}, "/level  level 只用于 hardware、software、solution、system 主题"),
     ({"layout": [{"type": "text", "box": [0, 0, 10, 10], "bind": "note", "style": "body", "size": 13}]},
      "/layout/0  不允许的字段 size"),
     ({"frame": "wide"}, "/frame  取值 wide 不在可选范围 ['standard', 'none']"),

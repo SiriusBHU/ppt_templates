@@ -4,11 +4,11 @@ from ppt_templates.validate import validate_repo
 
 
 def test_catalog_entry_for_real_template(root):
-    entry = next(e for e in build_catalog(root) if e["id"] == "system.solution-arch-overview")
+    entry = next(e for e in build_catalog(root) if e["id"] == "solution.solution-arch-overview")
     assert entry == {
-        "id": "system.solution-arch-overview",
-        "topic": "system",
-        "also_fits": ["software", "hardware"],
+        "id": "solution.solution-arch-overview",
+        "topic": "solution",
+        "also_fits": ["system", "software", "hardware"],
         "name": "分区架构方案总览",
         "roles": ["solution", "feature"],
         "density": "talk",

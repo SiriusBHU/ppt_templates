@@ -1,12 +1,12 @@
-id: software.solution-dual-metrics
+id: solution.solution-dual-metrics
 name: 问题与方案对照（示意图 + 指标表 + 设计要点）
 roles: [solution, problem, result]
-also_fits: [system, hardware]
+also_fits: [system, hardware, software]
 density: talk
 level: subsystem
 tags: [问题方案对照, 机制示意图, 指标表, 设计要点, 收益]
 when_to_use: 一页讲清一两个核心问题和各自的解法：顶部虚线框里列问题（问题名 + 所在方面 + 一句话总结），下方每个方案一栏，配机制示意图、前后指标表和设计要点
-when_not_to_use: 只有一个方案、要讲模块处理流程 → software.solution-module-flow；只列痛点不讲方案 → software.problem-pain-points；只讲改进前后的指标 → software.result-before-after
+when_not_to_use: 只有一个方案、要讲模块处理流程 → solution.solution-module-flow；只列痛点不讲方案 → software.problem-pain-points；只讲改进前后的指标 → software.result-before-after
 frame: standard
 
 structure:

@@ -1,0 +1,151 @@
+id: solution.solution-sub-columns
+name: 总述 + 子方案分栏
+roles: [solution, feature]
+also_fits: [system, hardware, software]
+density: talk
+level: system
+tags: [方案, 子方案, 分栏, 架构图, 收益表]
+when_to_use: 一页讲清「整体方案 = 若干专用子方案的组合」：顶部总述场景负载需求和组合式方案（图示 + 文字），下方每个子方案一栏，各配一句话特征、架构图、收益表、目标与优化方向
+when_not_to_use: 只讲一个方案的分区架构 → solution.solution-arch-overview；问题与方案对照、不分子方案 → solution.solution-dual-metrics；只讲模块内部处理流程 → solution.solution-module-flow
+frame: standard
+
+structure:
+  - 标题：结论式一行，「主题：判断」——主题是方案名（可带代际），判断写清什么需求驱动方案向哪里演进；24 号主体 + 18 号后半句同行
+  - 顶部灰底圆角带（总述）：讲「负载需求 → 组合方案」。左侧红框卡是整体方案（方案名称 + 整体结构示意图）；中间是场景负载需求（多行居中，写并发、调用、存储等负载特点）；右侧红框把若干专用单元用「+」连成组合——每个单元上方写它应对的需求、白底框里写单元名，红框底部的红字给出组合的定性结论
+  - 下方子方案栏：每栏对应顶部组合里的一个单元，从左到右顺序一致；栏标题压在栏框顶边上（白底遮住框线），写法「场景 - 作用：方案名」，红色加粗居中
+  - 栏内自上而下：一句话特征（括号句，居中）→ 架构图（图片）→ 收益表（白底只画横线的小表，收益列可高亮）→ 栏底要点（第一段是目标「目标：目标名 - 一句话」，其余是优化方向「名称：做法」，分段不带项目符号，全部加粗）
+  - 关系：顶部组合的单元与下方栏目一一对应；栏内「特征 → 架构 → 收益 → 目标 → 方向」从定性到定量展开，收益表里的数字要在优化方向里有出处
+
+slots:
+  type: object
+  required: [title, title_suffix, overview_name, load, units, note, subs]
+  properties:
+    title:
+      type: string
+      maxLength: 18
+      description: 标题主体（24 号加粗、深红）：方案主题，可带代际；中文不超过 12 个字（英文、数字约半个字宽）
+    title_suffix:
+      type: string
+      maxLength: 28
+      description: 与标题同一行的后半句（18 号、深红）：什么需求驱动方案向哪里演进；中文不超过 19 个字
+    overview_name:
+      type: string
+      maxLength: 14
+      description: 整体方案名称（14 号加粗、居中、一行），点明「合一 / 组合」类的定位；中文不超过 10 个字
+    overview_image:
+      type: string
+      description: 整体结构示意图的图片路径，留空显示占位框
+    load:
+      type: string
+      maxLength: 44
+      description: 场景负载需求（14 号、居中、最多四行）：什么负载，并发、调用、存储上的特点
+    units:
+      type: array
+      minItems: 2
+      maxItems: 3
+      description: 组合方案的专用单元，从左到右用连接符串起来，和下方子方案栏一一对应、顺序相同
+      items:
+        type: object
+        required: [need, name]
+        properties:
+          need: { type: string, maxLength: 12, description: 这个单元应对的需求（14 号加粗、居中、一行），中文不超过 10 个字 }
+          name: { type: string, maxLength: 8, description: 单元名（18 号加粗、居中，白底框里，一行），中文不超过 6 个字（可带英文，英文约半个字宽） }
+          joiner: { type: string, maxLength: 1, description: 与下一个单元之间的连接符，一般是 +；最后一个单元不填 }
+    note:
+      type: string
+      maxLength: 24
+      description: 组合的定性结论（14 号加粗、深红、居中，一行），写在组合框底部；中文不超过 16 个字
+    subs:
+      type: array
+      minItems: 2
+      maxItems: 3
+      description: 子方案，每栏一个，从左到右，和顶部组合单元一一对应、顺序相同
+      items:
+        type: object
+        required: [scene, action, name, feature, metrics, points]
+        properties:
+          scene: { type: string, maxLength: 6, description: 子方案服务的场景（短语），中文不超过 4 个字 }
+          action: { type: string, maxLength: 6, description: 在整体方案中的作用（短语），中文不超过 4 个字 }
+          name: { type: string, maxLength: 8, description: 子方案名（可带英文）；栏标题 = 场景 - 作用：方案名（18 号加粗、深红、居中、一行），三者合计不超过 14 个中文宽 }
+          feature: { type: string, maxLength: 38, description: 一句话特征（14 号、居中、最多两行，自动加圆括号），中文不超过 32 个字（英文、数字约半个字宽） }
+          diagram: { type: string, description: 架构图的图片路径，留空显示占位框 }
+          metrics:
+            type: object
+            description: 收益表（table 组件）：columns 是表头，rows 每行一组数据、两三行；widths 按各列内容长短给相对宽度，让每格一行写完；highlight_column 指向收益列
+          points:
+            type: array
+            minItems: 2
+            maxItems: 3
+            description: 栏底要点，每栏两段或三段：第一条是目标（名称固定写「目标」，做法写「目标名 - 一句话」，含适用场景），其余是优化方向（名称写 优化方向1 等）
+            items:
+              type: object
+              required: [name, text]
+              properties:
+                name: { type: string, maxLength: 10, description: 要点名（加粗，自动接「：」）：目标 / 优化方向1 … }
+                text: { type: string, maxLength: 64, description: 做法与收益，关键数字写进来；名称 + 做法合计不超过三行 }
+                highlight: { type: string, maxLength: 16, description: 最关键的收益数字（蓝色加粗，接在做法句尾），可选 }
+
+layout:                         # 参考 body 区 1216×560（本页无 takeaway，正文区自动上移并纵向拉伸到 600）
+  # 顶部总述带：灰底圆角面板（负载需求 → 组合方案）
+  - { type: shape, box: [0, 0, 1216, 92], shape: rounded, radius: 13, fill: surface_light, line: surface }
+  # 左：整体方案红框卡（名称 + 整体结构示意图）
+  - { type: shape, box: [28, 3, 216, 86], fill: bg, line: accent }
+  - { type: text, box: [28, 5, 216, 26], bind: overview_name, style: emphasis, align: center, valign: middle }
+  - { type: image, box: [46, 33, 180, 40], bind: overview_image, placeholder: 整体结构示意图 }
+  # 中：场景负载需求
+  - { type: text, box: [264, 1, 216, 90], bind: load, style: lead, align: center, valign: middle }
+  # 右：组合方案红框（专用单元用连接符串起，底部红字定性结论）
+  - { type: shape, box: [500, 3, 692, 86], fill: surface_light, line: accent }
+  - type: grid
+    box: [512, 5, 668, 62]
+    bind: units
+    columns: 3
+    gap: 34
+    item:
+      - { type: text, box: [0, 0, "100%", 24], bind: need, style: emphasis, align: center, valign: middle }
+      - { type: shape, box: [0, 26, "100%-34", 34], fill: bg, line: line }
+      - { type: text, box: [0, 26, "100%-34", 34], bind: name, style: heading, align: center, valign: middle }
+      - { type: text, box: ["100%-34", 26, 34, 34], bind: joiner, style: heading, align: center, valign: middle, when: joiner }
+  - { type: text, box: [556, 63, 580, 22], bind: note, style: emphasis, color: accent, align: center, valign: middle }
+  # 下方：每个子方案一栏，栏标题压在栏框顶边上（白底遮住框线）
+  - type: grid
+    box: [0, 102, 1216, 458]
+    bind: subs
+    columns: 3
+    gap: 12
+    item:
+      - { type: shape, box: [0, 16, "100%", "100%-16"], fill: bg, line: line }
+      - { type: shape, box: ["6%", 0, "88%", 32], fill: bg }
+      - type: text
+        box: ["4%", 0, "92%", 32]
+        style: heading
+        color: accent
+        align: center
+        valign: middle
+        runs:
+          - { bind: scene }
+          - { value: " - " }
+          - { bind: action }
+          - { value: "：" }
+          - { bind: name }
+      - type: text
+        box: [8, 34, "100%-16", 46]
+        style: lead
+        align: center
+        runs:
+          - { value: "（" }
+          - { bind: feature }
+          - { value: "）" }
+      - { type: image, box: [8, 83, "100%-16", 76], bind: diagram, placeholder: 架构图：这个子方案的内部结构 }
+      - type: component
+        component: table
+        box: [8, 163, "100%-16", 92]
+        bind: metrics
+        props: { look: plain, text_style: caption, align: center }
+      - { type: bullets, box: [16, 259, "100%-32", "100%-279"], bind: points, style: emphasis, marker: false }
+
+guidance:
+  - 栏的顺序和顶部组合单元一一对应，方案名和单元名一致，读者从上往下能直接对上号
+  - 收益表两三行、每格一行写完；收益列用 highlight_column 高亮，表里的数字要在优化方向里有出处
+  - 优化方向最多两条，每条写清「怎么做」和「带来多少收益」，关键数字不要漏
+  - 整体示意图和各栏架构图留空时显示占位框，出正式稿前再补图

@@ -1,0 +1,69 @@
+title: 某互连技术（某形态）：
+title_suffix: 后半句写对各代的结论：近期一代继续压成本，远期一代摸高性能、提前布局
+goals:
+  - name: 当前一代目标
+    text: 说明这一代要突破什么技术、做到什么量化指标（距离、成本、功耗等），以及给产品线带来的收益，一两行写完
+  - name: 下一代目标
+    text: 说明下一代基于什么自研手段构筑优势，性能与成本各要做到什么程度，对产品线的意义，一两行写完
+  - name: 更远一代目标
+    text: 说明面向更远期要研究什么方向、布局哪些标准与专利、牵引什么规格或生态位，达成什么卡位
+generations:
+  - tab: 第一代际名称（年份）
+    objectives:
+      - name: 头号目标名称
+        text: 突破什么、支撑什么目标、做到什么指标，两行内写完
+        highlight: 蓝色强调指标
+      - name: 第二个目标
+        text: 怎么做、把什么指标降到多少、对成本或产能有什么作用
+    schemes:
+      - name: 方案一名称
+        note: （括号补充）
+        feature: 特征行写量化收益：距离、成本、功耗
+        diagram: ""
+      - name: 方案二名称
+        note: （与方案一的差别）
+        feature: 特征行写量化收益：距离、成本、功耗
+        diagram: ""
+    key_techs:
+      - name: 技术一
+        text: 做什么、带来什么效果，一行写完
+      - name: 技术二
+        text: 手段与效果，一行写完
+  - tab: 第二代际名称（起止年份）
+    objectives:
+      - name: 头号目标名称
+        text: 自研什么器件或算法、把什么指标摸高到什么水平
+        highlight: 蓝色强调指标
+      - name: 第二个目标
+        text: 支撑什么指标、构筑多少优势，两行内写完
+        highlight: 量化收益写这里
+        text2: ，句尾余文
+    schemes:
+      - name: 方案名称
+        note: （括号补充说明）
+        feature: 特征行写这一代方案的量化收益
+        caption: 图注：方案形态一句话
+        diagram: ""
+    key_techs:
+      - name: 技术一
+        text: 工艺或算法上做什么，一行写完
+      - name: 技术二
+        text: 建模、补偿等手段与效果
+  - tab: 第三代际名称（起止年份）
+    objectives:
+      - name: 头号目标名称
+        text: 突破哪几项核心技术，支撑什么芯片或产品投片
+        highlight: 蓝色强调短语
+        text2: ，句尾余文
+      - name: 第二个目标
+        text: 布局多少专利、支撑什么标准、牵引什么规格
+    schemes:
+      - name: 方案名称
+        diagram: ""
+    key_techs:
+      - name: 技术一
+        text: 高性能某架构，一行写完
+      - name: 技术二
+        text: 器件手段，
+        highlight: 蓝色强调短语
+        text2: 句尾余文

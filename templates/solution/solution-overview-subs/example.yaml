@@ -1,0 +1,37 @@
+title: 编号：
+title_suffix: 一句话写清大方案要突破的若干工程难题，逐个点明每个难题的对象与量化指标要求
+big_solutions:
+  - name: 大方案一的名称（形式注释）
+  - name: 大方案二的名称（形式注释）
+subs:
+  - spec: 关键指标
+    name: 子方案名称（一）
+    width: 1.15
+    features:
+      - { spec: 关键数字, text: 特征与优势说明文字 }
+      - { spec: 关键数字, text: 特征与优势说明文字 }
+    figure: 图示名称写在这里（一）
+    metric: 关键指标从之前提升到之后
+  - spec: 量化指标
+    name: 子方案名称（二）
+    features:
+      - { spec: 量化数字, text: 关键特性说明写这里 }
+      - { spec: 关键数字, text: 另一项优势说明文字 }
+    figure: 图示名称写在这里（二）
+    metric: 另一指标从原水平提到新水平
+  - spec: 量化指标
+    name: 子方案名（三）
+    width: 0.9
+    features:
+      - { spec: 关键数字, text: 优势说明文字 }
+      - { spec: 量化数字, text: 特点说明文字 }
+    figure: 图示名称写这里（三）
+    metric: 关键指标达到原来若干倍
+  - spec: 关键指标
+    name: 子方案名称（四）
+    width: 1.1
+    features:
+      - { spec: 关键数字, text: 特征与优势说明文字 }
+      - { spec: 量化数字, text: 特性与收益说明文字 }
+    figure: 图示名称写在这里（四）
+    metric: 关键指标比原有水平提升若干

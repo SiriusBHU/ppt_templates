@@ -61,7 +61,7 @@ def test_get_template_returns_contract_without_layout(in_repo, root):
     assert "layout" not in t
 
 
-@pytest.mark.parametrize("bad", ["system.nope", "../etc.passwd", "system.solution-arch-overview/../../x", "nodot", ""])
+@pytest.mark.parametrize("bad", ["system.nope", "../etc.passwd", "solution.solution-arch-overview/../../x", "nodot", ""])
 def test_get_template_rejects_unknown_or_malformed_id(in_repo, bad):
     with pytest.raises(PptError, match=r"模板 .* 不存在|模板 id"):
         mcp_server.get_template(bad)

@@ -8,7 +8,7 @@
 
 ## 术语（不要混用）
 
-- **主题 topic**：一级分类，按「这一页讲的是什么对象」划分，共 12 个：`trend` 行业与技术趋势、`competition` 竞争格局、`ecosystem` 生态与合作、`ipr` 标准与专利、`product` 产品与业务、`workload` 负载分析、`model` 算法与模型、`system` 系统架构、`hardware` 硬件、`software` 软件、`project` 项目与组织、`common` 通用。各主题的边界（`includes` / `excludes`）写在 `taxonomy.yaml`。
+- **主题 topic**：一级分类，按「这一页讲的是什么对象」划分，共 13 个：`trend` 行业与技术趋势、`competition` 竞争格局、`ecosystem` 生态与合作、`ipr` 标准与专利、`product` 产品与业务、`workload` 负载分析、`model` 算法与模型、`system` 系统架构、`hardware` 硬件、`software` 软件、`project` 项目与组织、`solution` 技术方案、`common` 通用。`solution` 是唯一不按对象而按讲法划分的主题：各对象（系统 / 硬件 / 软件等）的方案讲解页都归这里。各主题的边界（`includes` / `excludes`）写在 `taxonomy.yaml`。
 - **页模板 template**：单页的版式 + 内容契约，位于 `templates/<topic>/<template>/`。
 - **页功能 role**：页在叙事中的作用（problem、selection、solution、result…），是所有主题共用的标签，不是目录，也不是模板名。
 - **风格 style**：颜色、字体、字号、页框、母版等视觉 token，位于 `styles/<style>/`。「主题」从不指视觉风格。
@@ -18,9 +18,9 @@
 
 - 目录只有两级：`templates/<topic>/<template>/`。模板 id = `<topic>.<template>`，由路径决定；`template.yaml` 里的 `id` 必须与路径一致。
 - 模板目录名 = `<主页功能>-<形态>`，主页功能就是 `roles[0]`，例如 `hardware/selection-matrix`。阅读型（`density: read`）的目录名末尾加 `-read`。主题 id 和页功能 id 都是单个小写英文单词，不带连字符。
-- 归属：按页面主要讲的对象放进一个主题——软硬件协同的整体归 `system`，模型对系统的要求归 `workload`，内容不限的通用版式（数据对比、表格、图文）归 `common`。也适用于其他主题的，用 `also_fits` 声明，不要复制模板。
+- 归属：按页面主要讲的对象放进一个主题——软硬件协同的整体归 `system`，模型对系统的要求归 `workload`，内容不限的通用版式（数据对比、表格、图文）归 `common`；例外是方案讲解页（从挑战 / 问题出发，讲架构或子方案、关键技术与收益），不分对象都归 `solution`。也适用于其他主题的，用 `also_fits` 声明，不要复制模板。
 - `taxonomy.yaml` 是主题和页功能的唯一词表。新增主题或页功能只改这里；模板的 `roles` 必须取自这里，`tags` 不受限制。
-- 其他字段：`density`（`talk` 默认 / `read`）、`level`（`system` / `subsystem` / `module`，仅用于 system、hardware、software 主题）。
+- 其他字段：`density`（`talk` 默认 / `read`）、`level`（`system` / `subsystem` / `module`，仅用于 system、hardware、software、solution 主题）。
 - 只做中文：槽位的 `maxLength` 按中文字符计。
 - 每个模板目录包含三个文件：`template.yaml`（元数据 + `structure` + `slots` + `layout` + `guidance`）、`example.yaml`（必须通过 `slots` 校验）、`preview.png`（由 example 渲染生成，不要手工制作）。
 - `structure`（字符串列表）写这一页的逻辑：每个元素承载什么角色（这块文字讲什么、这个框为什么存在——圈住一组文字、给架构图占位……），它们怎么组成一个完整的论证。从样板做的模板必须写；槽位的 `description` 和 example 的引导文字都要和它对上。
@@ -82,7 +82,7 @@ uv run pytest tests/test_render.py::test_name   # 单个测试
 ## 新增一个模板
 
 1. 选主题和主页功能，建目录 `templates/<topic>/<roles[0]>-<形态>/`。
-2. 参照 `templates/system/solution-arch-overview/` 写 `template.yaml` 和 `example.yaml`。
+2. 参照 `templates/solution/solution-arch-overview/` 写 `template.yaml` 和 `example.yaml`。
 3. `uv run ppt validate`，按报错修到没有错误。
 4. `uv run ppt preview <id> --write` 生成 `preview.png`，打开看有没有溢出、重叠、没对齐。
 5. `uv run ppt catalog` 重新生成索引。

@@ -1,12 +1,12 @@
-id: system.solution-arch-overview
+id: solution.solution-arch-overview
 name: 分区架构方案总览
 roles: [solution, feature]
-also_fits: [software, hardware]
+also_fits: [system, software, hardware]
 density: talk
 level: system
 tags: [架构, 分区, 方案, 挑战, 关键技术]
 when_to_use: 用一页讲清系统方案的全貌：面临的核心挑战、设计理念、分区分层的整体架构，以及支撑它的关键技术
-when_not_to_use: 只有一张数据流框图、不分区 → hardware.solution-block-diagram；只讲软件模块之间的处理流程 → software.solution-module-flow；只讲瓶颈、不讲方案 → system.problem-bottleneck
+when_not_to_use: 只有一张数据流框图、不分区 → solution.solution-block-diagram；只讲软件模块之间的处理流程 → solution.solution-module-flow；只讲瓶颈、不讲方案 → system.problem-bottleneck
 frame: standard
 
 slots:

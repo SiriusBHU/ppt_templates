@@ -1,0 +1,200 @@
+id: solution.solution-problem-techs
+name: 问题到关键技术展开
+roles: [solution, problem]
+also_fits: [system, hardware, software]
+density: talk
+level: system
+tags: [核心问题, 竞争力目标, 关键技术, 示意图]
+when_to_use: 一页讲清一项技术创新的完整论证：顶部总结核心问题，中部展开问题（背景 / 示意 / 挑战 / 量化数据）并给出竞争力目标和关键技术清单，底部把每项关键技术展开成示意图和要点
+when_not_to_use: 只有一两个问题、各配一个方案和指标表 → solution.solution-dual-metrics；挑战加一两个方案、各配收益小表 → solution.solution-dual-techs；只讲方案全貌不讲问题数据 → solution.solution-arch-overview
+frame: standard
+
+structure:
+  - 标题：结论式同行标题，主体（24 号加粗）点明对象和方案名（如「对象创新(N)：方案名」），后半句（18 号）写清收益——减少什么、提升什么
+  - 核心问题栏：顶部通栏，左侧红色竖标签点明这一带的角色，灰底上一到两条问题；每条一整行加粗，写成「问题链：一句话说明」，问题链写清因果（谁加剧谁、谁导致谁），说明写场景、根因和后果
+  - 问题展开框（中部左侧大框，细描边）：粉底横幅骑跨框顶、一句话写问题背景；框内左侧是问题示意图（图片：并发 / 争抢的时序或关系），右上是「核心挑战：」一段（名称加粗 + 常规说明，含量化影响），右下是量化证据小表（截图）
+  - 竞争力目标框（右上）：灰底小标签骑跨框顶，框内一两条加粗要点，每条一个量化目标
+  - 关键技术框（右下）：灰底小标签骑跨框顶，框内是编号清单——黑底白字编号 + 加粗名称 + 一句话说明
+  - 方案总述横幅：粉底横幅骑跨底部大框顶边，一句话写清从问题到方案的总思路（TO BE）
+  - 关键技术展开框（底部通栏，细描边）：每项关键技术一列，自上而下是红色加粗标题「技术N：名称」、状态后缀一行（成熟度 / 代际）、架构示意图（图片）、一两条加粗要点
+  - 关系：核心问题栏是总起；问题展开框把问题讲透（背景 → 示意 → 挑战 → 数据）；右侧两框给出「要做到什么、靠什么做」；总述横幅承上启下；底部各列与关键技术清单按相同编号顺序一一对应
+
+slots:
+  type: object
+  required: [title, title_suffix, problems_label, problems, background, challenge, goals_label, goals, techs_label, key_techs, solution, techs]
+  properties:
+    title:
+      type: string
+      maxLength: 18
+      description: 标题主体（24 号加粗、深红）：点明对象和方案名，如「对象创新(N)：方案名」；中文不超过 14 个字（英文、数字约半个字宽），给同一行的后半句留位置
+    title_suffix:
+      type: string
+      maxLength: 26
+      description: 与标题同一行的后半句（18 号加粗、深红）：方案收益——减少什么、提升什么；和标题主体合计不超过一行
+    problems_label:
+      type: string
+      maxLength: 4
+      description: 核心问题栏左侧的红色竖标签（18 号加粗、白字，两个字一行），如「核心问题」
+    problems:
+      type: array
+      minItems: 1
+      maxItems: 2
+      description: 核心问题，每条一整行加粗（12 号）：「问题链：一句话说明」，问题链写清因果（谁加剧谁、谁导致谁），说明写场景、根因和后果；一行写完（约 60 个汉字，英文、数字约半个字宽）
+      items: { type: string, maxLength: 72 }
+    background:
+      type: string
+      maxLength: 24
+      description: 问题背景（横幅，14 号加粗，接在「问题背景：」后面）：什么场景、谁和谁抢占什么资源，一行写完
+    problem_image:
+      type: string
+      description: 问题示意图的图片路径（并发 / 争抢的时序图或关系图，图上可带标注）；没有就留空显示占位框
+    challenge:
+      type: string
+      maxLength: 50
+      description: 核心挑战的说明（14 号，接在加粗的「核心挑战：」后面）：问题如何发生、对关键指标各造成多大影响；最多四行（约 44 个汉字，英文、数字约半个字宽）
+    metrics_image:
+      type: string
+      description: 量化证据小表的图片路径（截图：问题导致的指标劣化数据）；没有就留空显示占位框
+    goals_label:
+      type: string
+      maxLength: 6
+      description: 竞争力目标框的小标签（14 号加粗、深红，灰底带阴影，骑跨框顶），如「竞争力目标」
+    goals:
+      type: array
+      minItems: 1
+      maxItems: 2
+      description: 竞争力目标，每条加粗（12 号）：什么场景下达到什么量化目标；一条一行写完（约 23 个汉字，英文、数字约半个字宽）
+      items: { type: string, maxLength: 32 }
+    techs_label:
+      type: string
+      maxLength: 6
+      description: 关键技术框的小标签（14 号加粗、深红，灰底带阴影，骑跨框顶），如「关键技术」
+    key_techs:
+      type: array
+      minItems: 2
+      maxItems: 3
+      description: 关键技术清单，黑底白字编号 + 「名称：一句话说明」；和底部展开的关键技术按相同顺序一一对应
+      items:
+        type: object
+        required: [name, detail]
+        properties:
+          name: { type: string, maxLength: 12, description: 技术名称（短语，12 号加粗，自动接「：」） }
+          detail: { type: string, maxLength: 40, description: 一句话说明（10 号）：通过什么机制或设计实现；和名称合计不超过两行（约 44 个汉字，英文、数字约半个字宽） }
+    solution:
+      type: string
+      maxLength: 30
+      description: 方案总述（横幅，14 号加粗，接在「TO BE：」后面）：一句话总思路——绕过什么、利用什么、打通什么，一行写完（约 24 个汉字，英文、数字约半个字宽）
+    techs:
+      type: array
+      minItems: 2
+      maxItems: 3
+      description: 关键技术展开，每项一列，和关键技术清单按相同顺序一一对应
+      items:
+        type: object
+        required: [name, points]
+        properties:
+          name: { type: string, maxLength: 18, description: 技术名称（14 号加粗、深红、居中，标题自动带「技术N：」前缀）：基于什么做什么，一行写完（约 14 个汉字，英文、数字约半个字宽） }
+          status: { type: string, maxLength: 14, description: 状态后缀（14 号加粗、深红、居中，名称下一行）：成熟度 / 代际，如「软版本@当代，硬版本@下代」；没有就不填 }
+          image: { type: string, description: 该技术的架构示意图路径；没有就留空显示占位框 }
+          points:
+            type: array
+            minItems: 1
+            maxItems: 2
+            description: 要点，每条加粗（12 号）：怎么做、带来什么效果；两条合计不超过三行（约 66 个汉字，英文、数字约半个字宽）
+            items: { type: string, maxLength: 48 }
+
+layout:                         # 参考 body 区 1216×560（本页无 takeaway，正文区自动上移并纵向拉伸到 600）
+  # 顶部：核心问题栏——灰底通栏 + 左侧红色竖标签（白字，两个字一行）
+  - { type: shape, box: [108, 0, 1108, 62], fill: surface }
+  - { type: shape, box: [24, 0, 92, 62], fill: accent }
+  - { type: text, box: [40, 6, 60, 50], bind: problems_label, style: title_suffix, color: on_primary, align: center, valign: middle }
+  - type: grid
+    box: [124, 6, 1076, 50]
+    bind: problems
+    columns: 1
+    item:
+      - { type: text, box: [0, 0, "100%", "100%"], bind: ".", style: body_strong, valign: middle }
+
+  # 中部左：问题展开框（细描边），粉底「问题背景」横幅骑跨框顶
+  - { type: shape, box: [24, 84, 740, 203], fill: bg, line: line }
+  - { type: shape, box: [112, 67, 565, 34], fill: highlight, shadow: true }
+  - type: text
+    box: [112, 67, 565, 34]
+    style: emphasis
+    align: center
+    valign: middle
+    runs:
+      - { value: "问题背景：" }
+      - { bind: background }
+  - { type: image, box: [36, 102, 420, 176], bind: problem_image, placeholder: 问题示意图：并发 / 争抢的时序图或关系图 }
+  - type: text
+    box: [464, 100, 288, 100]
+    style: lead
+    valign: top
+    runs:
+      - { value: "核心挑战：", style: emphasis }
+      - { bind: challenge }
+  - { type: image, box: [464, 204, 288, 76], bind: metrics_image, placeholder: 量化证据小表（截图）：问题导致的指标劣化数据 }
+
+  # 中部右上：竞争力目标框，灰底小标签骑跨框顶
+  - { type: shape, box: [788, 78, 428, 68], fill: bg, line: line }
+  - { type: shape, box: [936, 65, 132, 24], fill: surface_light, shadow: true }
+  - { type: text, box: [936, 65, 132, 24], bind: goals_label, style: emphasis, color: accent, align: center, valign: middle }
+  - { type: bullets, box: [796, 86, 412, 54], bind: goals, style: body_strong }
+
+  # 中部右下：关键技术框，灰底小标签骑跨框顶；编号清单（黑底白字编号 + 加粗名称 + 说明）
+  - { type: shape, box: [788, 163, 428, 133], fill: bg, line: line }
+  - { type: shape, box: [936, 152, 132, 21], fill: surface_light, shadow: true }
+  - { type: text, box: [936, 152, 132, 21], bind: techs_label, style: emphasis, color: accent, align: center, valign: middle }
+  - type: grid
+    box: [800, 170, 404, 120]
+    bind: key_techs
+    columns: 1
+    item:
+      - { type: shape, box: [0, 3, 20, 18], fill: text, shape: oval }
+      - { type: text, box: [0, 3, 20, 18], bind: "#", style: emphasis, color: on_primary, align: center, valign: middle }
+      - type: text
+        box: [28, 0, "100%-28", "100%"]
+        style: detail
+        valign: top
+        runs:
+          - { bind: name, style: body_strong }
+          - { value: "：", style: body_strong }
+          - { bind: detail }
+
+  # 底部：关键技术展开框（细描边通栏），粉底 TO BE 横幅骑跨框顶；每项技术一列
+  - { type: shape, box: [24, 312, 1192, 232], fill: bg, line: line }
+  - { type: shape, box: [278, 297, 565, 31], fill: highlight, shadow: true }
+  - type: text
+    box: [278, 297, 565, 31]
+    style: emphasis
+    align: center
+    valign: middle
+    runs:
+      - { value: "TO BE：" }
+      - { bind: solution }
+  - type: grid
+    box: [36, 328, 1168, 212]
+    bind: techs
+    columns: 3
+    gap: 16
+    item:
+      - type: text
+        box: [0, 0, "100%", 26]
+        style: emphasis
+        color: accent
+        align: center
+        runs:
+          - { value: "技术" }
+          - { bind: "#" }
+          - { value: "：" }
+          - { bind: name }
+      - { type: text, box: [0, 26, "100%", 22], bind: status, style: emphasis, color: accent, align: center, when: status }
+      - { type: image, box: [6, 50, "100%-12", 92], bind: image, placeholder: 该技术的架构示意图 }
+      - { type: bullets, box: [2, 146, "100%-4", 64], bind: points, style: body_strong }
+
+guidance:
+  - 整页是一条论证链：核心问题 → 问题展开（背景 / 示意 / 挑战 / 数据）→ 目标与关键技术清单 → 总述 → 关键技术逐项展开；右侧清单和底部各列按相同编号顺序一一对应
+  - 核心问题每条写清因果链（谁加剧谁、谁导致谁）和量化后果，不要提前写方案
+  - 问题示意图和量化证据小表自己准备好再放进来：示意图画并发 / 争抢的时序或关系，小表给问题导致的指标劣化数据
+  - 底部每项技术：名称写「基于什么做什么」，状态写成熟度 / 代际，要点里的量化收益要和竞争力目标呼应

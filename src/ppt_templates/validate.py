@@ -20,7 +20,7 @@ from .skill import check_skill
 from .slots import bound_errors
 from .taxonomy import Taxonomy, load_taxonomy
 
-LEVEL_TOPICS = {"system", "hardware", "software"}
+LEVEL_TOPICS = {"system", "hardware", "software", "solution"}
 FRAME_SLOTS = ("title", "title_suffix", "takeaway")
 TEXT_COLORS = ("accent", "highlight_strong", "primary_text", "text", "on_primary")  # 文字只用这几种颜色；muted 等只给非文字元素
 EPS = 0.5  # 坐标比较容差（px）

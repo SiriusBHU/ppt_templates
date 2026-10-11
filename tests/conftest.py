@@ -8,7 +8,7 @@ import yaml
 from ppt_templates.catalog import write_catalog
 from ppt_templates.loader import find_repo_root, load_example
 
-TEMPLATE_ID = "system.solution-arch-overview"
+TEMPLATE_ID = "solution.solution-arch-overview"
 
 
 def _can_symlink() -> bool:

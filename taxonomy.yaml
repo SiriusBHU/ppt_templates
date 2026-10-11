@@ -31,15 +31,19 @@ topics:
   - id: system
     name: 系统架构
     includes: 软硬件协同的整体架构、系统瓶颈、演进、系统级创新
-    excludes: 只涉及硬件或只涉及软件 → hardware / software
+    excludes: 只涉及硬件或只涉及软件 → hardware / software；方案讲解页 → solution
   - id: hardware
     name: 硬件
     includes: 从硬件架构到单板 / 器件：瓶颈、选型、方案
-    excludes: 软硬件协同的整体 → system
+    excludes: 软硬件协同的整体 → system；方案讲解页 → solution
   - id: software
     name: 软件
     includes: 从软件架构到单个特性 / 模块：问题、方案、收益
-    excludes: 软硬件协同的整体 → system
+    excludes: 软硬件协同的整体 → system；方案讲解页 → solution
+  - id: solution
+    name: 技术方案
+    includes: 技术方案讲解页：从挑战 / 问题出发，讲架构或子方案、关键技术与收益，不分系统 / 硬件 / 软件对象
+    excludes: 只讲问题不给方案 → 对象所在主题的 problem 页；几个选项里选型 → 对象所在主题的 selection 页；通用版式 → common
   - id: project
     name: 项目与组织
     includes: 进展、里程碑、人力、组织架构、能力建设

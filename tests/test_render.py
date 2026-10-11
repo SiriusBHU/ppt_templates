@@ -160,14 +160,14 @@ def test_title_over_limit_is_rejected_with_json_pointer(deck, root):
     deck["pages"][0]["data"]["title"] = "标" * 30
     with pytest.raises(PptError) as exc:
         render_deck(deck, root)
-    assert "第 1 页 system.solution-arch-overview  /pages/0/data/title  长度 30，超过上限 14" in str(exc.value)
+    assert "第 1 页 solution.solution-arch-overview  /pages/0/data/title  长度 30，超过上限 14" in str(exc.value)
 
 
 def test_nested_error_pointer_and_page_number(deck, root):
     deck["pages"].append({"template": deck["pages"][0]["template"], "data": {"title": "x", "challenges": []}})
     with pytest.raises(PptError) as exc:
         prepare_pages(deck, root)
-    assert "第 2 页 system.solution-arch-overview  /pages/1/data/challenges  共 0 项，低于下限 2" in str(exc.value)
+    assert "第 2 页 solution.solution-arch-overview  /pages/1/data/challenges  共 0 项，低于下限 2" in str(exc.value)
     assert "/pages/1/data  缺少必填字段 takeaway、principles、arch、key_techs" in str(exc.value)
 
 

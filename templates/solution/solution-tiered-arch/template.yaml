@@ -1,0 +1,250 @@
+id: solution.solution-tiered-arch
+name: 分层介质方案
+roles: [solution, feature]
+also_fits: [system, hardware]
+density: talk
+level: system
+tags: [分层, 架构, 介质, 层级特征, 方案]
+when_to_use: 讲把多种介质按层级组合起来的方案：顶部逐代给出「以什么介质组合作为哪一层、得到何种效果」的总结，左侧列业务场景的量级需求和介质指标对比，右侧分层架构图标出新增的 X.5 层，并按层组讲存放什么数据、靠哪些技术点做到
+when_not_to_use: 讲分区分层的整体架构（多个分区并排）→ solution.solution-arch-overview；只讲一张框图 → solution.solution-block-diagram
+frame: standard
+
+structure:
+  - 标题：结论式同行标题——主题点出这是对什么的构想（分层介质），后半句写核心思路（以什么替代什么）
+  - 顶部总结条（浅灰通栏）：每行一代方案，句式固定为「以某介质组合作为某新增层存储，实现某效果」；层号固定蓝色，口号式的效果用蓝色强调、描述性的效果保持黑色；每行对应右侧架构里的一对层
+  - 左栏上部：几张需求卡并排，黄色标签写场景或数据名，灰框里每行列一项指标量级（容量、延时、带宽等）
+  - 左栏中部：两行蓝色加粗说明，点明各种介质在关键指标上差异巨大、必须组合使用——这是左栏的论点
+  - 左栏下部：介质指标对比表，用各介质的量化差异佐证上面的说明
+  - 右侧面板（深红描边浅灰底，顶边压一条深蓝架构名）：面板内左侧是分层堆叠图——顶端是可选的计算单元框（芯片 + 片上存储），其下每层一个横条、层号在左；新增的组合介质层用蓝色层号 + 浅蓝底横条标出，基础层黑号白底
+  - 面板内右侧：每层组一张圆角特征卡（深蓝标题条压顶边，写覆盖的层号），卡内先一行写这层组存放什么数据，再列若干「技术点名称：做法」要点；特征卡与堆叠图里的层组上下对齐、一一对应
+  - 面板下缘的结论横幅（浅蓝底）：一句话总结整个分层方案的收益
+  - 关系：左栏回答「为什么做」（业务需求 + 介质差异），右栏回答「怎么做」（分层架构 + 每层组的特征）；顶部总结条和底部横幅分别是右栏方案的概括和结论
+
+slots:
+  type: object
+  required: [title, title_suffix, summary, scenarios, note, media_table, arch_name, layers, features, banner]
+  properties:
+    title:
+      type: string
+      maxLength: 16
+      description: 标题主体（24 号加粗），主题式短语，点出这是对什么的构想
+    title_suffix:
+      type: string
+      maxLength: 26
+      description: 与标题同一行的后半句（18 号），写核心思路（以什么替代什么）
+    summary:
+      type: array
+      minItems: 2
+      maxItems: 4
+      description: 顶部总结条，每行一代方案「以某介质组合作为某层存储，实现某效果」，行数与新增层的个数一致
+      items:
+        type: object
+        required: [media, level, effect, tone]
+        properties:
+          media: { type: string, maxLength: 18, description: 这一代的介质组合（短语，黑色） }
+          level: { type: string, maxLength: 6, description: 新增层的层号（蓝色），如 Lx.5 }
+          effect: { type: string, maxLength: 22, description: 实现的效果（一行内写完；口号可带引号） }
+          tone:
+            enum: [plain, strong]
+            description: 效果的着色：strong 蓝色强调（口号式），plain 黑色（描述性）
+    scenarios:
+      type: array
+      minItems: 2
+      maxItems: 3
+      description: 左栏需求卡，每张一个业务场景或一类数据
+      items:
+        type: object
+        required: [name, metrics]
+        properties:
+          name: { type: string, maxLength: 16, description: 场景或数据名（黄色标签里，最多两行） }
+          metrics:
+            type: array
+            minItems: 2
+            maxItems: 4
+            description: 指标量级，每行一项（容量、延时、带宽等）
+            items: { type: string, maxLength: 12, description: 一项指标的量级（一行写完，可带单位） }
+    note:
+      type: string
+      maxLength: 45
+      description: 需求卡下方的说明（蓝色加粗，最多两行）：点明介质差异大、必须组合使用
+    media_table:
+      type: object
+      required: [columns, rows]
+      description: 介质指标对比表（table 组件）：columns 第一列是介质、其余是对比指标（三四个），rows 每行一种介质；可写 widths 给各列相对宽度，让每格尽量一行写完
+      properties:
+        columns:
+          type: array
+          minItems: 3
+          maxItems: 5
+          items: { type: string, maxLength: 6 }
+        rows:
+          type: array
+          minItems: 2
+          maxItems: 6
+          items:
+            type: array
+            items: { type: string, maxLength: 20, description: 单元格文字（超过列宽会折成两行） }
+        widths:
+          type: array
+          items: { type: number, exclusiveMinimum: 0 }
+    arch_name:
+      type: string
+      maxLength: 13
+      description: 右侧面板的架构名（深蓝条白字，压在面板顶边上）
+    compute:
+      type: object
+      required: [name, on_chip]
+      description: 堆叠图顶端的计算单元框，可选；不写就不画
+      properties:
+        name: { type: string, maxLength: 8, description: 计算单元名（如芯片型号） }
+        on_chip: { type: string, maxLength: 8, description: 片上存储名 }
+    layers:
+      type: array
+      minItems: 3
+      maxItems: 7
+      description: 分层堆叠图，自上而下逐层排；层号在横条左侧
+      items:
+        type: object
+        required: [level, media, kind]
+        properties:
+          level: { type: string, maxLength: 6, description: 层号，如 Lx / Lx.5 }
+          media: { type: string, maxLength: 14, description: 这一层的介质组合（横条里一行写完） }
+          kind:
+            enum: [base, extended]
+            description: base 基础层（黑号白底），extended 本方案新增的组合介质层（蓝号浅蓝底）
+    features:
+      type: array
+      minItems: 2
+      maxItems: 3
+      description: 层组特征卡，自上而下，与堆叠图里的层组一一对应
+      items:
+        type: object
+        required: [levels, stores, points]
+        properties:
+          levels: { type: string, maxLength: 14, description: 特征卡标题（深蓝条白字）：覆盖的层号，如 Lx / Lx.5 存储 }
+          stores: { type: string, maxLength: 15, description: 这层组存放什么数据（列举类型，句首固定「存放」） }
+          points:
+            type: array
+            minItems: 1
+            maxItems: 3
+            description: 技术点，每条「名称：做法」；三条时每条一行写完（名称 + 做法合计约 18 字）
+            items:
+              type: object
+              required: [name, text]
+              properties:
+                name: { type: string, maxLength: 14, description: 技术点名称（蓝色加粗，自动接「：」） }
+                text: { type: string, maxLength: 18, description: 做法（黑色，怎么做） }
+    banner:
+      type: string
+      maxLength: 30
+      description: 底部结论横幅（浅蓝底）：一句话总结分层方案的收益
+
+layout:                         # 参考 body 区 1216×560（本页无 takeaway，正文区自动上移并纵向拉伸到 600）
+  # 顶部总结条：浅灰通栏，每行一代方案；层号蓝色，效果按 tone 取色
+  - { type: shape, box: [0, 0, 1216, 96], fill: surface_light }
+  - type: grid
+    box: [32, 6, 1152, 84]
+    bind: summary
+    columns: 1
+    item:
+      - type: text
+        box: [0, 0, "100%", "100%"]
+        style: heading
+        align: center
+        valign: middle
+        by: tone
+        color_map: { plain: text, strong: primary_text }
+        runs:
+          - { value: "以“", color: text }
+          - { bind: media, color: text }
+          - { value: "”作为", color: text }
+          - { bind: level, color: primary_text }
+          - { value: "存储，实现", color: text }
+          - { bind: effect }
+
+  # 左栏：需求卡（黄色标签压灰框）→ 蓝色说明 → 介质对比表
+  - type: grid
+    box: [0, 108, 496, 128]
+    bind: scenarios
+    columns: 3
+    gap: 12
+    item:
+      - { type: shape, box: [22, 0, 113, 46], fill: highlight, shadow: true }
+      - { type: text, box: [22, 0, 113, 46], bind: name, style: emphasis, align: center, valign: middle }
+      - { type: shape, box: [0, 40, "100%", 88], fill: surface_light, line: text }
+      - type: grid
+        box: [4, 44, "100%-8", 80]
+        bind: metrics
+        columns: 1
+        item:
+          - { type: text, box: [0, 0, "100%", "100%"], bind: ".", style: emphasis, align: center, valign: middle }
+  - { type: text, box: [8, 252, 480, 44], bind: note, style: emphasis, color: primary_text, align: center, valign: middle }
+  - type: component
+    component: table
+    box: [0, 306, 496, 254]
+    bind: media_table
+    props: { align: center }
+
+  # 右侧面板：深红描边浅灰底 + 顶边压深蓝架构名条
+  - { type: shape, box: [512, 122, 704, 406], fill: surface_light, line: accent }
+  - { type: shape, box: [706, 106, 312, 34], fill: primary, shadow: true }
+  - { type: text, box: [706, 106, 312, 34], bind: arch_name, style: heading, color: on_primary, align: center, valign: middle }
+
+  # 面板内左：计算单元框（可选）+ 分层堆叠图（新增层蓝号浅蓝底）
+  - { type: shape, box: [592, 134, 216, 56], fill: bg, line: primary, when: compute }
+  - { type: shape, box: [624, 140, 152, 20], fill: bg, line: text, when: compute }
+  - { type: text, box: [624, 140, 152, 20], bind: compute.name, style: emphasis, align: center, valign: middle, when: compute }
+  - { type: shape, box: [624, 164, 152, 20], fill: bg, line: text, when: compute }
+  - { type: text, box: [624, 164, 152, 20], bind: compute.on_chip, style: emphasis, align: center, valign: middle, when: compute }
+  - type: grid
+    box: [524, 202, 288, 316]
+    bind: layers
+    columns: 1
+    row_height: 40
+    gap: 6
+    item:
+      - { type: text, box: [0, 0, 64, 40], bind: level, style: heading, valign: middle, by: kind, color_map: { base: text, extended: primary_text } }
+      - { type: shape, box: [68, 3, 216, 34], fill: bg, line: primary, by: kind, fill_map: { base: bg, extended: highlight_blue } }
+      - { type: text, box: [68, 3, 216, 34], bind: media, style: emphasis, align: center, valign: middle }
+
+  # 面板内右：层组特征卡（深蓝标题条压圆角灰卡顶边；存放行 + 技术点要点）
+  - type: grid
+    box: [824, 134, 380, 390]
+    bind: features
+    columns: 1
+    row_height: 130
+    item:
+      - { type: shape, box: [0, 14, 380, 110], fill: surface_light, line: line, shape: rounded, radius: 18, shadow: true }
+      - { type: shape, box: [70, 0, 240, 28], fill: primary }
+      - { type: text, box: [70, 0, 240, 28], bind: levels, style: subtitle, color: on_primary, align: center, valign: middle }
+      - type: text
+        box: [20, 32, 340, 22]
+        style: emphasis
+        align: center
+        valign: middle
+        runs:
+          - { value: "存放 " }
+          - { bind: stores }
+      - type: grid
+        box: [16, 56, 348, 64]
+        bind: points
+        columns: 1
+        item:
+          - type: text
+            box: [0, 0, "100%", "100%"]
+            style: lead
+            runs:
+              - { bind: name, style: emphasis, color: primary_text }
+              - { value: "：", style: emphasis, color: primary_text }
+              - { bind: text }
+
+  # 底部结论横幅
+  - { type: shape, box: [570, 530, 644, 28], fill: highlight_blue, shadow: true }
+  - { type: text, box: [570, 530, 644, 28], bind: banner, style: emphasis, align: center, valign: middle }
+
+guidance:
+  - 总结条每行一代方案，行数与新增层（X.5 层）的个数一致；口号式效果用 strong 蓝色，描述性效果用 plain 黑色
+  - 需求卡的指标按容量、延时、带宽的顺序每行一项，写量级不写精确值；对比表选最能拉开差距的三四个指标，佐证说明里的「差异大」
+  - "layers 自上而下按层级排；kind 为 extended 的是本方案新增的组合介质层，总结条、堆叠图、特征卡里的层号要互相对上"
+  - 特征卡按相邻层组对（基础层 + 它下面的新增层）；要点写这层组独有的技术点，做法里写清靠什么机制做到
+  - 没有独立的计算单元就省略 compute，堆叠图从第一层开始

@@ -6,7 +6,7 @@ density: talk
 level: system
 tags: [选型, 对比, 推荐]
 when_to_use: 把几个候选方案按若干维度并排对比，高亮其中一个，并在右侧给出推荐结论和理由
-when_not_to_use: 只是通用的数据对比、不需要给出推荐 → common.overview-table；已经选定方案、讲它怎么构成 → hardware.solution-block-diagram
+when_not_to_use: 只是通用的数据对比、不需要给出推荐 → common.overview-table；已经选定方案、讲它怎么构成 → solution.solution-block-diagram
 frame: standard
 
 slots:

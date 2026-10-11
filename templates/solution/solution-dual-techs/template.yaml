@@ -1,0 +1,124 @@
+id: solution.solution-dual-techs
+name: 挑战与双技术方案（架构图 + 收益表 + 特征要点）
+roles: [solution, feature]
+also_fits: [system, hardware, software]
+density: talk
+level: system
+tags: [技术挑战, 技术方案, 架构图, 收益表, 特征要点]
+when_to_use: 一页讲清整组技术挑战和一两个并列的技术方案：顶部虚线框列挑战（症结 + 所在方面 + 量化代价，关键数字深红加粗），下方每个方案一栏，配架构图、效果收益小表和特征要点
+when_not_to_use: 问题和方案一一对应、各配机制示意图和前后指标表 → solution.solution-dual-metrics；只有一个方案、按模块讲处理流程 → solution.solution-module-flow；只列痛点不讲方案 → software.problem-pain-points
+frame: standard
+
+structure:
+  - 标题：结论式同行标题，主体（24 号）写清这是什么方案、以冒号收尾，后半句（18 号）写核心技术路线、突破的瓶颈和总收益
+  - 顶部虚线框：把这页要回应的全部挑战圈在一起；框内左侧竖排黑字标签点明这一带的角色
+  - 每个挑战：红字挑战名跨在虚线框上边、点出症结；细框里第一行写挑战落在哪个具体方面，下面是量化说明——常规文字写在什么场景出现、现象是什么，关键数字和结论用深红加粗接在后面
+  - 下方左右两栏：每栏一个技术方案，几个方案合起来回应上方全部挑战；压在栏框顶边上的蓝字是方案名
+  - 每栏自上而下：架构图（带编号标注的图片）→ 效果收益小表（白底只画横线：前后对比或分档对比）→ 可选表注（假设与口径，右对齐小字）→ 两三条特征要点「特征名：做法」，收益用蓝色加粗接在句尾
+  - 上半页讲「为什么做」，下半页讲「怎么做、效果多少」；架构图里的编号和特征要点的顺序对应，要点里的收益数字要能在小表里找到出处
+
+slots:
+  type: object
+  required: [title, title_suffix, challenges_label, challenges, solutions]
+  properties:
+    title:
+      type: string
+      maxLength: 12
+      description: 标题主体（24 号加粗、深红）：写清这是什么方案，以冒号收尾；中文不超过 12 个字，给同一行的后半句留位置
+    title_suffix:
+      type: string
+      maxLength: 40
+      description: 与标题同一行的后半句（18 号加粗、深红）：核心技术路线 + 突破的瓶颈 + 总收益；标题主体和后半句合计不超过一行（约 44 个汉字，英文、数字约半个字宽）
+    challenges_label:
+      type: string
+      maxLength: 4
+      description: 挑战带左侧的竖排标签（18 号加粗、黑），两个字一行，如「技术挑战」
+    challenges:
+      type: array
+      minItems: 2
+      maxItems: 3
+      description: 技术挑战，从左到右并列，没有先后顺序；整页挑战由下方所有方案合力回应
+      items:
+        type: object
+        required: [name, aspect, text]
+        properties:
+          name: { type: string, maxLength: 8, description: 挑战名（14 号加粗、深红，跨在虚线框上边居中），一个词点出症结 }
+          aspect: { type: string, maxLength: 10, description: 挑战落在哪个具体方面（14 号加粗、居中，一行写完） }
+          text: { type: string, maxLength: 34, description: 量化说明的常规部分（14 号、居中）：在什么场景下出现、现象是什么；和 key 合计不超过两行（约 34 个汉字，英文、数字约半个字宽） }
+          key: { type: string, maxLength: 34, description: 量化说明里的关键数字和结论（14 号加粗、深红，接在 text 后面）：代价多大；没有就不填 }
+          width: { type: number, minimum: 1, maximum: 1.5, description: 这个挑战框的相对宽度，默认 1；量化说明长的设 1.2–1.5 }
+    solutions:
+      type: array
+      minItems: 1
+      maxItems: 2
+      description: 技术方案，从左到右并列；几个方案合起来回应上方全部挑战
+      items:
+        type: object
+        required: [name, metrics, points]
+        properties:
+          name: { type: string, maxLength: 18, description: 方案名（14 号加粗、蓝色，压在栏框顶边上），写「对什么做什么」；中文不超过 18 个字（英文、数字约半个字宽） }
+          diagram: { type: string, description: 架构图的图片路径（带编号标注，编号和下方特征要点顺序对应），没有就留空显示占位框 }
+          metrics:
+            type: object
+            description: 效果收益小表（table 组件）：columns 是表头（2–5 列），rows 每行一个方案或一个配比档位（1–4 行）；widths 按各列内容长短给相对宽度；单元格文字写短，表头最长一列不超过两行
+          note: { type: string, maxLength: 50, description: 表注（8 号、右对齐）：数值的假设和口径，一行写完；没有就不填 }
+          points:
+            type: array
+            minItems: 2
+            maxItems: 3
+            description: 特征要点，和架构图里的编号顺序对应；每条「特征名：做法」
+            items:
+              type: object
+              required: [name, text]
+              properties:
+                name: { type: string, maxLength: 14, description: 特征名（加粗，自动接「：」；中文不超过 12 个字，英文、数字约半个字宽） }
+                text: { type: string, maxLength: 64, description: 做法：用什么手段处理哪一部分、怎么做 }
+                highlight: { type: string, maxLength: 16, description: 这条特征带来的关键收益（蓝色加粗，接在句尾）；name + text + highlight 合起来不超过两行（约 64 个汉字，英文、数字约半个字宽） }
+
+layout:                         # 参考 body 区 1216×560（本页无 takeaway，正文区自动上移并纵向拉伸到 600）
+  # 顶部：虚线框圈住全部挑战，左侧竖排黑字标签；挑战名跨在虚线框上边上
+  - { type: shape, box: [0, 8, 1216, 100], fill: bg, line: line, dash: true }
+  - { type: text, box: [14, 28, 52, 60], bind: challenges_label, style: heading, align: center, valign: middle }
+  - type: grid
+    box: [84, 0, 1132, 108]
+    bind: challenges
+    columns: 3
+    gap: 24
+    weight: width
+    item:
+      - { type: text, box: [0, 0, "100%", 22], bind: name, style: emphasis, color: accent, align: center, valign: middle }
+      - { type: shape, box: [0, 26, "100%", 78], fill: bg, line: line }
+      - { type: text, box: [6, 30, "100%-12", 20], bind: aspect, style: emphasis, align: center, valign: middle }
+      - type: text
+        box: [8, 52, "100%-16", 46]
+        style: lead
+        align: center
+        valign: top
+        runs:
+          - { bind: text }
+          - { bind: key, style: emphasis, color: accent }
+  # 下方：每个方案一栏，栏标题压在栏框顶边上（白底遮住框线）
+  - type: grid
+    box: [0, 120, 1216, 440]
+    bind: solutions
+    columns: 2
+    gap: 28
+    item:
+      - { type: shape, box: [0, 14, "100%", 426], fill: bg, line: line }
+      - { type: shape, box: ["20%", 0, "60%", 28], fill: bg }
+      - { type: text, box: ["20%", 0, "60%", 28], bind: name, style: emphasis, color: primary_text, align: center, valign: middle }
+      - { type: image, box: [10, 22, "100%-20", 112], bind: diagram, placeholder: 架构图：带编号标注，编号和下方特征要点一一对应 }
+      - type: component
+        component: table
+        box: [10, 140, "100%-20", 124]
+        bind: metrics
+        props: { look: plain, text_style: detail, align: center }
+      - { type: text, box: [10, 290, "100%-20", 11], bind: note, style: footnote, align: right, when: note }
+      - { type: bullets, box: [12, 306, "100%-24", 124], bind: points, style: body }
+
+guidance:
+  - 挑战之间是并列关系，几个方案合起来回应全部挑战；方案最多两个，再多就拆页
+  - 量化说明先写场景和现象（text），关键数字和代价放进 key；这里不要提前写方案
+  - 架构图自己画好再放进来：图上用编号标出关键设计，编号和特征要点的顺序一一对应
+  - 小表每行一个方案或一个配比档位，数值写具体数字；有假设和测试口径就写进表注
+  - 特征要点每条一件事：特征名是做法的名字，text 写怎么做，highlight 写这条带来的量化收益，数字要能在小表里找到出处

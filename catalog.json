@@ -299,37 +299,6 @@
     }
   },
   {
-    "id": "hardware.solution-block-diagram",
-    "topic": "hardware",
-    "also_fits": [
-      "system"
-    ],
-    "name": "硬件框图方案",
-    "roles": [
-      "solution"
-    ],
-    "density": "talk",
-    "level": "system",
-    "tags": [
-      "框图",
-      "硬件架构",
-      "方案"
-    ],
-    "when_to_use": "用框图说明一个硬件方案由哪些部件组成、部件之间怎么连接，标出本次新增的部件，并配上关键参数和说明",
-    "slots": {
-      "required": [
-        "title",
-        "diagram",
-        "params"
-      ],
-      "optional": [
-        "title_suffix",
-        "takeaway",
-        "notes"
-      ]
-    }
-  },
-  {
     "id": "model.overview-structure",
     "topic": "model",
     "also_fits": [
@@ -565,11 +534,81 @@
     }
   },
   {
-    "id": "software.solution-dual-metrics",
-    "topic": "software",
+    "id": "solution.solution-arch-overview",
+    "topic": "solution",
+    "also_fits": [
+      "system",
+      "software",
+      "hardware"
+    ],
+    "name": "分区架构方案总览",
+    "roles": [
+      "solution",
+      "feature"
+    ],
+    "density": "talk",
+    "level": "system",
+    "tags": [
+      "架构",
+      "分区",
+      "方案",
+      "挑战",
+      "关键技术"
+    ],
+    "when_to_use": "用一页讲清系统方案的全貌：面临的核心挑战、设计理念、分区分层的整体架构，以及支撑它的关键技术",
+    "slots": {
+      "required": [
+        "title",
+        "takeaway",
+        "challenges",
+        "principles",
+        "arch",
+        "key_techs"
+      ],
+      "optional": [
+        "title_suffix"
+      ]
+    }
+  },
+  {
+    "id": "solution.solution-block-diagram",
+    "topic": "solution",
     "also_fits": [
       "system",
       "hardware"
+    ],
+    "name": "硬件框图方案",
+    "roles": [
+      "solution"
+    ],
+    "density": "talk",
+    "level": "system",
+    "tags": [
+      "框图",
+      "硬件架构",
+      "方案"
+    ],
+    "when_to_use": "用框图说明一个硬件方案由哪些部件组成、部件之间怎么连接，标出本次新增的部件，并配上关键参数和说明",
+    "slots": {
+      "required": [
+        "title",
+        "diagram",
+        "params"
+      ],
+      "optional": [
+        "title_suffix",
+        "takeaway",
+        "notes"
+      ]
+    }
+  },
+  {
+    "id": "solution.solution-dual-metrics",
+    "topic": "solution",
+    "also_fits": [
+      "system",
+      "hardware",
+      "software"
     ],
     "name": "问题与方案对照（示意图 + 指标表 + 设计要点）",
     "roles": [
@@ -598,10 +637,72 @@
     }
   },
   {
-    "id": "software.solution-module-flow",
-    "topic": "software",
+    "id": "solution.solution-dual-techs",
+    "topic": "solution",
     "also_fits": [
-      "system"
+      "system",
+      "hardware",
+      "software"
+    ],
+    "name": "挑战与双技术方案（架构图 + 收益表 + 特征要点）",
+    "roles": [
+      "solution",
+      "feature"
+    ],
+    "density": "talk",
+    "level": "system",
+    "tags": [
+      "技术挑战",
+      "技术方案",
+      "架构图",
+      "收益表",
+      "特征要点"
+    ],
+    "when_to_use": "一页讲清整组技术挑战和一两个并列的技术方案：顶部虚线框列挑战（症结 + 所在方面 + 量化代价，关键数字深红加粗），下方每个方案一栏，配架构图、效果收益小表和特征要点",
+    "slots": {
+      "required": [
+        "title",
+        "title_suffix",
+        "challenges_label",
+        "challenges",
+        "solutions"
+      ],
+      "optional": []
+    }
+  },
+  {
+    "id": "solution.solution-generations",
+    "topic": "solution",
+    "also_fits": [],
+    "name": "多代际方案",
+    "roles": [
+      "solution",
+      "roadmap"
+    ],
+    "density": "talk",
+    "level": "module",
+    "tags": [
+      "代际",
+      "规划",
+      "架构图"
+    ],
+    "when_to_use": "讲一条产品 / 技术线的多代际方案：先给多代际的共同目标，再按代际逐列展开各代的目标、架构图与特征、支撑技术",
+    "slots": {
+      "required": [
+        "title",
+        "title_suffix",
+        "goals",
+        "generations"
+      ],
+      "optional": []
+    }
+  },
+  {
+    "id": "solution.solution-module-flow",
+    "topic": "solution",
+    "also_fits": [
+      "system",
+      "software"
     ],
     "name": "模块处理流程方案",
     "roles": [
@@ -624,6 +725,159 @@
       "optional": [
         "title_suffix",
         "takeaway"
+      ]
+    }
+  },
+  {
+    "id": "solution.solution-overview-subs",
+    "topic": "solution",
+    "also_fits": [
+      "system",
+      "hardware"
+    ],
+    "name": "大方案+子方案网格",
+    "roles": [
+      "solution",
+      "feature"
+    ],
+    "density": "talk",
+    "level": "system",
+    "tags": [
+      "大方案",
+      "子方案",
+      "关键技术",
+      "指标",
+      "图文"
+    ],
+    "when_to_use": "一页讲清大方案的构成：顶部并排对比两种大方案的形式（名称＋形式图），下方三到四个子方案各讲名称、特征优势、图示和关键指标收益",
+    "slots": {
+      "required": [
+        "title",
+        "title_suffix",
+        "big_solutions",
+        "subs"
+      ],
+      "optional": []
+    }
+  },
+  {
+    "id": "solution.solution-problem-techs",
+    "topic": "solution",
+    "also_fits": [
+      "system",
+      "hardware",
+      "software"
+    ],
+    "name": "问题到关键技术展开",
+    "roles": [
+      "solution",
+      "problem"
+    ],
+    "density": "talk",
+    "level": "system",
+    "tags": [
+      "核心问题",
+      "竞争力目标",
+      "关键技术",
+      "示意图"
+    ],
+    "when_to_use": "一页讲清一项技术创新的完整论证：顶部总结核心问题，中部展开问题（背景 / 示意 / 挑战 / 量化数据）并给出竞争力目标和关键技术清单，底部把每项关键技术展开成示意图和要点",
+    "slots": {
+      "required": [
+        "title",
+        "title_suffix",
+        "problems_label",
+        "problems",
+        "background",
+        "challenge",
+        "goals_label",
+        "goals",
+        "techs_label",
+        "key_techs",
+        "solution",
+        "techs"
+      ],
+      "optional": [
+        "problem_image",
+        "metrics_image"
+      ]
+    }
+  },
+  {
+    "id": "solution.solution-sub-columns",
+    "topic": "solution",
+    "also_fits": [
+      "system",
+      "hardware",
+      "software"
+    ],
+    "name": "总述 + 子方案分栏",
+    "roles": [
+      "solution",
+      "feature"
+    ],
+    "density": "talk",
+    "level": "system",
+    "tags": [
+      "方案",
+      "子方案",
+      "分栏",
+      "架构图",
+      "收益表"
+    ],
+    "when_to_use": "一页讲清「整体方案 = 若干专用子方案的组合」：顶部总述场景负载需求和组合式方案（图示 + 文字），下方每个子方案一栏，各配一句话特征、架构图、收益表、目标与优化方向",
+    "slots": {
+      "required": [
+        "title",
+        "title_suffix",
+        "overview_name",
+        "load",
+        "units",
+        "note",
+        "subs"
+      ],
+      "optional": [
+        "overview_image"
+      ]
+    }
+  },
+  {
+    "id": "solution.solution-tiered-arch",
+    "topic": "solution",
+    "also_fits": [
+      "system",
+      "hardware"
+    ],
+    "name": "分层介质方案",
+    "roles": [
+      "solution",
+      "feature"
+    ],
+    "density": "talk",
+    "level": "system",
+    "tags": [
+      "分层",
+      "架构",
+      "介质",
+      "层级特征",
+      "方案"
+    ],
+    "when_to_use": "讲把多种介质按层级组合起来的方案：顶部逐代给出「以什么介质组合作为哪一层、得到何种效果」的总结，左侧列业务场景的量级需求和介质指标对比，右侧分层架构图标出新增的 X.5 层，并按层组讲存放什么数据、靠哪些技术点做到",
+    "slots": {
+      "required": [
+        "title",
+        "title_suffix",
+        "summary",
+        "scenarios",
+        "note",
+        "media_table",
+        "arch_name",
+        "layers",
+        "features",
+        "banner"
+      ],
+      "optional": [
+        "compute"
       ]
     }
   },
@@ -689,42 +943,6 @@
         "title_suffix",
         "takeaway",
         "vision"
-      ]
-    }
-  },
-  {
-    "id": "system.solution-arch-overview",
-    "topic": "system",
-    "also_fits": [
-      "software",
-      "hardware"
-    ],
-    "name": "分区架构方案总览",
-    "roles": [
-      "solution",
-      "feature"
-    ],
-    "density": "talk",
-    "level": "system",
-    "tags": [
-      "架构",
-      "分区",
-      "方案",
-      "挑战",
-      "关键技术"
-    ],
-    "when_to_use": "用一页讲清系统方案的全貌：面临的核心挑战、设计理念、分区分层的整体架构，以及支撑它的关键技术",
-    "slots": {
-      "required": [
-        "title",
-        "takeaway",
-        "challenges",
-        "principles",
-        "arch",
-        "key_techs"
-      ],
-      "optional": [
-        "title_suffix"
       ]
     }
   },
