@@ -7,17 +7,29 @@ description: "把用户已有的 PPT 页抽象成本仓库的页模板。当用�
 
 输入是一份 pptx：可以是用户给的样板，也可以是公司内部真实页经 `tools/ppt-skeleton` 脱敏后带出的骨架稿（随附 `manifest.yaml`）。输出是 `templates/<topic>/<template>/` 下的 `template.yaml`、`example.yaml`、`preview.png`。仓库规则以 `AGENTS.md` 为准，本 skill 只描述流程和踩过的坑。
 
-## 两条原则
+## 三条原则
 
 1. **先讲清这一页的逻辑，再做版式。** 模板要还原的是原页「每个元素承载什么、它们怎么组成一个完整的论证」：左边的文字讲什么、右边的文字讲什么，这个框是为了把哪些文字圈在一起、那个框是给架构图占位，上下是层次关系还是先后关系，颜色和图例代表什么。这些写进 `template.yaml` 的 `structure`，槽位、`description`、example 的引导文字都要和它一一对上。不能把原页泛化成「分组名称（一）」「左栏小节标题」这样的卡片网格。
 2. **样式照原页。** 描边还是阴影、圆角还是直角（含圆角大小）、底色、文字对齐、加粗、文字颜色都照原页；只有颜色和字号换成最接近的 token（`ppt import` 已经给出）。`AGENTS.md` 的风格约定只用在原页没交代的地方。
 3. **模板要能复用。** 模板讲的是「这一类页」，不是这一份原页：原页的业务词（某某建模仿真、领域名、产品名）不能写进模板名、`structure`、描述和固定文字；原页的具体数量（三层、第一层只有一张卡、三大特征）变成数量范围（`minItems` / `maxItems`），排布用 grid 按数据排，不逐行写死。原页的通用叫法（接口专家、核心问题、关键举措）可以保留。
 
+## 必需环境：LibreOffice
+
+导入原图、模板预览、还原对照都靠 LibreOffice（`soffice`）出图。**它是本 skill 的必需依赖，不是可选项**：
+
+- 开始前先检查：`uv run ppt preview common.cover-basic -o out/env-check`。生成了 PNG 就是装好了；报「找不到 soffice」就是没装。
+- 没装就先安装，装好再继续：
+  - Windows：`winget install --id TheDocumentFoundation.LibreOffice -e`（装到默认位置即可，`ppt` 会自己找到，不用改 PATH）
+  - macOS：`brew install --cask libreoffice`
+  - Linux：用发行版的包管理器装，如 `sudo apt install libreoffice-impress`
+- 安装会改动系统：按所在环境的规则先告诉用户、得到同意后再装。装不了（没有权限、用户不同意）就停下来说明原因，不要往下做。
+- 装好之前不要开始写模板：不能跳过出图、只凭 `shapes.yaml` 写模板，也不能省掉预览和还原对照。`ppt import` 提示「没有生成 original.png」时，同样先装好再重新导入。
+
 ## 准备
 
-- 在仓库根目录（含 `taxonomy.yaml`）运行 `uv run ppt ...`；第一次先 `uv sync`。导入原图和预览都依赖 LibreOffice（`soffice`）。
+- 在仓库根目录（含 `taxonomy.yaml`）运行 `uv run ppt ...`；第一次先 `uv sync`。
 - 样板放在 `samples/`（目录里的文件都被 `.gitignore` 忽略），连同 `manifest.yaml` 一起，永远不要提交。
-- 模板语法从这三处查就够了：`AGENTS.md` 的结构约定、`schema/template.schema.json`（layout 元素的全部字段）、2–3 个版式相近的现有模板（`project.roadmap-workstreams` 是按这两条原则做的范例）。不用读 `src/` 的渲染和校验代码；用组件时只看组件文件开头的模块说明、`SCHEMA` 和 `PROPS_SCHEMA`。
+- 模板语法从这三处查就够了：`AGENTS.md` 的结构约定、`schema/template.schema.json`（layout 元素的全部字段）、2–3 个版式相近的现有模板（按这三条原则做的范例：`product.roadmap-capability-map`、`project.roadmap-workstreams`、`workload.problem-chart-cases`、`software.solution-dual-metrics`）。不用读 `src/` 的渲染和校验代码；用组件时只看组件文件开头的模块说明、`SCHEMA` 和 `PROPS_SCHEMA`。
 
 ## 流程
 

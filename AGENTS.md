@@ -56,7 +56,7 @@
 
 ## 命令
 
-Python 3.13 + python-pptx，用 uv 管理环境（`uv sync` 安装依赖）。已实现：
+Python 3.13 + python-pptx，用 uv 管理环境（`uv sync` 安装依赖）。LibreOffice（`soffice`）是必需依赖：`ppt import` 的原图、`ppt preview`、模板的 `preview.png` 都靠它出图，没装要先装（Windows `winget install --id TheDocumentFoundation.LibreOffice -e`，macOS `brew install --cask libreoffice`）；`ppt` 会在 PATH 和各平台默认安装位置里找 `soffice`。已实现：
 
 ```
 uv run ppt list [--topic T] [--role R] [--density D] [--tag X]   # --topic 同时匹配 also_fits
@@ -71,7 +71,7 @@ uv run ppt import SKEL.pptx [--slide N ...] -o DIR   # 骨架 pptx → DIR/slide
 uv run ppt leaks <id> SAMPLE.pptx [--slide N ...] [--allow 词]   # example.yaml 和样板原文重合的片段（连续 4 个汉字等），必须 0 处
 uv run ppt sync-skill                    # 把 skill 正本复制到 .claude/skills/（改过正本后运行）
 uv run ppt mcp                           # 启动 stdio MCP server
-uv run pytest                            # 全部测试；找不到 soffice 时跳过预览测试
+uv run pytest                            # 全部测试；找不到 soffice 时跳过预览测试（只为了让没有 LibreOffice 的 CI 能跑，开发和做模板时必须装）
 uv run pytest tests/test_render.py::test_name   # 单个测试
 ```
 

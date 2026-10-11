@@ -11,7 +11,12 @@ description: "用本仓库的页模板生成原生 .pptx。当用户要做汇报
 
 - 确认当前目录是仓库根目录，即含 `taxonomy.yaml` 的目录；不是的话先 `cd` 过去。
 - 所有命令都用 `uv run ppt ...` 运行。第一次使用先 `uv sync`。
-- 预览依赖 LibreOffice（`soffice`）；没有的话 `preview` 会报错，其余步骤不受影响。
+- **LibreOffice（`soffice`）是必需依赖**：第 7 步的预览靠它出图。开始前先检查 `uv run ppt preview common.cover-basic -o out/env-check`，生成了 PNG 就是装好了；报「找不到 soffice」就先安装：
+  - Windows：`winget install --id TheDocumentFoundation.LibreOffice -e`（装到默认位置即可，`ppt` 会自己找到，不用改 PATH）
+  - macOS：`brew install --cask libreoffice`
+  - Linux：用发行版的包管理器装，如 `sudo apt install libreoffice-impress`
+
+  安装会改动系统：按所在环境的规则先告诉用户、得到同意后再装；装不了就停下来说明原因。不能因为没装就跳过预览直接交付 `.pptx`。
 
 ## 流程
 
@@ -40,7 +45,7 @@ description: "用本仓库的页模板生成原生 .pptx。当用户要做汇报
    其余页同理，按顺序追加到 `pages`。
 5. **校验。** `uv run ppt validate deck.yaml`。报错格式是 `<页>  <JSON Pointer>  <消息>`，按消息修改：超字数就精简文字，超数量就合并或删减条目，缺必填字段就补上。
 6. **渲染。** `uv run ppt render deck.yaml -o out/<名字>.pptx`。
-7. **预览。** `uv run ppt preview deck.yaml -o out/<名字>-preview/`，逐页查看 PNG。有文字溢出、留白过大或内容空洞，就回到第 4 步调整内容。
+7. **预览（必做）。** `uv run ppt preview deck.yaml -o out/<名字>-preview/`，逐页查看 PNG。有文字溢出、留白过大或内容空洞，就回到第 4 步调整内容。
 
 ## 规则
 
