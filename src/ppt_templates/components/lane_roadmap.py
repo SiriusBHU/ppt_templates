@@ -176,7 +176,7 @@ def _overlaps(spans, entries, where):
             if spans[j] and spans[k] and spans[j][0] <= spans[k][1] and spans[k][0] <= spans[j][1]]
 
 
-def check(data, box) -> list[tuple[tuple, str]]:
+def check(data, box, props=None) -> list[tuple[tuple, str]]:
     """from / to 要在 periods 里且 to 不早于 from，同一泳道的条目、时代之间不能重叠；
     时间轴上的标签只能一行，英文单词不能比框宽（否则会被拦腰折断），所有泳道和时代行加起来不能超出 box 的高度。
     图例是否预留取决于 props，这里拿不到，所以只要有高亮就按预留图例的高度检查，只会更严。"""
@@ -222,7 +222,7 @@ def render(slide, style, box, data, props):
         opts = dict(align="center", valign="middle", inset=INSET[kind])
         name = texts[0][1]
         if kind == "period":
-            add_shape(slide, style, b, "surface", text=name, text_style="body_strong", color="primary", **opts)
+            add_shape(slide, style, b, "surface", text=name, text_style="body_strong", color="primary_text", **opts)
         elif kind == "label":
             add_shape(slide, style, b, "primary", text=name, text_style="body_strong", color="on_primary", **opts)
         else:

@@ -395,10 +395,10 @@ def test_runs_are_consecutive_runs_in_one_paragraph_with_own_style_and_color(mak
 
 
 def test_runs_fall_back_to_the_element_color_and_keep_alignment(make_repo, root):
-    shapes = _shapes(make_repo, _runs_template([{"bind": "name"}], color="primary", align="center", valign="middle"),
+    shapes = _shapes(make_repo, _runs_template([{"bind": "name"}], color="primary_text", align="center", valign="middle"),
                      {"title": "t", "name": "名称"})
     shape = next(sh for sh in shapes if sh.has_text_frame and sh.text_frame.text == "名称")
-    assert _run_info(shape) == [("名称", False, _color(root, "primary"))]
+    assert _run_info(shape) == [("名称", False, _color(root, "primary_text"))]
     assert shape.text_frame.paragraphs[0].alignment == PP_ALIGN.CENTER
 
 

@@ -1,11 +1,10 @@
-import shutil
-
 import pytest
 from PIL import Image
 
 from ppt_templates.cli import main
+from ppt_templates.preview import find_soffice
 
-pytestmark = pytest.mark.skipif(shutil.which("soffice") is None, reason="需要 LibreOffice (soffice)")
+pytestmark = pytest.mark.skipif(find_soffice() is None, reason="需要 LibreOffice (soffice)")
 
 
 def test_preview_template_id_writes_one_1920_wide_png_per_slide(tmp_path, monkeypatch, root):

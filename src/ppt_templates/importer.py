@@ -17,7 +17,7 @@ from pptx.oxml.ns import qn
 from .errors import PptError
 from .geometry import CANVAS_H, CANVAS_W, REF_H, REF_W
 from .loader import load_style, load_yaml
-from .preview import render_pngs
+from .preview import find_soffice, render_pngs
 from .validate import TEXT_COLORS
 
 STYLE = "default"
@@ -348,6 +348,10 @@ def _node(shape, tf, ctx: _Context) -> dict | None:
     else:
         node["kind"] = kind
     node.update(box=box, body_box=_body_box(box, ctx))
+    if kind == "rounded":  # 圆角半径换成 px（= 短边 × adj），模板里照抄成 shape 的 radius
+        gd = prst_el.find(qn("a:avLst") + "/" + qn("a:gd")) if (prst_el := el.find(".//" + qn("a:prstGeom"))) is not None else None
+        adj = int(gd.get("fmla").split()[1]) if gd is not None else 16667
+        node["radius"] = _num(min(box[2], box[3]) * adj / 100000)
     if shape.is_placeholder:
         node["layout_placeholder"] = shape.placeholder_format.type.name.lower()
     if (rotation := getattr(shape, "rotation", 0)):
@@ -479,7 +483,7 @@ def import_skeleton(root: Path, pptx: Path, out_dir: Path, slides: list[int] | N
             yaml.dump(doc, Dumper=_Dumper, allow_unicode=True, sort_keys=False, width=10**6), encoding="utf-8")
         dirs.append(slide_dir)
 
-    if shutil.which("soffice") is None:
+    if find_soffice() is None:
         warnings.append("找不到 soffice，没有生成 original.png（安装 LibreOffice 后重新运行）")
     else:
         try:

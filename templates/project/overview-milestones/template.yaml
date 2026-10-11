@@ -53,11 +53,11 @@ layout:                         # 参考 body 区 1216×560
     columns: 6
     gap: 12
     item:
-      - { type: text, box: [0, 0, "100%", 24], bind: date, style: emphasis, color: accent, by: status, color_map: { 已完成: primary, 进行中: highlight_strong, 未开始: text } }
+      - { type: text, box: [0, 0, "100%", 24], bind: date, style: emphasis, color: accent, by: status, color_map: { 已完成: primary_text, 进行中: highlight_strong, 未开始: text } }
       - { type: shape, box: [0, 32, 14, 14], by: status, fill: line, fill_map: { 已完成: primary, 进行中: highlight_strong, 未开始: line } }
       - { type: shape, box: [0, 64, "100%", "100%-64"], fill: surface }
       - { type: shape, box: [0, 64, "100%", 4], by: status, fill: line, fill_map: { 已完成: primary, 进行中: highlight_strong, 未开始: line } }
-      - { type: text, box: [12, 84, "100%-24", 56], bind: name, style: emphasis, color: primary }
+      - { type: text, box: [12, 84, "100%-24", 56], bind: name, style: emphasis, color: primary_text }
       - { type: shape, box: [12, "100%-60", "100%-24", 1], fill: line }
       - { type: shape, box: [12, "100%-44", 76, 28], shape: rounded, by: status, fill: line, fill_map: { 已完成: primary, 进行中: highlight_strong, 未开始: line } }
       - { type: text, box: [12, "100%-44", 76, 28], bind: status, style: body_strong, color: text, by: status, color_map: { 已完成: on_primary, 进行中: on_primary, 未开始: text }, align: center, valign: middle }
@@ -65,7 +65,7 @@ layout:                         # 参考 body 区 1216×560
   # 下方：当前进展与问题
   - { type: shape, box: [0, 344, 1216, 216], fill: surface }
   - { type: shape, box: [0, 344, 4, 216], fill: accent }
-  - { type: text, box: [24, 360, 1168, 24], value: 当前进展与问题, style: emphasis, color: primary }
+  - { type: text, box: [24, 360, 1168, 24], value: 当前进展与问题, style: emphasis, color: primary_text }
   - { type: bullets, box: [24, 400, 1168, 148], bind: notes, style: body }
 
 guidance:

@@ -43,7 +43,7 @@ def bound_errors(template: dict, data, images: ImageSource, prefix=()) -> list[s
             if el["type"] == "component" and el["component"] in COMPONENTS and value is not None:
                 comp = COMPONENTS[el["component"]]
                 found = errors(comp.schema, value, prefix=at) or [
-                    f"{pointer([*at, *path])}  {msg}" for path, msg in comp.check(value, box)]
+                    f"{pointer([*at, *path])}  {msg}" for path, msg in comp.check(value, box, el.get("props", {}))]
                 problems.extend(f"{e}（组件 {el['component']}）" for e in found)
             elif el["type"] == "image" and not is_empty(value):
                 try:

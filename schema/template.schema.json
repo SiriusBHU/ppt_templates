@@ -15,6 +15,7 @@
     "when_to_use": {"type": "string", "minLength": 1},
     "when_not_to_use": {"type": "string"},
     "frame": {"enum": ["standard", "none"]},
+    "structure": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
     "slots": {"type": "object"},
     "layout": {"$ref": "#/$defs/elements"},
     "guidance": {"type": "array", "items": {"type": "string"}}
@@ -81,6 +82,11 @@
         "bind": {"type": "string"},
         "style": {"type": "string"},
         "color": {"type": "string"},
+        "by": {"type": "string"},
+        "color_map": {"$ref": "#/$defs/token_map"},
+        "marker": {"type": "boolean"},
+        "children": {"type": "string"},
+        "group_style": {"type": "string"},
         "when": {"type": "string"}
       }
     },
@@ -93,6 +99,8 @@
         "fill": {"type": "string"},
         "line": {"type": "string"},
         "shape": {"enum": ["rect", "rounded", "oval"]},
+        "radius": {"type": "number", "minimum": 0},
+        "dash": {"type": "boolean"},
         "shadow": {"type": "boolean"},
         "by": {"type": "string"},
         "fill_map": {"$ref": "#/$defs/token_map"},
@@ -110,6 +118,7 @@
         "columns": {"type": "integer", "minimum": 1},
         "gap": {"type": "number", "minimum": 0},
         "row_height": {"type": "number", "exclusiveMinimum": 0},
+        "weight": {"type": "string"},
         "item": {"$ref": "#/$defs/elements"},
         "when": {"type": "string"}
       }

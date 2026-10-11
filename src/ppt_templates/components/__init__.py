@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from . import block_diagram, capability_map, lane_roadmap, layered_arch, partitioned_arch, table
 
 
-def _no_problems(data, box) -> list:
+def _no_problems(data, box, props=None) -> list:
     return []
 
 

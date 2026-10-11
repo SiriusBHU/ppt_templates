@@ -1,5 +1,3 @@
-import shutil
-
 import pytest
 import yaml
 from lxml import etree
@@ -11,9 +9,11 @@ from pptx.enum.shapes import MSO_CONNECTOR, MSO_SHAPE
 from pptx.oxml.ns import qn
 from pptx.util import Emu, Pt
 
+from ppt_templates import importer
 from ppt_templates.cli import main
 from ppt_templates.errors import PptError
 from ppt_templates.importer import import_skeleton
+from ppt_templates.preview import find_soffice
 
 
 def px(v):
@@ -57,7 +57,8 @@ def build(path, width=12192000, height=6858000):
 
     s1 = prs.slides.add_slide(blank)
     _title(s1)
-    card = _box(s1, MSO_SHAPE.ROUNDED_RECTANGLE, 64, 160, 300, 100, fill="F3F5F8")
+    card = _box(s1, MSO_SHAPE.ROUNDED_RECTANGLE, 64, 160, 300, 100, fill="E7E6E6")
+    card.adjustments[0] = 0.12  # 圆角半径 = 短边 100px × 0.12 = 12px
     _run(card, "名称：", size=12, bold=True)
     _run(card, "说明文字", size=12)
     _run(card, "约十一磅", size=11, new_paragraph=True, color="595959")
@@ -107,7 +108,7 @@ def build(path, width=12192000, height=6858000):
 
 @pytest.fixture
 def no_soffice(monkeypatch):
-    monkeypatch.setattr(shutil, "which", lambda name: None)
+    monkeypatch.setattr(importer, "find_soffice", lambda: None)
 
 
 def run_import(root, tmp_path, slides=None, **build_args):
@@ -165,10 +166,11 @@ def test_non_16_9_slide_warns(root, tmp_path, no_soffice):
 def test_kinds_fills_and_shadow(root, tmp_path, no_soffice):
     (doc,), _ = run_import(root, tmp_path, [1])
     card = of_kind(doc["shapes"], "rounded")[0]
-    assert card["fill"] == {"hex": "#F3F5F8", "token": "surface"} and card["shadow"] is True and "line" not in card
+    assert card["fill"] == {"hex": "#E7E6E6", "token": "surface"} and card["shadow"] is True and "line" not in card
+    assert card["radius"] == 12
     oval = by_name(doc["shapes"], "近似色")
     assert oval["kind"] == "oval" and oval["shadow"] is False
-    assert oval["fill"] == {"hex": "#E8ECF4", "token": "surface", "approx": True}
+    assert oval["fill"] == {"hex": "#E8ECF4", "token": "highlight_blue", "approx": True}
     themed = [s for s in of_kind(doc["shapes"], "rect") if s["box"][:2] == [1000, 400]][0]
     assert themed["fill"] == {"hex": "#FFFFFF", "token": "bg"}  # 主题色 bg1 解析为白，再映射到 bg
 
@@ -245,16 +247,16 @@ def build_compact(path):
     blank = prs.slide_layouts[6]
     s1 = prs.slides.add_slide(blank)
     _title(s1)
-    _box(s1, MSO_SHAPE.ROUNDED_RECTANGLE, 64, 96, 300, 100, fill="F3F5F8")
+    _box(s1, MSO_SHAPE.ROUNDED_RECTANGLE, 64, 96, 300, 100, fill="E7E6E6")
     s1.shapes.add_picture(str(path.with_suffix(".png")), px(400), px(96), px(200), px(140))
     s2 = prs.slides.add_slide(blank)
     _title(s2)
     sub = s2.shapes.add_textbox(px(32), px(76), px(800), px(30))
     _run(sub, "一句话结论", size=18)
-    _box(s2, MSO_SHAPE.ROUNDED_RECTANGLE, 64, 140, 300, 100, fill="F3F5F8")
+    _box(s2, MSO_SHAPE.ROUNDED_RECTANGLE, 64, 140, 300, 100, fill="E7E6E6")
     s3 = prs.slides.add_slide(blank)
     _title(s3)
-    _box(s3, MSO_SHAPE.RECTANGLE, 64, 96, 300, 640, fill="F3F5F8")
+    _box(s3, MSO_SHAPE.RECTANGLE, 64, 96, 300, 640, fill="E7E6E6")
     s4 = prs.slides.add_slide(blank)
     _title(s4)
     plain = s4.shapes.add_textbox(px(64), px(140), px(300), px(30))
@@ -334,7 +336,7 @@ def test_without_soffice_warns_and_skips_original_png(root, tmp_path, no_soffice
     assert not (tmp_path / "out" / "slide-1" / "original.png").exists()
 
 
-@pytest.mark.skipif(shutil.which("soffice") is None, reason="需要 LibreOffice (soffice)")
+@pytest.mark.skipif(find_soffice() is None, reason="需要 LibreOffice (soffice)")
 def test_original_png_is_rendered_per_selected_slide(root, tmp_path):
     pptx = build(tmp_path / "skeleton.pptx")
     dirs, warnings = import_skeleton(root, pptx, tmp_path / "out", [3])

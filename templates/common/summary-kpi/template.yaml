@@ -57,7 +57,7 @@ layout:                         # 参考 body 区 1216×560
       - { type: text, box: [16, 178, "100%-32", 64], bind: note, style: detail, align: center }
 
   # 下：解读
-  - { type: text, box: [0, 348, 1216, 24], value: 结果解读, style: emphasis, color: primary }
+  - { type: text, box: [0, 348, 1216, 24], value: 结果解读, style: emphasis, color: primary_text }
   - { type: bullets, box: [0, 384, 1216, 176], bind: notes, style: body }
 
 guidance:

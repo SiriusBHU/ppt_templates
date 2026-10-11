@@ -43,9 +43,11 @@ def resolve_box(box: list, parent_w: float, parent_h: float) -> Box:
     )
 
 
-def grid_cells(box: Box, columns: int, gap: float, count: int, row_height: float | None = None) -> list[Box]:
+def grid_cells(box: Box, columns: int, gap: float, count: int, row_height: float | None = None,
+               weights: list[float] | None = None) -> list[Box]:
     """列数 = min(columns, count)（columns 是上限，项少时占满整行），行数 = ceil(count / 列数)，按行优先返回各单元格。
-    row_height 给定时每个单元格这么高，从 box 顶部起按 gap 依次排列；省略则行高均分 box 的高度。"""
+    row_height 给定时每个单元格这么高，从 box 顶部起按 gap 依次排列；省略则行高均分 box 的高度。
+    weights（每项一个正数）给定时按比例分：单列 grid 分行高，多列 grid 每行的项按权重占满整行宽。"""
     if count == 0:
         return []
     x, y, w, h = box
@@ -53,7 +55,23 @@ def grid_cells(box: Box, columns: int, gap: float, count: int, row_height: float
     rows = math.ceil(count / columns)
     cw = (w - gap * (columns - 1)) / columns
     ch = (h - gap * (rows - 1)) / rows if row_height is None else row_height
-    return [(x + (i % columns) * (cw + gap), y + (i // columns) * (ch + gap), cw, ch) for i in range(count)]
+    if weights is None:
+        return [(x + (i % columns) * (cw + gap), y + (i // columns) * (ch + gap), cw, ch) for i in range(count)]
+    if columns == 1:
+        sizes = _split(h - gap * (count - 1), weights)
+        tops = [y + sum(sizes[:i]) + gap * i for i in range(count)]
+        return [(x, top, w, size) for top, size in zip(tops, sizes)]
+    cells = []
+    for r in range(rows):
+        row = weights[r * columns:(r + 1) * columns]
+        sizes = _split(w - gap * (len(row) - 1), row)
+        cells += [(x + sum(sizes[:i]) + gap * i, y + r * (ch + gap), size, ch) for i, size in enumerate(sizes)]
+    return cells
+
+
+def _split(total: float, weights: list[float]) -> list[float]:
+    s = sum(weights)
+    return [total * wt / s for wt in weights]
 
 
 def body_box(style: dict, data: dict) -> Box:

@@ -92,7 +92,7 @@ layout:                         # 参考 body 区 1216×560
     box: [784, 0, 432, 24]
     value: 关键参数
     style: emphasis
-    color: primary
+    color: primary_text
   - type: grid
     box: [784, 32, 432, 300]
     bind: params
@@ -108,7 +108,7 @@ layout:                         # 参考 body 区 1216×560
     box: [784, 364, 432, 24]
     value: 设计说明
     style: emphasis
-    color: primary
+    color: primary_text
   - type: shape
     box: [784, 396, 432, 164]
     fill: surface

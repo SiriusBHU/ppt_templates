@@ -84,7 +84,7 @@ layout:                         # 参考 body 区 1216×560
     box: [784, 0, 432, 24]
     value: 关键规格
     style: emphasis
-    color: primary
+    color: primary_text
   - type: grid
     box: [784, 32, 432, 348]
     bind: specs
@@ -101,7 +101,7 @@ layout:                         # 参考 body 区 1216×560
     box: [784, 396, 432, 24]
     value: 补充说明
     style: emphasis
-    color: primary
+    color: primary_text
   - type: bullets
     box: [784, 428, 432, 132]
     bind: notes

@@ -391,32 +391,33 @@
     "topic": "product",
     "also_fits": [
       "system",
-      "software"
+      "project"
     ],
-    "name": "能力地图与关键举措",
+    "name": "业务沙盘与关键举措",
     "roles": [
       "roadmap",
       "overview"
     ],
     "density": "talk",
     "tags": [
+      "整体策略",
+      "业务沙盘",
       "能力地图",
-      "沙盘",
-      "举措",
-      "策略",
-      "分组",
+      "关键举措",
       "落地节奏"
     ],
-    "when_to_use": "左边用一张分组的能力地图摊开要做的事（条目按落地节奏分两类标注），右边列出对应的关键举措，一页讲清「做什么」和「怎么做」，适合整体策略和总体方案",
+    "when_to_use": "讲一块业务的整体策略：左栏把要建设的能力按层次排成一张沙盘（白底近期落地、浅蓝底远期预埋），右栏和左栏的层次一一对应，写每一层的关键举措",
     "slots": {
       "required": [
         "title",
         "map_label",
         "map",
-        "measures_label",
-        "measures"
+        "actions_label",
+        "actions"
       ],
-      "optional": []
+      "optional": [
+        "note"
+      ]
     }
   },
   {
@@ -480,9 +481,10 @@
     "id": "project.roadmap-workstreams",
     "topic": "project",
     "also_fits": [
-      "product"
+      "product",
+      "system"
     ],
-    "name": "领域工作项规划",
+    "name": "分层业务规划",
     "roles": [
       "roadmap",
       "overview"
@@ -490,16 +492,15 @@
     "density": "talk",
     "tags": [
       "业务规划",
+      "分层",
       "工作项",
-      "分工",
-      "接口人",
-      "领域"
+      "接口专家"
     ],
-    "when_to_use": "把一项业务规划按领域拆成若干行，每个领域下并排几个工作项，每个工作项写清做什么、达到什么指标，并标出接口人",
+    "when_to_use": "讲一个领域的整体业务规划：按层次（从靠近业务到靠近硬件）把领域拆成几行，每一层并排列出要建设的工作项，每项写清做什么、做到什么程度、支撑什么决策，并标出接口专家",
     "slots": {
       "required": [
         "title",
-        "rows"
+        "layers"
       ],
       "optional": []
     }
@@ -570,24 +571,26 @@
       "system",
       "hardware"
     ],
-    "name": "双问题双方案与指标",
+    "name": "问题与方案对照（示意图 + 指标表 + 设计要点）",
     "roles": [
       "solution",
+      "problem",
       "result"
     ],
     "density": "talk",
     "level": "subsystem",
     "tags": [
-      "方案",
-      "核心问题",
-      "指标",
-      "收益",
-      "对比"
+      "问题方案对照",
+      "机制示意图",
+      "指标表",
+      "设计要点",
+      "收益"
     ],
-    "when_to_use": "先点出两个核心问题，再并排给出各自对应的方案：每个方案配改进前后的示意图、指标表和关键设计要点，用一页同时讲清「问题 → 方案 → 量化收益」",
+    "when_to_use": "一页讲清一两个核心问题和各自的解法：顶部虚线框里列问题（问题名 + 所在方面 + 一句话总结），下方每个方案一栏，配机制示意图、前后指标表和设计要点",
     "slots": {
       "required": [
         "title",
+        "problems_label",
         "problems",
         "solutions"
       ],
@@ -755,30 +758,36 @@
     "id": "workload.problem-chart-cases",
     "topic": "workload",
     "also_fits": [
-      "trend"
+      "trend",
+      "system"
     ],
-    "name": "负载趋势图与典型场景",
+    "name": "负载趋势图、档位标注与典型场景",
     "roles": [
       "problem",
+      "trend",
       "analysis"
     ],
     "density": "talk",
     "tags": [
-      "负载",
-      "趋势图",
-      "特征",
+      "负载趋势",
+      "档位",
       "典型场景",
-      "截图"
+      "截图",
+      "负载特征"
     ],
-    "when_to_use": "用一页讲清某类负载的变化及其带来的挑战：左侧一张趋势图配上负载特征，右侧用一两个典型场景的截图佐证；结论写进标题",
+    "when_to_use": "用一张趋势图讲清某类负载分成几档、各自增长到什么量级，右侧用真实业务的截图佐证，左下归纳出几大负载特征和对系统的挑战",
     "slots": {
       "required": [
         "title",
-        "chart",
-        "features",
-        "cases"
+        "chart_title",
+        "tiers",
+        "cases",
+        "features_label",
+        "features"
       ],
-      "optional": []
+      "optional": [
+        "chart"
+      ]
     }
   },
   {

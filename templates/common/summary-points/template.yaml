@@ -49,7 +49,7 @@ layout:                         # 参考 body 区 1216×560
     item:
       - { type: shape, box: [0, 0, "100%", "100%"], fill: surface }
       - { type: shape, box: [0, 0, 4, "100%"], fill: accent }
-      - { type: text, box: [28, 0, 300, "100%"], bind: name, style: emphasis, color: primary, valign: middle }
+      - { type: text, box: [28, 0, 300, "100%"], bind: name, style: emphasis, color: primary_text, valign: middle }
       - { type: shape, box: [348, 12, 1, "100%-24"], fill: line }
       - { type: text, box: [372, 0, "100%-396", "100%"], bind: detail, style: body, valign: middle }
 

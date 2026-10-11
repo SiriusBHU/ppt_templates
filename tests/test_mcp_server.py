@@ -1,6 +1,5 @@
 import asyncio
 import io
-import shutil
 
 import pytest
 from mcp import Client
@@ -11,11 +10,12 @@ from pptx.enum.shapes import MSO_SHAPE_TYPE
 
 from conftest import CAN_SYMLINK, TEMPLATE_ID, needs_symlink
 from factories import deck_of, image_template, mini_template
-from ppt_templates import mcp_server
+from ppt_templates import mcp_server, preview
 from ppt_templates.errors import PptError
 from ppt_templates.loader import load_example
+from ppt_templates.preview import find_soffice
 
-needs_soffice = pytest.mark.skipif(shutil.which("soffice") is None, reason="需要 LibreOffice (soffice)")
+needs_soffice = pytest.mark.skipif(find_soffice() is None, reason="需要 LibreOffice (soffice)")
 TOOLS = {"get_taxonomy", "list_templates", "get_template", "validate_deck", "render_deck", "preview_deck"}
 
 
@@ -130,7 +130,7 @@ def test_preview_deck_returns_1280_wide_pngs(mini_repo):
 
 
 def test_preview_deck_without_soffice_is_a_clear_error(mini_repo, monkeypatch):
-    monkeypatch.setattr(shutil, "which", lambda name: None)
+    monkeypatch.setattr(preview, "find_soffice", lambda: None)
     with pytest.raises(PptError, match="找不到 soffice"):
         mcp_server.preview_deck(mini_deck())
 

@@ -87,10 +87,11 @@ def _render_elements(slide, style, elements, area, scope, tf, index=None, *, ima
             key = lookup(scope, el["by"]) if "by" in el else None
             add_shape(slide, style, tf(ref_box), _mapped(el.get("fill_map"), key) or el["fill"],
                       line=_mapped(el.get("line_map"), key) or el.get("line"), kind=el.get("shape", "rect"),
-                      shadow=el.get("shadow", False))
+                      shadow=el.get("shadow", False), radius=el.get("radius"), dash=el.get("dash", False))
         elif kind == "text" and "runs" in el:
-            # 一个段落里连排多个 run；run 没写 style / color 就用元素的；取不到值的 run 跳过，全部取不到则不画
-            runs = [(text, run.get("style", el["style"]), run.get("color", el.get("color")))
+            # 一个段落里连排多个 run；run 没写 style / color 就用元素的（有 by + color_map 时按值取色）；取不到值的 run 跳过，全部取不到则不画
+            color = (_mapped(el.get("color_map"), lookup(scope, el["by"])) if "by" in el else None) or el.get("color")
+            runs = [(text, run.get("style", el["style"]), run.get("color", color))
                     for run in el["runs"] if (text := _text_of(scope, run, index)) is not None]
             if runs:
                 add_runs(slide, style, tf(ref_box), runs, align=el.get("align", "left"), valign=el.get("valign", "top"))
@@ -103,10 +104,16 @@ def _render_elements(slide, style, elements, area, scope, tf, index=None, *, ima
         elif kind == "bullets":
             items = lookup(scope, el["bind"])
             if items:
-                add_bullets(slide, style, tf(ref_box), items, el["style"], color=el.get("color"))
+                color = _mapped(el.get("color_map"), lookup(scope, el["by"])) if "by" in el else None
+                add_bullets(slide, style, tf(ref_box), items, el["style"], color=color or el.get("color"), marker=el.get("marker", True),
+                            children=el.get("children"), group_style=el.get("group_style"))
         elif kind == "grid":
             items = lookup(scope, el["bind"]) or []
-            cells = grid_cells(ref_box, el["columns"], el.get("gap", 0), len(items), el.get("row_height"))
+            weights = None
+            if "weight" in el:  # 数值按数值、列表按条目数，没填的项按 1 算
+                weights = [float(len(w) if isinstance(w, list) else w) if w is not None else 1.0
+                           for w in (lookup(item, el["weight"]) for item in items)]
+            cells = grid_cells(ref_box, el["columns"], el.get("gap", 0), len(items), el.get("row_height"), weights)
             for i, (item, cell) in enumerate(zip(items, cells), 1):
                 _render_elements(slide, style, el["item"], cell, item, tf, i, images=images)
         elif kind == "image":
@@ -123,7 +130,7 @@ def _render_elements(slide, style, elements, area, scope, tf, index=None, *, ima
             if data is not None:
                 component, box = COMPONENTS[el["component"]], tf(ref_box)
                 # prepare_pages 已按参考尺寸检查过；这里按实际画布尺寸兜底，免得画出损坏的形状
-                problems = [f"组件 {el['component']}  {pointer(path)}  {msg}" for path, msg in component.check(data, box)]
+                problems = [f"组件 {el['component']}  {pointer(path)}  {msg}" for path, msg in component.check(data, box, el.get("props", {}))]
                 if problems:
                     raise PptError("\n".join(problems))
                 component.render(slide, style, box, data, el.get("props", {}))

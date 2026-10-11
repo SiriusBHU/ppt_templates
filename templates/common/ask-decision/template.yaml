@@ -50,7 +50,7 @@ layout:                         # 参考 body 区 1216×560
     box: [0, 0, 464, 24]
     value: 决策背景
     style: emphasis
-    color: primary
+    color: primary_text
   - type: grid
     box: [0, 36, 464, 468]
     bind: context
@@ -67,7 +67,7 @@ layout:                         # 参考 body 区 1216×560
     box: [488, 0, 728, 24]
     value: 需要的决策与资源
     style: emphasis
-    color: primary
+    color: primary_text
   - type: grid
     box: [488, 36, 728, 468]
     bind: asks

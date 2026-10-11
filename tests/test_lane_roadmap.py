@@ -83,7 +83,7 @@ def test_highlight_style_notes_and_legend(make_repo):
     shapes = render()
     hot, plain = _shape(shapes, "芯片乙"), _shape(shapes, "芯片甲")
     assert str(hot.fill.fore_color.rgb) == "FFF1E6" and str(hot.line.color.rgb) == "C00000" and hot.line.width == 19050
-    assert str(plain.fill.fore_color.rgb) == "FFFFFF" and str(plain.line.color.rgb) == "D1D5DB" and plain.line.width == 9525
+    assert str(plain.fill.fore_color.rgb) == "FFFFFF" and str(plain.line.color.rgb) == "A6A6A6" and plain.line.width == 9525
     name, *notes = (p.runs[0] for p in hot.text_frame.paragraphs)
     assert [p.runs[0].text for p in hot.text_frame.paragraphs] == ["芯片乙", "IP已确定", "SoC待评审"]
     assert name.font.bold and name.font.size.pt == 12 and str(name.font.color.rgb) == "C00000"
@@ -101,7 +101,7 @@ def test_eras_are_arrow_shapes_and_faded_ones_are_plain(make_repo):
     shapes = _renderer(make_repo)()
     old, new = _shape(shapes, "旧时代"), _shape(shapes, "新时代")
     assert old.auto_shape_type == new.auto_shape_type == MSO_SHAPE.PENTAGON
-    assert str(old.fill.fore_color.rgb) == "F3F5F8" and str(old.line.color.rgb) == "D1D5DB"
+    assert str(old.fill.fore_color.rgb) == "E7E6E6" and str(old.line.color.rgb) == "A6A6A6"
     assert str(new.fill.fore_color.rgb) == "FFF1E6" and str(new.line.color.rgb) == "C00000"
     assert [p.runs[0].text for p in new.text_frame.paragraphs] == ["新时代", "多智能体"]
     assert [p.runs[0].font.bold for p in new.text_frame.paragraphs] == [True, False]   # 名称加粗，说明不加粗
@@ -112,7 +112,7 @@ def test_eras_are_arrow_shapes_and_faded_ones_are_plain(make_repo):
 def test_axis_and_lane_labels(make_repo):
     shapes = _renderer(make_repo)()
     chip, label = _shape(shapes, "2026"), _shape(shapes, "智算")
-    assert str(chip.fill.fore_color.rgb) == "F3F5F8" and str(chip.text_frame.paragraphs[0].runs[0].font.color.rgb) == "283593"
+    assert str(chip.fill.fore_color.rgb) == "E7E6E6" and str(chip.text_frame.paragraphs[0].runs[0].font.color.rgb) == "0000FF"
     assert str(label.fill.fore_color.rgb) == "283593" and str(label.text_frame.paragraphs[0].runs[0].font.color.rgb) == "FFFFFF"
     assert label.text_frame.paragraphs[0].runs[0].font.bold and label.text_frame.paragraphs[0].alignment == 2   # PP_ALIGN.CENTER
 

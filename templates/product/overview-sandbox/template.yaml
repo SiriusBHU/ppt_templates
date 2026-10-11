@@ -67,7 +67,7 @@ layout:                         # 参考 body 区 1216×560
     box: [24, 444, 400, 24]
     value: 业务洞察
     style: emphasis
-    color: primary
+    color: primary_text
   - type: bullets
     box: [24, 476, 1168, 72]
     bind: insights

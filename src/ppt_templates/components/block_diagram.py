@@ -60,7 +60,7 @@ def _grid(nodes, box) -> tuple[int, int, float, float]:
     return rows, cols, (w - GAP_X * (cols - 1)) / cols, (h - GAP_Y * (rows - 1)) / rows
 
 
-def check(data, box) -> list[tuple[tuple, str]]:
+def check(data, box, props=None) -> list[tuple[tuple, str]]:
     """id 和位置不能重复，连线端点必须存在，节点不能小于 MIN_W×MIN_H。"""
     problems, ids, cells = [], set(), set()
     for i, n in enumerate(data["nodes"]):

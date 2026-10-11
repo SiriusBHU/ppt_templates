@@ -1,6 +1,7 @@
 """python-pptx 绘制原语：文字、矩形 / 圆角矩形 / 椭圆。所有 box 都是画布逻辑像素 (x, y, w, h)。"""
 
 from pptx.dml.color import RGBColor
+from pptx.enum.dml import MSO_LINE_DASH_STYLE
 from pptx.enum.shapes import MSO_CONNECTOR, MSO_SHAPE
 from pptx.enum.text import MSO_ANCHOR, MSO_AUTO_SIZE, PP_ALIGN
 from pptx.oxml import parse_xml
@@ -103,22 +104,51 @@ def add_runs(slide, style: dict, box: Box, runs, *, align="left", valign="top"):
 BULLET = "•"
 
 
-def add_bullets(slide, style: dict, box: Box, items, text_style: str, *, color=None):
-    """要点列表：每项一段，带项目符号；项是字符串，或 {text, level}（level 从 0 起，每级多缩进一个字宽）。"""
+def _colon(name: str) -> str:
+    return name if name.endswith(("：", ":")) else name + "："
+
+
+def add_bullets(slide, style: dict, box: Box, items, text_style: str, *, color=None, marker=True, children=None, group_style=None):
+    """要点列表：每项一段，带项目符号；项是字符串，或 {text, level, name, highlight}（level 从 0 起，每级多缩进一个字宽；
+    name 写成段首加粗的「名称：」，highlight 写成段尾蓝色加粗的强调片段）。
+    marker=False 时不画项目符号、不缩进，只是段与段之间留同样的间距（并列的几段说明）。
+    children 给定时 items 是分组：每组先写一段加粗的组名（取 name，自动接「：」，字号用 group_style），再写 item[children] 的要点；
+    整个列表在一个文本框里自然往下排，组与组之间多留一点间距。"""
     tb = slide.shapes.add_textbox(*emu_box(box))
     _setup_frame(tb.text_frame, "top", 0)
     em = px_to_emu(_text_style(style, text_style)["size"] * 96 / 72)
-    for i, item in enumerate(items):
-        text, level = (item, 0) if isinstance(item, str) else (item["text"], item.get("level", 0))
+    paras = []
+    for item in items:
+        if children:
+            paras.append(("group", item))
+            paras += [("item", child) for child in item.get(children) or []]
+        else:
+            paras.append(("item", item))
+    for i, (kind, item) in enumerate(paras):
         p = tb.text_frame.paragraphs[0] if i == 0 else tb.text_frame.add_paragraph()
+        if kind == "group":
+            if i:
+                p._p.get_or_add_pPr().append(parse_xml(f'<a:spcBef {nsdecls("a")}><a:spcPts val="1000"/></a:spcBef>'))
+            add_run(p, style, _colon(item["name"]), group_style or text_style, color, True)
+            continue
+        item = {"text": item} if isinstance(item, str) else item
+        text, level = item["text"], item.get("level", 0)
         p_pr = p._p.get_or_add_pPr()
-        p_pr.set("marL", str(em * (level + 1)))
-        p_pr.set("indent", str(-em))
+        if marker:
+            p_pr.set("marL", str(em * (level + 1)))
+            p_pr.set("indent", str(-em))
+        elif level:
+            p_pr.set("marL", str(em * level))
         if i:  # a:pPr 子元素顺序：spcBef 必须在 buFont / buChar 之前
             p_pr.append(parse_xml(f'<a:spcBef {nsdecls("a")}><a:spcPts val="400"/></a:spcBef>'))
-        p_pr.append(parse_xml(f'<a:buFont {nsdecls("a")} typeface="{style["fonts"]["latin"]}"/>'))
-        p_pr.append(parse_xml(f'<a:buChar {nsdecls("a")} char="{BULLET}"/>'))
+        if marker:
+            p_pr.append(parse_xml(f'<a:buFont {nsdecls("a")} typeface="{style["fonts"]["latin"]}"/>'))
+            p_pr.append(parse_xml(f'<a:buChar {nsdecls("a")} char="{BULLET}"/>'))
+        if item.get("name"):
+            add_run(p, style, _colon(item["name"]), text_style, color, True)
         add_run(p, style, text, text_style, color)
+        if item.get("highlight"):
+            add_run(p, style, item["highlight"], text_style, "primary_text", True)
     return tb
 
 
@@ -134,11 +164,14 @@ def _outer_shadow(style: dict):
         f'</a:outerShdw>')
 
 
-def add_shape(slide, style: dict, box: Box, fill: str, *, line=None, line_width=0.75, kind="rect", shadow=False, text=None,
-              **text_opts):
+def add_shape(slide, style: dict, box: Box, fill: str, *, line=None, line_width=0.75, kind="rect", shadow=False, radius=None,
+              dash=False, text=None, **text_opts):
     """实心形状（kind: rect / rounded / oval）；line 给定才画 line_width pt 的描边。
-    默认无阴影；shadow=True 按风格的 shadow 小节画投影。text 直接写在形状里，便于居中。"""
+    默认无阴影；shadow=True 按风格的 shadow 小节画投影。rounded 给了 radius（px）就固定圆角大小，
+    不给则用 PowerPoint 默认的按短边比例（框越大圆角越大）。dash=True 时描边画成虚线。text 直接写在形状里，便于居中。"""
     shape = slide.shapes.add_shape(SHAPES[kind], *emu_box(box))
+    if kind == "rounded" and radius is not None and min(box[2], box[3]) > 0:
+        shape.adjustments[0] = min(0.5, radius / min(box[2], box[3]))
     shape.shadow.inherit = False  # PowerPoint 认空的 a:effectLst
     shape._element.find(qn("p:style")).find(qn("a:effectRef")).set("idx", "0")  # LibreOffice 仍会按主题画阴影
     if shadow:
@@ -148,6 +181,8 @@ def add_shape(slide, style: dict, box: Box, fill: str, *, line=None, line_width=
     if line:
         shape.line.color.rgb = rgb(style, line)
         shape.line.width = Pt(line_width)
+        if dash:
+            shape.line.dash_style = MSO_LINE_DASH_STYLE.DASH
     else:
         shape.line.fill.background()
     if text is not None:

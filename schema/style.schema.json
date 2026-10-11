@@ -18,29 +18,33 @@
     },
     "colors": {
       "type": "object",
-      "required": ["primary", "accent", "text", "muted", "line", "surface", "bg", "on_primary", "highlight", "highlight_strong"],
+      "required": ["primary", "primary_text", "accent", "text", "muted", "line", "surface", "surface_light", "bg", "on_primary", "highlight", "highlight_blue", "highlight_strong"],
       "additionalProperties": false,
       "properties": {
         "primary": {"$ref": "#/$defs/hex"},
+        "primary_text": {"$ref": "#/$defs/hex"},
         "accent": {"$ref": "#/$defs/hex"},
         "text": {"$ref": "#/$defs/hex"},
         "muted": {"$ref": "#/$defs/hex"},
         "line": {"$ref": "#/$defs/hex"},
         "surface": {"$ref": "#/$defs/hex"},
+        "surface_light": {"$ref": "#/$defs/hex"},
         "bg": {"$ref": "#/$defs/hex"},
         "on_primary": {"$ref": "#/$defs/hex"},
         "highlight": {"$ref": "#/$defs/hex"},
+        "highlight_blue": {"$ref": "#/$defs/hex"},
         "highlight_strong": {"$ref": "#/$defs/hex"}
       }
     },
     "text_styles": {
       "type": "object",
-      "required": ["title", "title_suffix", "subtitle", "emphasis", "lead", "body", "body_strong", "detail", "caption", "footnote", "kpi"],
+      "required": ["title", "title_suffix", "subtitle", "heading", "emphasis", "lead", "body", "body_strong", "detail", "caption", "footnote", "kpi"],
       "additionalProperties": false,
       "properties": {
         "title": {"$ref": "#/$defs/text_style", "properties": {"size": {"const": 24}}},
         "title_suffix": {"$ref": "#/$defs/text_style", "properties": {"size": {"const": 18}}},
         "subtitle": {"$ref": "#/$defs/text_style", "properties": {"size": {"const": 18}}},
+        "heading": {"$ref": "#/$defs/text_style", "properties": {"size": {"const": 18}}},
         "emphasis": {"$ref": "#/$defs/text_style", "properties": {"size": {"const": 14}}},
         "lead": {"$ref": "#/$defs/text_style", "properties": {"size": {"const": 14}}},
         "body": {"$ref": "#/$defs/text_style", "properties": {"size": {"const": 12}}},

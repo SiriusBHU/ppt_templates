@@ -42,7 +42,7 @@ def catalog_text(root: Path) -> str:
 
 def write_catalog(root: Path) -> Path:
     path = root / "catalog.json"
-    path.write_text(catalog_text(root), encoding="utf-8")
+    path.write_text(catalog_text(root), encoding="utf-8", newline="\n")  # Windows 上也写 LF，和仓库里的一致
     return path
 
 

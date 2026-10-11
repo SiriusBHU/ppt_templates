@@ -46,7 +46,7 @@ layout:                         # frame: none，坐标以画布左上角为原�
   - { type: shape, box: [1160, 32, 24, 24], fill: primary }
   - { type: shape, box: [1192, 32, 24, 24], fill: accent }
   - { type: shape, box: [1224, 32, 24, 24], fill: line }
-  - { type: text, box: [640, 112, 608, 24], value: 汇报要点, style: emphasis, color: primary, when: highlights }
+  - { type: text, box: [640, 112, 608, 24], value: 汇报要点, style: emphasis, color: primary_text, when: highlights }
   - type: grid
     box: [640, 152, 608, 408]
     bind: highlights
@@ -56,7 +56,7 @@ layout:                         # frame: none，坐标以画布左上角为原�
     item:
       - { type: shape, box: [0, 0, "100%", "100%"], fill: bg }
       - { type: shape, box: [0, 0, 4, "100%"], fill: accent }
-      - { type: text, box: [28, "50%-34", "100%-52", 28], bind: name, style: emphasis, color: primary, valign: middle }
+      - { type: text, box: [28, "50%-34", "100%-52", 28], bind: name, style: emphasis, color: primary_text, valign: middle }
       - { type: text, box: [28, "50%+2", "100%-52", 40], bind: detail, style: body }
 
   # 左：深色标题区

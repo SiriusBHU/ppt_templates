@@ -66,3 +66,24 @@ def test_component_inside_grid_reports_item_pointer(make_repo):
     data = {"title": "表", "matrix": [cell, {**cell, "rows": [["x"]]}]}
     assert ("/pages/0/data/matrix/1/rows/0  第 1 行有 1 格，表头有 2 列（组件 table）"
             in _prepare_error(repo, template, data))
+
+
+def test_plain_look_has_no_fills_and_draws_rules(make_repo, tmp_path):
+    from pptx.oxml.ns import qn
+    template, example = table_template()
+    template["layout"][0]["props"] = {**template["layout"][0].get("props", {}), "look": "plain", "text_style": "caption", "align": "left"}
+    repo = make_repo({"common.overview-table": (template, example)})
+    assert validate_repo(repo).errors == []
+    path = tmp_path / "t.pptx"
+    render_deck(deck_of("common.overview-table", example), repo).save(path)
+    table = next(sh for sh in Presentation(path).slides[0].shapes if sh.has_table).table
+    cells = [table.cell(r, c) for r in range(len(table.rows)) for c in range(len(table.columns))]
+    assert all(str(cell.fill.fore_color.rgb) == "FFFFFF" for cell in cells)
+    head = table.cell(0, 1).text_frame.paragraphs[0]
+    assert head.runs[0].font.bold and head.runs[0].font.size.pt == 9 and str(head.runs[0].font.color.rgb) == "000000"
+    assert head.alignment == 1                                                         # PP_ALIGN.LEFT
+    tc_pr = table.cell(0, 1)._tc.tcPr
+    assert tc_pr.find(qn("a:lnT")) is not None and tc_pr.find(qn("a:lnB")) is not None
+    body = table.cell(2, 1)._tc.tcPr
+    assert body.find(qn("a:lnT")) is None and body.find(qn("a:lnB")) is not None
+    assert [child.tag.split("}")[1] for child in tc_pr][:3] == ["lnT", "lnB", "solidFill"]     # 线在填充之前（OOXML 顺序）

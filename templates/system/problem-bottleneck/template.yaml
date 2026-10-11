@@ -72,7 +72,7 @@ layout:                         # 参考 body 区 1216×560
     box: [0, 80, 448, 24]
     value: 关键指标
     style: emphasis
-    color: primary
+    color: primary_text
   - type: grid
     box: [0, 112, 448, 448]
     bind: metrics
@@ -90,7 +90,7 @@ layout:                         # 参考 body 区 1216×560
     box: [472, 80, 744, 24]
     value: 根因分析
     style: emphasis
-    color: primary
+    color: primary_text
   - type: grid
     box: [472, 112, 744, 448]
     bind: causes

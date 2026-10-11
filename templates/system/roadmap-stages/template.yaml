@@ -61,7 +61,7 @@ layout:                         # 参考 body 区 1216×560
     item:
       - { type: text, box: [0, 4, "100%", 22], bind: period, style: body_strong, color: accent }
       - { type: shape, box: [0, 35, 12, 12], fill: accent }
-      - { type: text, box: [0, 62, "100%", 26], bind: name, style: emphasis, color: primary }
+      - { type: text, box: [0, 62, "100%", 26], bind: name, style: emphasis, color: primary_text }
       - type: grid
         box: [0, 104, "100%", "100%-104"]
         bind: points

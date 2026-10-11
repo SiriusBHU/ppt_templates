@@ -1,95 +1,125 @@
 id: workload.problem-chart-cases
-name: 负载趋势图与典型场景
-roles: [problem, analysis]
-also_fits: [trend]
+name: 负载趋势图、档位标注与典型场景
+roles: [problem, trend, analysis]
+also_fits: [trend, system]
 density: talk
-tags: [负载, 趋势图, 特征, 典型场景, 截图]
-when_to_use: 用一页讲清某类负载的变化及其带来的挑战：左侧一张趋势图配上负载特征，右侧用一两个典型场景的截图佐证；结论写进标题
-when_not_to_use: 只有量化特征、要逐条推出对系统的需求 → workload.requirement-matrix；只有几个趋势、不配图 → trend.trend-points；要对比多个产品、没有图 → common.overview-table
-frame: standard                 # 没有 takeaway：正文区上移到 body_compact，标题单独占一行
+tags: [负载趋势, 档位, 典型场景, 截图, 负载特征]
+when_to_use: 用一张趋势图讲清某类负载分成几档、各自增长到什么量级，右侧用真实业务的截图佐证，左下归纳出几大负载特征和对系统的挑战
+when_not_to_use: 只有量化特征、要逐条推出对系统的需求 → workload.requirement-matrix；讲行业趋势而不是某类负载 → trend.trend-points
+frame: standard
+
+structure:
+  - 标题：结论式，一句话写这类负载有什么特征、对系统提出什么挑战
+  - 左上趋势图：图名写在图上方居中（对象 + 指标 + 趋势）；图里横轴是时间、纵轴是负载的规模指标，画出几类负载各自的增长区间，区间框和箭头随图一起画
+  - 叠在图上的档位标注：每档一段「档名：规模区间」，下面一两条这一档的特点或管理做法；从上到下是规模从大到小，文字颜色和图里这一档的颜色一致
+  - 右侧典型场景：每个场景一个名称（「产品：服务形态」）加一到三张截图，证明图里的档位在真实业务里已经出现
+  - 左下负载特征：小标题点明有几大特征，下面每条「特征名：现象和影响」，是全页的结论，要和左图、右侧场景对得上
+  - 阅读顺序：先看趋势（左上）→ 再看实例（右侧）→ 最后落到特征和挑战（左下）；整页不画卡片框
 
 slots:
   type: object
-  required: [title, chart, features, cases]
+  required: [title, chart_title, tiers, cases, features_label, features]
   properties:
     title:
       type: string
-      maxLength: 36
-      description: 标题（24 号加粗，一行写完），结论式：写出负载呈现什么趋势或特征，以及它给系统带来什么挑战
+      maxLength: 40
+      description: 页标题（24 号加粗、深红、一行）：结论句；中文不超过 36 个字（英文、数字约半个字宽）
+    chart_title:
+      type: string
+      maxLength: 24
+      description: 趋势图的图名（14 号加粗，图上方居中）：对象 + 指标 + 趋势
     chart:
-      type: object
-      required: [title, image]
-      description: 左上的大图卡片，放趋势图
-      properties:
-        title: { type: string, maxLength: 20, description: 图的标题（加粗），点明对象和指标，如「某类负载的增长趋势」 }
-        image: { type: string, description: 图片路径（png / jpg 等），相对 deck 文件所在目录；留空则显示占位框 }
-    features:
-      type: object
-      required: [title, items]
-      description: 左下的特征卡片，每条「名称：说明」连排成一行，一行写完
-      properties:
-        title: { type: string, maxLength: 8, description: 卡片标题（加粗），如「三大负载特征」，条数与 items 一致 }
-        items:
-          type: array
-          minItems: 2
-          maxItems: 4
-          description: 负载特征，按重要性从上到下排列
-          items:
-            type: object
-            required: [name, detail]
-            properties:
-              name: { type: string, maxLength: 6, description: 特征名称（短语），加粗 }
-              detail: { type: string, maxLength: 28, description: 这个特征的表现和带来的影响，最好带数字 }
+      type: string
+      description: 趋势图的图片路径：横轴时间、纵轴规模指标，各档的区间框和指向箭头画在图里；没有就留空显示占位框
+    tiers:
+      type: array
+      minItems: 1
+      maxItems: 3
+      description: 叠在图上的档位标注，从上到下规模从大到小
+      items:
+        type: object
+        required: [tone, name, range]
+        properties:
+          tone: { type: string, enum: [深红, 蓝, 黑], description: 这一档的文字颜色，和图里这一档的颜色一致 }
+          name: { type: string, maxLength: 12, description: 档名（14 号加粗）；档名 + 区间合起来不超过 16 个字宽（英文、数字约半个字） }
+          range: { type: string, maxLength: 10, description: 规模区间，如「N ～ M」 }
+          points:
+            type: array
+            maxItems: 2
+            description: 这一档的特点或管理做法，一条一件事
+            items: { type: string, maxLength: 20 }
     cases:
       type: array
       minItems: 1
       maxItems: 2
-      description: 右侧的典型场景，每个场景一张卡片，自上而下排列；只有一个时卡片占满右侧整列
+      description: 右侧的典型场景，自上而下
       items:
         type: object
-        required: [title, image]
+        required: [name, images]
         properties:
-          title: { type: string, maxLength: 20, description: 场景标题（加粗），写明产品或业务和它的负载形态 }
-          image: { type: string, description: 场景截图或示意图的路径，相对 deck 文件所在目录；留空则显示占位框 }
+          name: { type: string, maxLength: 20, description: 场景名称（14 号加粗、居中）：「产品：服务形态」 }
+          images:
+            type: array
+            minItems: 1
+            maxItems: 3
+            description: 这个场景的截图路径，一到三张并排；没有就写空串显示占位框
+            items: { type: string }
+    features_label:
+      type: string
+      maxLength: 10
+      description: 左下负载特征的小标题（18 号加粗），点明有几大特征，如「N 大负载特征：」
+    features:
+      type: array
+      minItems: 2
+      maxItems: 4
+      description: 负载特征，每条一行，是全页的结论
+      items:
+        type: object
+        required: [name, text]
+        properties:
+          name: { type: string, maxLength: 6, description: 特征名（18 号加粗，自动接「：」） }
+          text: { type: string, maxLength: 32, description: 现象和影响；特征名 + 说明合起来一行写完（约 30 个字宽，英文、数字约半个字） }
 
-layout:                         # 参考 body 区 1216×560（body_compact 下纵向拉伸到 600）；卡片之间、卡片内边距都是 16；左列 728、右列 472
-  # 左上：趋势图
-  - { type: shape, box: [0, 0, 728, 380], fill: bg, shadow: true }
-  - { type: text, box: [16, 12, 696, 24], bind: chart.title, style: emphasis, color: accent, valign: middle }
-  - { type: image, box: [16, 44, 696, 320], bind: chart.image, placeholder: "趋势图：横轴为时间，纵轴为负载指标，用不同颜色区分各类负载，并标出各自的增长区间" }
-
-  # 左下：负载特征
-  - { type: shape, box: [0, 396, 728, 164], fill: bg, shadow: true }
-  - { type: text, box: [16, 406, 696, 24], bind: features.title, style: emphasis, color: accent, valign: middle }
+layout:                         # 参考 body 区 1216×560（本页无 takeaway，正文区自动上移并纵向拉伸到 600）
+  # 左上：图名 + 趋势图，档位标注叠在图上
+  - { type: text, box: [0, 0, 760, 30], bind: chart_title, style: emphasis, align: center, valign: middle }
+  - { type: image, box: [0, 34, 760, 344], bind: chart, placeholder: 趋势图 }
   - type: grid
-    box: [16, 436, 696, 114]
-    bind: features.items
+    box: [60, 46, 290, 300]
+    bind: tiers
     columns: 1
-    item:                       # 不设 row_height：条目均分高度，文字垂直居中
-      - { type: shape, box: [4, "50%-3", 6, 6], fill: accent, shape: oval }
+    gap: 8
+    item:
       - type: text
-        box: [24, 0, "100%-24", "100%"]
-        style: lead
-        valign: middle
+        box: [0, 0, "100%", 22]
+        style: emphasis
+        by: tone
+        color_map: { 深红: accent, 蓝: primary_text, 黑: text }
         runs:
-          - { bind: name, style: body_strong }
-          - { value: "：", style: body_strong }
-          - { bind: detail }
-
-  # 右：典型场景（1 个占满整列，2 个上下均分）
+          - { bind: name }
+          - { value: "：" }
+          - { bind: range }
+      - { type: bullets, box: [0, 24, "100%", "100%-24"], bind: points, style: body, by: tone, color_map: { 深红: accent, 蓝: primary_text, 黑: text } }
+  # 右侧：典型场景，名称 + 一到三张截图
   - type: grid
-    box: [744, 0, 472, 560]
+    box: [784, 0, 432, 560]
     bind: cases
     columns: 1
-    gap: 16
+    gap: 20
     item:
-      - { type: shape, box: [0, 0, "100%", "100%"], fill: bg, shadow: true }
-      - { type: text, box: [16, 12, "100%-32", 24], bind: title, style: emphasis, color: accent, valign: middle }
-      - { type: image, box: [16, 44, "100%-32", "100%-60"], bind: image, placeholder: 场景截图或示意图 }
+      - { type: text, box: [0, 0, "100%", 30], bind: name, style: emphasis, align: center, valign: middle }
+      - type: grid
+        box: [0, 34, "100%", "100%-34"]
+        bind: images
+        columns: 3
+        gap: 10
+        item:
+          - { type: image, box: [0, 0, "100%", "100%"], bind: ".", placeholder: 截图 }
+  # 左下：几大负载特征
+  - { type: text, box: [0, 392, 760, 32], bind: features_label, style: heading, valign: middle }
+  - { type: bullets, box: [0, 428, 760, 132], bind: features, style: subtitle }
 
 guidance:
-  - 标题写成结论：先说负载呈现什么变化，再说它给系统带来的挑战，不要只写「负载分析」
-  - 左侧大图贴趋势图：横轴时间、纵轴关键指标，用颜色或分区区分不同类型的负载，并在图里直接标注各类的增长区间；图的标题写清对象和指标
-  - 特征写成「名称：说明」，名称用短语，说明带上数字或程度，按对系统影响从大到小排列；特征数与卡片标题里的数字一致
-  - 右侧场景挑最能说明特征的一两个：标题写产品或业务和它的负载形态，图放产品截图或示意图（多张截图先拼成一张图再放）
-  - 图片路径相对 deck 文件所在目录；图片等比缩放后居中放入框内，建议先按框的比例裁好：左图约 2:1，右侧两个场景各约 2:1，只放一个场景时约 4:5 的竖图，留白少、文字更清楚
+  - 档位按规模从大到小自上而下排，档名用同一套说法，区间写到量级即可；颜色和图里的区间框保持一致
+  - 截图选能一眼看出服务形态的界面；一个场景最多三张，多了就拼成一张
+  - 负载特征每条一行，和左图的档位、右侧的场景对得上，不要写成解决方案

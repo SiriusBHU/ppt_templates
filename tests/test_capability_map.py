@@ -124,7 +124,7 @@ def test_tags_pick_the_fill_and_untagged_items_use_the_first_one(make_repo):
     assert _rgb(shapes, "能力一") == "FFFFFF" and _rgb(shapes, "能力二") == "FFFFFF"      # 没写 tag / 第 1 种
     assert _rgb(shapes, "子二") == "FFF1E6" and _rgb(shapes, "能力十") == "FFF1E6"        # 第 2 种
     hot = _shape(shapes, "能力十")
-    assert str(hot.line.color.rgb) == "D1D5DB" and hot.line.width == 9525
+    assert str(hot.line.color.rgb) == "A6A6A6" and hot.line.width == 9525
     run = hot.text_frame.paragraphs[0].runs[0]
     assert run.font.bold and run.font.size.pt == 12 and str(run.font.color.rgb) == "000000"   # 文字仍是黑色、加粗
     assert hot.text_frame.paragraphs[0].alignment == 2                                        # PP_ALIGN.CENTER
@@ -152,14 +152,14 @@ def test_group_panels_titles_and_the_nested_box(make_repo):
     shapes = _renderer(make_repo)()
     title = _shape(shapes, "甲组")
     run = title.text_frame.paragraphs[0].runs[0]
-    assert run.font.bold and run.font.size.pt == 14 and str(run.font.color.rgb) == "283593"       # 组名：14 号加粗、靛蓝
+    assert run.font.bold and run.font.size.pt == 14 and str(run.font.color.rgb) == "0000FF"       # 组名：14 号加粗、纯蓝
     sub = _shape(shapes, "分组框").text_frame.paragraphs[0].runs[0]
-    assert sub.font.bold and sub.font.size.pt == 12 and str(sub.font.color.rgb) == "283593"
+    assert sub.font.bold and sub.font.size.pt == 12 and str(sub.font.color.rgb) == "0000FF"
     top = _shape(shapes, "总标题").text_frame.paragraphs[0].runs[0]
     assert top.font.bold and top.font.size.pt == 14 and str(top.font.color.rgb) == "000000"
     fills = [str(sh.fill.fore_color.rgb) for sh in shapes if sh.shape_type == MSO_SHAPE_TYPE.AUTO_SHAPE and not sh.text_frame.text
              and sh.line.fill.type == MSO_FILL.BACKGROUND]
-    assert fills.count("F3F5F8") == 3 and fills.count("FFFFFF") == 1                            # 3 个灰底分组面板、1 个白底分组框，都不描边
+    assert fills.count("E7E6E6") == 3 and fills.count("FFFFFF") == 1                            # 3 个灰底分组面板、1 个白底分组框，都不描边
 
 
 def test_rows_stop_growing_at_the_cap_and_the_stack_stays_at_the_top(make_repo):
@@ -306,3 +306,28 @@ def test_default_columns_and_row_flow():
     wide, box = {"name": "宽", "wide": True}, {"name": "框", "items": [plain]}
     assert _rows([plain, plain, wide, plain], 3) == [(0, 1), (2,), (3,)]                                      # wide 截断当前行
     assert _rows([plain, box, plain, plain], 2) == [(0,), (1,), (2, 3)]                                       # 分组框也一样
+
+
+def test_props_restyle_panels_titles_items_fills_and_boxed_legend(make_repo):
+    template, example = capmap_template()
+    template["layout"][0]["props"] = {"group_fill": "surface_light", "outline": "line", "title_color": "text", "item_style": "body",
+                                      "fills": ["bg", "highlight_blue"], "legend_look": "box"}
+    repo = make_repo({CAP: (template, example)})
+    assert validate_repo(repo).errors == []
+    shapes = list(render_deck(deck_of(CAP, example), repo).slides[0].shapes)
+    assert str(_shape(shapes, "甲组").text_frame.paragraphs[0].runs[0].font.color.rgb) == "000000"   # 组名黑字
+    item = _shape(shapes, "能力十").text_frame.paragraphs[0].runs[0]
+    assert not item.font.bold and _rgb(shapes, "能力十") == "DEEBF7"                                   # 常规字、浅蓝底
+    panels = [sh for sh in shapes if sh.shape_type == MSO_SHAPE_TYPE.AUTO_SHAPE and not sh.text_frame.text]
+    assert sum(str(sh.fill.fore_color.rgb) == "F2F2F2" for sh in panels) == 3
+    assert all(str(sh.line.color.rgb) == "A6A6A6" for sh in panels)                                   # 面板和分组框都描边
+    legend = _shape(shapes, "远期预埋")                                                                # 图例是带文字的小框
+    assert str(legend.fill.fore_color.rgb) == "DEEBF7" and legend.text_frame.paragraphs[0].alignment == 2
+    assert not [sh for sh in shapes if round(sh.width / PX) == 14]                                    # 没有色块
+
+
+def test_props_must_use_style_tokens(make_repo):
+    template, example = capmap_template()
+    template["layout"][0]["props"] = {"group_fill": "灰", "legend_look": "dots"}
+    errors = validate_repo(make_repo({CAP: (template, example)})).errors
+    assert any("/layout/0/props/group_fill" in e for e in errors) and any("/layout/0/props/legend_look" in e for e in errors)

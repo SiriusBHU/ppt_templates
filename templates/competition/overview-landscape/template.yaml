@@ -43,7 +43,7 @@ slots:
 
 layout:                         # 参考 body 区 1216×560；每家一行，高度随家数自动均分
   # 列标题
-  - { type: text, box: [24, 0, 240, 20], value: 玩家与定位, style: body_strong, color: primary }
+  - { type: text, box: [24, 0, 240, 20], value: 玩家与定位, style: body_strong, color: primary_text }
   - { type: text, box: [288, 0, 432, 20], value: 优势, style: body_strong, color: accent }
   - { type: text, box: [756, 0, 444, 20], value: 劣势, style: body_strong, color: highlight_strong }
 
@@ -55,7 +55,7 @@ layout:                         # 参考 body 区 1216×560；每家一行，高
     item:
       - { type: shape, box: [0, 0, "100%", "100%"], fill: surface }
       - { type: shape, box: [0, 0, 4, "100%"], fill: accent }
-      - { type: text, box: [24, "50%-24", 240, 24], bind: name, style: emphasis, color: primary }
+      - { type: text, box: [24, "50%-24", 240, 24], bind: name, style: emphasis, color: primary_text }
       - { type: text, box: [24, "50%+2", 240, 16], bind: position, style: detail }
       - { type: text, box: [288, 0, 432, "100%"], bind: strength, style: body, valign: middle }
       - { type: text, box: [756, 0, 444, "100%"], bind: weakness, style: body, valign: middle }

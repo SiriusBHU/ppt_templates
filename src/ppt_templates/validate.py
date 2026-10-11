@@ -22,7 +22,7 @@ from .taxonomy import Taxonomy, load_taxonomy
 
 LEVEL_TOPICS = {"system", "hardware", "software"}
 FRAME_SLOTS = ("title", "title_suffix", "takeaway")
-TEXT_COLORS = ("accent", "highlight_strong", "primary", "text", "on_primary")  # 文字只用这几种颜色；muted 等只给非文字元素
+TEXT_COLORS = ("accent", "highlight_strong", "primary_text", "text", "on_primary")  # 文字只用这几种颜色；muted 等只给非文字元素
 EPS = 0.5  # 坐标比较容差（px）
 
 
@@ -106,6 +106,16 @@ def _type_error(el: dict, slot: dict) -> str | None:
     kind, t = el["type"], slot.get("type")
     if kind == "text":
         return None if t == "string" else f"text 只能绑定 string 槽位，实际是 {t}"
+    if kind == "bullets" and "children" in el:  # 分组：每项是 {name, <children>: 要点数组}
+        group = _obj(slot.get("items"))
+        props = _obj(group.get("properties"))
+        if t != "array" or group.get("type") != "object" or _obj(props.get("name")).get("type") != "string" \
+                or "name" not in group.get("required", []):
+            return f"bullets 写了 children 时只能绑定对象数组，每项有必填的 string 字段 name（组名）"
+        inner = props.get(el["children"])
+        if inner is None:
+            return f"bullets 的 children「{el['children']}」不在每组的字段里"
+        return _type_error({"type": "bullets"}, _obj(inner))
     if kind == "bullets":
         items = _obj(slot.get("items"))
         props = _obj(items.get("properties"))
@@ -116,6 +126,9 @@ def _type_error(el: dict, slot: dict) -> str | None:
             level = _obj(props.get("level"))
             if "level" in props and (level.get("type") != "integer" or level.get("minimum", -1) < 0):
                 return "bullets 的 level 必须是 type: integer 且 minimum: 0"
+            for key in ("name", "highlight"):
+                if key in props and _obj(props[key]).get("type") != "string":
+                    return f"bullets 的 {key} 必须是 type: string"
             return None
         return "bullets 只能绑定 string 数组，或含 string 字段 text 的对象数组"
     if kind == "image":
@@ -126,6 +139,31 @@ def _type_error(el: dict, slot: dict) -> str | None:
         return None if "maxItems" in slot else "grid 绑定的数组必须声明 maxItems"
     want = COMPONENTS[el["component"]].schema.get("type")
     return None if t == want else f"组件 {el['component']} 需要 {want} 类型的槽位，实际是 {t}"
+
+
+def _weight_range(item_scope: dict, path: str) -> tuple[float, float] | None:
+    """grid weight 槽位的 (下限, 上限)；不是带上下限的正数槽位返回 None。"""
+    slot = _obj(slot_at(item_scope, path))
+    if slot.get("type") == "array":  # 按条目数分配
+        low, high = slot.get("minItems"), slot.get("maxItems")
+    elif slot.get("type") in ("number", "integer"):
+        low, high = slot.get("minimum", slot.get("exclusiveMinimum")), slot.get("maximum")
+    else:
+        return None
+    if not isinstance(low, (int, float)) or not isinstance(high, (int, float)):
+        return None
+    return (low, high) if 0 < low <= high else None
+
+
+def _weight_error(item_scope: dict, el: dict) -> str | None:
+    if slot_at(item_scope, el["weight"]) is None:
+        return f"槽位 {el['weight']} 不存在（weight 相对 grid 的每一项解析）"
+    if _weight_range(item_scope, el["weight"]) is None:
+        return ("weight 的槽位必须是写了 minimum（> 0）和 maximum 的 number，或写了 minItems（≥ 1）和 maxItems 的数组（按条目数分配）："
+                "校验按最不利的比例检查单元格")
+    if el["columns"] == 1 and "row_height" in el:
+        return "单列 grid 的 weight 分配行高，不能再写 row_height"
+    return None
 
 
 def check_layout(f: str, tpl: dict, colors: set[str], texts: set[str]) -> list[str]:
@@ -165,9 +203,10 @@ def check_layout(f: str, tpl: dict, colors: set[str], texts: set[str]) -> list[s
                     err(f"{p}/{key}/{k}", f"未知颜色 token {token}")
         if ("fill_map" in el or "line_map" in el) and "by" not in el:
             err(f"{p}/by", "fill_map / line_map 必须用 by 指明按哪个槽位取色")
-        path = el.get("by", el.get("bind"))
+        path = el.get("by", el.get("bind") if el["type"] != "bullets" else None)
         if "color_map" in el and path is None:
-            err(f"{p}/color_map", "color_map 必须配合 bind 或 by，才知道按哪个值取色")
+            err(f"{p}/color_map", "color_map 必须配合 bind 或 by，才知道按哪个值取色" if el["type"] != "bullets"
+                else "bullets 的 color_map 必须配合 by（bind 是要点列表本身）")
         enum = _obj(slot_at(scope, path)).get("enum") if path is not None else None
         if enum:
             allowed = {str(v) for v in enum}
@@ -211,8 +250,9 @@ def check_layout(f: str, tpl: dict, colors: set[str], texts: set[str]) -> list[s
             for key in ("fill", "line", "color"):
                 if key in el and el[key] not in colors:
                     err(f"{p}/{key}", f"未知颜色 token {el[key]}")
-            if "style" in el and el["style"] not in texts:
-                err(f"{p}/style", f"未知文字样式 token {el['style']}")
+            for key in ("style", "group_style"):
+                if key in el and el[key] not in texts:
+                    err(f"{p}/{key}", f"未知文字样式 token {el[key]}")
             for key in ("when", "by"):
                 if key in el:
                     check_ref(scope, p, el, key)
@@ -223,9 +263,8 @@ def check_layout(f: str, tpl: dict, colors: set[str], texts: set[str]) -> list[s
                 for k, token in el.get("color_map", {}).items():
                     check_text_color(f"{p}/color_map/{k}", token)
             if "runs" in el:
-                for key in ("color_map", "by"):
-                    if key in el:
-                        err(f"{p}/{key}", f"runs 不支持 {key}，请在 run 上写 color")
+                if "color_map" in el and "by" not in el:
+                    err(f"{p}/by", "runs 的 color_map 必须配合 by（按哪个槽位取色）")
                 for k, run in enumerate(el["runs"]):
                     rp = f"{p}/runs/{k}"
                     if "color" in run and run["color"] not in colors:
@@ -243,11 +282,20 @@ def check_layout(f: str, tpl: dict, colors: set[str], texts: set[str]) -> list[s
                 prefix = (*p[1:].split("/"), "props")
                 errs.extend(f"{f}  {e}（组件 {el['component']}）" for e in
                             schema_errors(COMPONENTS[el["component"]].props_schema, el.get("props", {}), prefix=prefix))
+            if "radius" in el and el.get("shape") != "rounded":
+                err(f"{p}/radius", "radius 只用于 shape: rounded")
+            if el.get("dash") and "line" not in el and "line_map" not in el:
+                err(f"{p}/dash", "dash 是描边的虚线样式，需要同时写 line")
             if "bind" not in el:
                 continue
             slot = check_bind(p, el, scope, top)
             if slot is not None and el["type"] == "grid":
-                walk(el["item"], _obj(slot.get("items")), f"{p}/item", False)
+                item_scope = _obj(slot.get("items"))
+                if "weight" in el:
+                    problem = _weight_error(item_scope, el)
+                    if problem:
+                        err(f"{p}/weight", problem)
+                walk(el["item"], item_scope, f"{p}/item", False)
 
     walk(tpl["layout"], slots, "/layout", True)
     rendered = {path.split(".")[0] for path in top_paths}
@@ -284,6 +332,15 @@ def check_geometry(f: str, tpl: dict) -> list[str]:
                 continue  # 缺 maxItems 已由 check_layout 报告
             gap, row_height = el.get("gap", 0), el.get("row_height")
             cw, ch = grid_cells(box, el["columns"], gap, n, row_height)[0][2:]  # 项数越多单元格越小：maxItems 是最坏情况
+            weights = _weight_range(_obj(slot.get("items")), el["weight"]) if "weight" in el else None
+            if weights:  # 最不利：这一项取下限，同一行 / 同一列的其他项都取上限
+                low, high = weights
+                k = n if el["columns"] == 1 else min(el["columns"], n)
+                share = low / (low + (k - 1) * high)
+                if el["columns"] == 1:
+                    ch = (box[3] - gap * (k - 1)) * share
+                else:
+                    cw = (box[2] - gap * (k - 1)) * share
             if cw <= 0 or ch <= 0:
                 errs.append(f"{f}  {p}/box  按 maxItems={n} 计算的单元格 {cw:.0f}×{ch:.0f} 不是正数（gap 过大或 box 过小）")
                 continue

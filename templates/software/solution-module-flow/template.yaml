@@ -80,7 +80,7 @@ layout:                         # 参考 body 区 1216×560
     box: [0, 0, 784, 24]
     value: 处理流程
     style: emphasis
-    color: primary
+    color: primary_text
   - type: component
     component: block-diagram
     box: [0, 40, 784, 480]
@@ -93,7 +93,7 @@ layout:                         # 参考 body 区 1216×560
     box: [808, 0, 408, 24]
     value: 关键设计
     style: emphasis
-    color: primary
+    color: primary_text
   - type: grid
     box: [808, 40, 408, 520]
     bind: design_points
@@ -102,7 +102,7 @@ layout:                         # 参考 body 区 1216×560
     item:
       - { type: shape, box: [0, 0, "100%", "100%"], fill: surface }
       - { type: shape, box: [0, 0, 4, "100%"], fill: accent }
-      - { type: text, box: [20, 16, "100%-36", 22], bind: name, style: emphasis, color: primary }
+      - { type: text, box: [20, 16, "100%-36", 22], bind: name, style: emphasis, color: primary_text }
       - { type: text, box: [20, 48, "100%-36", "100%-60"], bind: detail, style: body }
 
 guidance:

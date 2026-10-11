@@ -87,7 +87,7 @@ layout:                         # 参考 body 区 1216×560
     box: [848, 56, 344, 48]
     bind: recommendation.choice
     style: emphasis
-    color: primary
+    color: primary_text
   - type: shape
     box: [848, 112, 344, 1]
     fill: highlight_strong

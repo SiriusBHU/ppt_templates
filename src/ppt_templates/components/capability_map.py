@@ -1,5 +1,6 @@
 """能力地图：可选的总标题；若干分组（灰底面板，顶部是组名），组里的条目按行排成网格；
-带 items 的条目是组内的分组框（自带标题和内层网格）；条目按 tag 分两种底色，图例画在底部左侧。"""
+带 items 的条目是组内的分组框（自带标题和内层网格）；条目按 tag 分两种底色，图例画在底部左侧。
+props 可以照原页调样式：面板底色和描边、组名颜色、条目文字、两类条目的底色、图例画成色块 + 文字还是带文字的小框。"""
 
 import re
 from typing import NamedTuple
@@ -7,6 +8,7 @@ from typing import NamedTuple
 from ..draw import add_shape, add_text
 from .lane_roadmap import ASCII_EM, _lines
 from .partitioned_arch import _inset_x
+from .tokens import COLOR, TEXT_STYLE
 
 EM, EM_TITLE, EM_DETAIL = 16, 56 / 3, 40 / 3   # 12 / 14 / 10 pt 一个全角字的宽度（px）；字号对所有风格统一，所以可以写死
 LINE_H = EM * 1.25                # 条目文字一行占的高度，按偏保守的行距估算
@@ -19,7 +21,9 @@ MIN_ROW_H, MAX_ROW_H = 28, 56     # 一行条目的最低高度；有富余高�
 LEGEND_H, LEGEND_GAP = 24, 8      # 图例一行的高度，以及它和分组之间的间距
 SWATCH, SWATCH_GAP, ENTRY_GAP = 14, 6, 20   # 图例色块的边长，色块与文字、相邻图例项之间的间距
 TITLE_INSET = 4                   # 标题文字的左右内边距
-FILLS = ("bg", "highlight")       # legend 的第 1、2 项对应的底色；没写 tag 的条目用第 1 种
+FILLS = ("bg", "highlight")       # 默认：legend 的第 1、2 项对应的底色；没写 tag 的条目用第 1 种
+LEGEND_BOX_W = 150                # 图例画成小框时，每个框的最小宽度
+FRAME_PAD = 12                    # 有外框时，框和总标题、分组之间的内边距
 
 _LEAF = {
     "type": "object",
@@ -70,7 +74,19 @@ SCHEMA = {
     },
 }
 
-PROPS_SCHEMA = {"type": "object", "additionalProperties": False, "properties": {}}
+PROPS_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "properties": {
+        "group_fill": COLOR,                         # 分组面板底色，默认 surface
+        "outline": COLOR,                            # 分组面板和分组框的描边，默认不描边
+        "title_color": COLOR,                        # 组名、分组框标题的颜色，默认 primary_text
+        "item_style": TEXT_STYLE,                    # 条目文字，默认 body_strong
+        "fills": {"type": "array", "minItems": 2, "maxItems": 2, "items": COLOR},   # 两类条目的底色，默认 [bg, highlight]
+        "legend_look": {"enum": ["swatch", "box"]},  # 图例：色块 + 文字（默认），或和条目一样的带文字小框
+        "frame": COLOR,                              # 给总标题和各组画一个白底外框（描边颜色），图例留在框外下方；默认不画
+    },
+}
 
 
 class Block(NamedTuple):
@@ -147,7 +163,7 @@ def _height(slots, row_h) -> float:
         row_h(s.need) if s.inner is None else SUB_TOP + SUB_BOTTOM + _height(s.inner, row_h) for s in slots)
 
 
-def _place(out, slots, items, path, x, y, w, row_h, fills) -> float:
+def _place(out, slots, items, path, x, y, w, row_h, fills, default_fill) -> float:
     """从 (x, y) 起、在 w 宽的区域里自上而下画出各行（分组框先画面板和标题，再画里面的行），返回最后一行的下沿。"""
     for n, slot in enumerate(slots):
         if n:
@@ -157,14 +173,15 @@ def _place(out, slots, items, path, x, y, w, row_h, fills) -> float:
             h = SUB_TOP + SUB_BOTTOM + _height(slot.inner, row_h)
             out.append(Block("sub", None, (x, y, w, h)))
             out.append(Block("sub_title", (*path, i, "name"), (x + PAD, y + TITLE_TOP, w - 2 * PAD, SUB_TITLE_H), items[i]["name"]))
-            _place(out, slot.inner, items[i]["items"], (*path, i, "items"), x + PAD, y + SUB_TOP, w - 2 * PAD, row_h, fills)
+            _place(out, slot.inner, items[i]["items"], (*path, i, "items"), x + PAD, y + SUB_TOP, w - 2 * PAD, row_h, fills,
+                   default_fill)
             y += h
             continue
         h = row_h(slot.need)
         iw = (w - ITEM_GAP * (len(slot.idxs) - 1)) / len(slot.idxs)
         for k, i in enumerate(slot.idxs):
             out.append(Block("item", (*path, i, "name"), (x + k * (iw + ITEM_GAP), y, iw, h), items[i]["name"],
-                             fills.get(items[i].get("tag"), FILLS[0])))
+                             fills.get(items[i].get("tag"), default_fill)))
         y += h
     return y
 
@@ -173,20 +190,24 @@ def _text_w(text: str, em: float) -> float:
     return sum(em if ord(c) > 0x2E7F else em * ASCII_EM for c in text)
 
 
-def _plan(data, box) -> list[Block]:
+def _plan(data, box, props=None) -> list[Block]:
     """把 box 划成要画的块，先画的在前（面板在文字和条目之下）。check 和 render 共用这一份，保证检查的就是画出来的。
 
     纵向：总标题（可选）→ 各分组 →（底部）图例。每个分组 = 组名 + 若干行；每行高度 = 它里面文字最多的条目所需的高度，
     有富余高度时平均分给所有行（单行最高 MAX_ROW_H），多出来的留在图例之上。内容多到放不下时照常往下排，由 check 报错。
     横向：分组面板占满 box 的宽度；一行的条目平分面板内的宽度。"""
     x, y, w, h = box
+    props = props or {}
+    palette = props.get("fills", FILLS)
     legend = data.get("legend", [])
-    fills = {entry["tag"]: FILLS[i] for i, entry in enumerate(legend)}
+    fills = {entry["tag"]: palette[i] for i, entry in enumerate(legend)}
     out = []
+    pad = FRAME_PAD if props.get("frame") else 0
+    x, y, w = x + pad, y + pad, w - 2 * pad
     if data.get("title"):
         out.append(Block("title", ("title",), (x, y, w, TITLE_H), data["title"]))
         y += TITLE_H + TITLE_GAP
-    bottom = box[1] + h - (LEGEND_H + LEGEND_GAP if legend else 0)
+    bottom = box[1] + h - (LEGEND_H + LEGEND_GAP if legend else 0) - pad
 
     groups = [(g, _slots(g["items"], g.get("columns"), w - 2 * PAD)) for g in data["groups"]]
     tallies = [_tally(slots) for _, slots in groups]
@@ -200,13 +221,20 @@ def _plan(data, box) -> list[Block]:
         gh = GROUP_TOP + _height(slots, row_h) + PAD
         out.append(Block("group", None, (x, y, w, gh)))
         out.append(Block("group_title", ("groups", i, "name"), (x + PAD, y + TITLE_TOP, w - 2 * PAD, TITLE_H), group["name"]))
-        _place(out, slots, group["items"], ("groups", i, "items"), x + PAD, y + GROUP_TOP, w - 2 * PAD, row_h, fills)
+        _place(out, slots, group["items"], ("groups", i, "items"), x + PAD, y + GROUP_TOP, w - 2 * PAD, row_h, fills, palette[0])
         y += gh + GROUP_GAP
+    if pad:  # 外框先画，压在最底下
+        out.insert(0, Block("frame", None, (box[0], box[1], box[2], y - GROUP_GAP + pad - box[1])))
 
     lx = x
     for i, entry in enumerate(legend):
         tw = _text_w(entry["label"], EM_DETAIL) + 8
-        out.append(Block("swatch", None, (lx, box[1] + h - (LEGEND_H + SWATCH) / 2, SWATCH, SWATCH), None, FILLS[i]))
+        if props.get("legend_look") == "box":  # 和条目一样的小框，文字写在框里
+            bw = max(LEGEND_BOX_W, tw + 2 * INSET_X)
+            out.append(Block("legend_box", ("legend", i, "label"), (lx, box[1] + h - LEGEND_H, bw, LEGEND_H), entry["label"], palette[i]))
+            lx += bw + ITEM_GAP
+            continue
+        out.append(Block("swatch", None, (lx, box[1] + h - (LEGEND_H + SWATCH) / 2, SWATCH, SWATCH), None, palette[i]))
         out.append(Block("legend", ("legend", i, "label"), (lx + SWATCH + SWATCH_GAP, box[1] + h - LEGEND_H, tw, LEGEND_H), entry["label"]))
         lx += SWATCH + SWATCH_GAP + tw + ENTRY_GAP
     return out
@@ -233,13 +261,14 @@ def _tag_problems(data) -> list[tuple[tuple, str]]:
     return problems
 
 
-def check(data, box) -> list[tuple[tuple, str]]:
+def check(data, box, props=None) -> list[tuple[tuple, str]]:
     """tag 要在 legend 里定义；组名、分组框标题、总标题和图例只能一行；条目名要放得进自己的框（按字数估算行数），
     英文单词不能比框宽（否则会被拦腰折断）；所有分组加起来不能超出 box 里图例之上的高度；图例要放得进一行。"""
+    props = props or {}
     problems = _tag_problems(data)
-    blocks = _plan(data, box)
+    blocks = _plan(data, box, props)
     legend = data.get("legend", [])
-    limit = box[1] + box[3] - (LEGEND_H + LEGEND_GAP if legend else 0)
+    limit = box[1] + box[3] - (LEGEND_H + LEGEND_GAP if legend else 0) - (FRAME_PAD if props.get("frame") else 0)
     for i, group in enumerate(b for b in blocks if b.kind == "group"):
         if group.box[1] + group.box[3] > limit + 0.5:
             problems.append((("groups", i), f"第 {i + 1} 组「{data['groups'][i]['name']}」放不下：各组自上而下排，到它的下沿估算要 "
@@ -249,31 +278,37 @@ def check(data, box) -> list[tuple[tuple, str]]:
     for b in blocks:
         if b.text is None:
             continue
-        em = EM_TITLE if b.kind in ("title", "group_title") else EM_DETAIL if b.kind == "legend" else EM
+        em = EM_TITLE if b.kind in ("title", "group_title") else EM_DETAIL if b.kind in ("legend", "legend_box") else EM
         avail = b.box[2] - 2 * (INSET_X if b.kind == "item" else TITLE_INSET)
         word = max(re.findall(r"[\x21-\x7e]+", b.text), key=len, default="")
         if len(word) * em * ASCII_EM > avail:
             problems.append((b.path, f"英文单词「{word}」比 {b.box[2]:.0f} px 宽的框还宽，会被拦腰折断，请换短一点的写法，或减少每行条目数"))
-        elif b.kind not in ("item", "legend") and (avail < em or _lines(b.text, avail, em) > 1):
+        elif b.kind not in ("item", "legend", "legend_box") and (avail < em or _lines(b.text, avail, em) > 1):
             problems.append((b.path, f"「{b.text}」在 {b.box[2]:.0f} px 宽的框里估算要 {_lines(b.text, avail, em)} 行，只放得下 1 行，请缩短文字"))
-    if legend and (end := max(b.box[0] + b.box[2] for b in blocks if b.kind == "legend")) > box[0] + box[2] + 0.5:
+    if legend and (end := max(b.box[0] + b.box[2] for b in blocks if b.kind in ("legend", "legend_box"))) > box[0] + box[2] + 0.5:
         problems.append((("legend",), f"图例估算要 {end - box[0]:.0f} px 宽，只放得下 {box[2]:.0f} px，请缩短图例文字"))
     return problems
 
 
 def render(slide, style, box, data, props):
-    for kind, _, b, text, fill in _plan(data, box):
-        if kind == "group":
-            add_shape(slide, style, b, "surface")
+    outline = props.get("outline")
+    for kind, _, b, text, fill in _plan(data, box, props):
+        if kind == "frame":
+            add_shape(slide, style, b, "bg", line=props["frame"])
+        elif kind == "group":
+            add_shape(slide, style, b, props.get("group_fill", "surface"), line=outline)
         elif kind == "sub":
-            add_shape(slide, style, b, "bg")
+            add_shape(slide, style, b, "bg", line=outline)
         elif kind == "item":
-            add_shape(slide, style, b, fill, line="line", line_width=0.75, text=text, text_style="body_strong",
+            add_shape(slide, style, b, fill, line="line", line_width=0.75, text=text, text_style=props.get("item_style", "body_strong"),
                       align="center", valign="middle", inset=(_inset_x("module", text, b[2]), INSET_Y))
         elif kind == "swatch":
             add_shape(slide, style, b, fill, line="line", line_width=0.75)
         elif kind == "legend":
             add_text(slide, style, b, text, "detail", valign="middle")
+        elif kind == "legend_box":
+            add_shape(slide, style, b, fill, line="line", line_width=0.75, text=text, text_style="detail", align="center", valign="middle")
         else:  # 标题：总标题和组名 14 号加粗，分组框标题 12 号加粗
             text_style = "body_strong" if kind == "sub_title" else "emphasis"
-            add_text(slide, style, b, text, text_style, color=None if kind == "title" else "primary", align="center", valign="middle")
+            color = None if kind == "title" else props.get("title_color", "primary_text")
+            add_text(slide, style, b, text, text_style, color=color, align="center", valign="middle")

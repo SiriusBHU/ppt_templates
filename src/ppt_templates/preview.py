@@ -2,6 +2,7 @@
 
 import shutil
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 
@@ -27,16 +28,32 @@ _SUBSTITUTION_XCU = f"""<?xml version="1.0" encoding="UTF-8"?>
 """
 
 
+SOFFICE_PATHS = (
+    "/Applications/LibreOffice.app/Contents/MacOS/soffice",
+    r"C:\Program Files\LibreOffice\program\soffice.exe",
+    r"C:\Program Files (x86)\LibreOffice\program\soffice.exe",
+)
+
+
+def find_soffice() -> str | None:
+    """先找 PATH，再找各平台的默认安装位置（Windows 装 LibreOffice 不会加进 PATH）。"""
+    if found := shutil.which("soffice"):
+        return found
+    return next((p for p in SOFFICE_PATHS if Path(p).is_file()), None)
+
+
 def render_pngs(prs: Presentation, out_dir: Path, width: int = 1920) -> list[Path]:
-    soffice = shutil.which("soffice")
+    soffice = find_soffice()
     if not soffice:
-        raise PptError("找不到 soffice：预览依赖 LibreOffice，请先安装（macOS: brew install --cask libreoffice）并确保 soffice 在 PATH 中")
+        raise PptError("找不到 soffice：预览依赖 LibreOffice，请先安装（macOS: brew install --cask libreoffice；"
+                       "Windows: winget install TheDocumentFoundation.LibreOffice）")
     out_dir.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory() as tmp:
         tmp = Path(tmp)
         prs.save(tmp / "deck.pptx")
         (tmp / "profile" / "user").mkdir(parents=True)
-        (tmp / "profile" / "user" / "registrymodifications.xcu").write_text(_SUBSTITUTION_XCU, encoding="utf-8")
+        if sys.platform != "win32":  # Windows 自带微软雅黑，不用替换（也没有冬青黑体可换）
+            (tmp / "profile" / "user" / "registrymodifications.xcu").write_text(_SUBSTITUTION_XCU, encoding="utf-8")
         proc = subprocess.run(
             [soffice, f"-env:UserInstallation={(tmp / 'profile').as_uri()}", "--headless",
              "--convert-to", "pdf", "--outdir", str(tmp), str(tmp / "deck.pptx")],

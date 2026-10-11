@@ -436,11 +436,13 @@ def test_run_tokens_must_exist(make_repo):
     assert "/layout/1/runs/0/color  未知颜色 token red" in errs
 
 
-@pytest.mark.parametrize("extra", [{"color_map": {"x": "accent"}}, {"by": "note"}])
-def test_runs_do_not_support_color_map_or_by(make_repo, extra):
-    key = next(iter(extra))
-    errs = _errors(make_repo, layout=[NOTE, {**RUNS, "runs": [{"value": "x"}], **extra}])
-    assert f"/layout/1/{key}  runs 不支持 {key}，请在 run 上写 color" in errs
+def test_runs_color_map_needs_by(make_repo):
+    errs = _errors(make_repo, layout=[NOTE, {**RUNS, "runs": [{"value": "x"}], "color_map": {"x": "accent"}}])
+    assert "/layout/1/by  runs 的 color_map 必须配合 by（按哪个槽位取色）" in errs
+
+
+def test_runs_may_take_color_from_by(make_repo):
+    assert _errors(make_repo, layout=[NOTE, {**RUNS, "runs": [{"value": "x"}], "by": "note", "color_map": {"x": "accent"}}]) == []
 
 
 def test_runs_in_a_grid_item_use_the_item_scope_and_the_index_bind(make_repo):
@@ -490,10 +492,10 @@ def test_style_shadow_color_must_be_a_color_token(make_repo, root):
     assert "styles/default/style.yaml  /shadow/color  未知颜色 token ink" in validate_repo(repo).errors
 
 
-TEXT_COLOR_HINT = "文字颜色只能用 accent / highlight_strong / primary / text / on_primary，实际是"
+TEXT_COLOR_HINT = "文字颜色只能用 accent / highlight_strong / primary_text / text / on_primary，实际是"
 
 
-@pytest.mark.parametrize("token", ["accent", "highlight_strong", "primary", "text", "on_primary"])
+@pytest.mark.parametrize("token", ["accent", "highlight_strong", "primary_text", "text", "on_primary"])
 def test_allowed_text_colors_pass(make_repo, token):
     layout = [{**NOTE, "color": token}, {**RUNS, "runs": [{"bind": "extra", "color": token}]}]
     assert _errors(make_repo, slots=_slots(extra={"type": "string"}), layout=layout) == []

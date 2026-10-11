@@ -1,4 +1,4 @@
-"""ppt 命令行：render / preview / validate / catalog / list / show / import / sync-skill / mcp。"""
+"""ppt 命令行：render / preview / validate / catalog / list / show / import / leaks / sync-skill / mcp。"""
 
 import argparse
 import shutil
@@ -10,7 +10,8 @@ from .catalog import filter_catalog, load_catalog, write_catalog
 from .errors import PptError
 from .images import ImageSource
 from .importer import import_skeleton
-from .loader import find_repo_root, load_deck, load_example, load_style, template_dir, template_dirs
+from .leaks import TEMPLATE_KEYS_SKIPPED, find_leaks, sample_texts
+from .loader import find_repo_root, load_deck, load_example, load_style, load_template, template_dir, template_dirs
 from .preview import render_pngs
 from .render import render_deck
 from .skill import sync_skill
@@ -95,6 +96,19 @@ def _import(args) -> None:
         print(d)
 
 
+def _leaks(args) -> None:
+    root = find_repo_root()
+    if not (template_dir(root, args.id) / "example.yaml").is_file():
+        raise PptError(f"模板 {args.id} 缺少 example.yaml")
+    texts = sample_texts(Path(args.sample), args.slide)
+    leaks = (find_leaks(load_template(root, args.id), texts, args.allow, prefix="template.yaml", skip=TEMPLATE_KEYS_SKIPPED, numbers=False)
+             + find_leaks(load_example(root, args.id), texts, args.allow, prefix="example.yaml"))
+    if leaks:
+        raise PptError("\n".join(leaks) + f"\n{args.id} 有 {len(leaks)} 处与样板原文重合：example 改成说明「这里该填什么」的引导文字，"
+                       "template.yaml 里的业务词换成通用说法（确认无害的通用词用 --allow）")
+    print(f"{args.id}：template.yaml 和 example.yaml 都没有与样板原文重合的片段")
+
+
 def _sync_skill(args) -> None:
     root = find_repo_root()
     for path in sync_skill(root):
@@ -146,6 +160,13 @@ def main(argv=None) -> int:
     p.add_argument("--slide", type=int, nargs="+", action="extend", metavar="N", help="只导这几页（从 1 起），默认全部")
     p.add_argument("-o", "--output", required=True, help="输出目录，每页写到 <目录>/slide-<N>/")
     p.set_defaults(run=_import)
+
+    p = sub.add_parser("leaks", help="列出模板 template.yaml / example.yaml 里和样板原文重合的片段，防止把样板内容带进模板")
+    p.add_argument("id", help="<主题>.<模板名>")
+    p.add_argument("sample", help="样板 .pptx")
+    p.add_argument("--slide", type=int, nargs="+", action="extend", metavar="N", help="只和这几页比（从 1 起），默认全部")
+    p.add_argument("--allow", action="append", default=[], metavar="词", help="确认无害的通用词（如「背景」「核心问题」），可重复")
+    p.set_defaults(run=_leaks)
 
     p = sub.add_parser("sync-skill", help="把 .agents/skills 里的 skill 正本复制到各工具读取的位置")
     p.set_defaults(run=_sync_skill)

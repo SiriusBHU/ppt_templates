@@ -69,7 +69,7 @@ def test_header_tab_is_a_bordered_box_with_centered_bold_text(make_repo):
     shapes = _renderer(make_repo)()
     tab = next(sh for sh in shapes if sh.has_text_frame and sh.text_frame.text == "Tool Use (via CPU)")
     run = tab.text_frame.paragraphs[0].runs[0]
-    assert str(tab.fill.fore_color.rgb) == "FFFFFF" and str(tab.line.color.rgb) == "283593"
+    assert str(tab.fill.fore_color.rgb) == "FFFFFF" and str(tab.line.color.rgb) == "0000FF"
     assert run.font.bold and run.font.size.pt == 12 and tab.text_frame.paragraphs[0].alignment == 2  # PP_ALIGN.CENTER
 
 

@@ -138,7 +138,7 @@ def _plan(data, box, legend: bool) -> list:
     return out
 
 
-def check(data, box) -> list[tuple[tuple, str]]:
+def check(data, box, props=None) -> list[tuple[tuple, str]]:
     """页签和每个层名、模块名都要放得进自己的框（按字数估算行数），英文单词不能比框宽（否则会被拦腰折断）。
     图例是否预留取决于 props，这里拿不到，所以只要有高亮模块就按预留图例的高度检查，只会更严。"""
     problems = []
@@ -168,7 +168,7 @@ def render(slide, style, box, data, props):
             continue
         text_opts = dict(text=text, align="center", valign="middle", inset=(_inset_x(kind, text, b[2]), INSET[kind]))
         if kind == "header":
-            add_shape(slide, style, b, "bg", line="primary", line_width=1, text_style="body_strong", color="primary", **text_opts)
+            add_shape(slide, style, b, "bg", line="primary_text", line_width=1, text_style="body_strong", color="primary_text", **text_opts)
         elif kind == "label":
             add_shape(slide, style, b, "primary", text_style="body_strong", color="on_primary", **text_opts)
         else:

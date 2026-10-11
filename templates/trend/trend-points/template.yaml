@@ -46,7 +46,7 @@ layout:                         # 参考 body 区 1216×560；每条趋势一行
       # 左：趋势名称 + 依据
       - { type: shape, box: [0, 0, 716, "100%"], fill: surface }
       - { type: shape, box: [0, 0, 4, "100%"], fill: accent }
-      - { type: text, box: [24, 0, 176, "100%"], bind: name, style: emphasis, color: primary, valign: middle }
+      - { type: text, box: [24, 0, 176, "100%"], bind: name, style: emphasis, color: primary_text, valign: middle }
       - { type: shape, box: [212, 16, 1, "100%-32"], fill: line }
       - { type: text, box: [228, 0, 468, "100%"], bind: evidence, style: body, valign: middle }
       # 右：对我们的影响

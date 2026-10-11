@@ -46,7 +46,7 @@ def test_missing_or_empty_path_draws_a_placeholder_with_guide_text(make_repo, da
     assert _pictures(prs) == []
     (box,) = _placeholders(prs)
     assert _px(box) == (32, 128, 400, 400)  # body 区原点 (32, 128)
-    assert str(box.fill.fore_color.rgb) == "F3F5F8"  # surface
+    assert str(box.fill.fore_color.rgb) == "E7E6E6"  # surface
     assert not box._element.xpath(".//a:outerShdw") and box.line.fill.type == 5  # 无阴影、无描边（MSO_FILL.BACKGROUND）
     paragraph = box.text_frame.paragraphs[0]
     assert paragraph.alignment == PP_ALIGN.CENTER and box.text_frame.vertical_anchor == MSO_ANCHOR.MIDDLE

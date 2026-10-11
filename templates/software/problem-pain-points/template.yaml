@@ -47,7 +47,7 @@ layout:                         # 参考 body 区 1216×560
     item:
       - { type: shape, box: [0, 0, "100%", "100%"], fill: surface }
       - { type: shape, box: [0, 0, "100%", 4], fill: accent }
-      - { type: text, box: [20, 40, "100%-40", 24], bind: name, style: emphasis, color: primary }
+      - { type: text, box: [20, 40, "100%-40", 24], bind: name, style: emphasis, color: primary_text }
       - { type: shape, box: [20, 78, 32, 3], fill: accent }
       - { type: text, box: [20, 112, "100%-40", 18], value: 问题现象, style: detail }
       - { type: text, box: [20, 140, "100%-40", 140], bind: detail, style: body }
