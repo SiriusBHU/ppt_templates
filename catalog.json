@@ -534,6 +534,106 @@
     }
   },
   {
+    "id": "solution.problem-arch-callouts",
+    "topic": "solution",
+    "also_fits": [],
+    "name": "架构图编号标注",
+    "roles": [
+      "problem",
+      "analysis"
+    ],
+    "density": "talk",
+    "level": "system",
+    "tags": [
+      "架构图",
+      "编号标注",
+      "问题对策",
+      "业界技术扫描"
+    ],
+    "when_to_use": "围绕一张中央架构图讲「哪里有问题、怎么办、业界怎么解」：图上用红色圆点编号标出存在问题的环节，四周标注卡按方位与编号一一对应；标注卡分两种——问题卡（红框问题 + 编号，可带对策说明）和业界技术扫描卡（名称 + 年份来源 + 原理说明）",
+    "slots": {
+      "required": [
+        "title",
+        "diagram",
+        "left_cards",
+        "right_cards"
+      ],
+      "optional": [
+        "title_suffix",
+        "bottom_num",
+        "bottom_problem",
+        "bottom_cards"
+      ]
+    }
+  },
+  {
+    "id": "solution.result-sim-tables-read",
+    "topic": "solution",
+    "also_fits": [],
+    "name": "分析成果汇报（诉求卡 + 策略 + 多栏指标表）",
+    "roles": [
+      "result",
+      "overview"
+    ],
+    "density": "read",
+    "level": "system",
+    "tags": [
+      "成果汇报",
+      "指标表",
+      "诉求",
+      "策略",
+      "进展要点",
+      "多栏"
+    ],
+    "when_to_use": "一页汇报一批分析 / 评估工作的成果：顶部左侧是诉求方的诉求小卡、右侧是分析策略，下半页用 2~5 个等宽栏给出量化结论，每栏一栏标题 + 一两张指标表 + 代号打头的进展要点；适合评审 / 汇报里「按对象分栏、用数据说话」的阅读型页面",
+    "slots": {
+      "required": [
+        "title",
+        "title_suffix",
+        "demand_title",
+        "demands",
+        "strategy_title",
+        "columns"
+      ],
+      "optional": [
+        "strategies",
+        "strategy_image",
+        "banner",
+        "results_label"
+      ]
+    }
+  },
+  {
+    "id": "solution.roadmap-matrix",
+    "topic": "solution",
+    "also_fits": [],
+    "name": "代际×子系统工作项矩阵",
+    "roles": [
+      "roadmap"
+    ],
+    "density": "talk",
+    "level": "system",
+    "tags": [
+      "规划",
+      "代际",
+      "子系统",
+      "工作项",
+      "矩阵",
+      "时间轴"
+    ],
+    "when_to_use": "讲一条系统或产品线的分代际规划：顶部先给全周期的共同目标，再用时间轴串起若干代际列（每列一句代际主题），下方按「子系统 × 代际」铺开工作项矩阵，每格一两条「名称：说明」",
+    "slots": {
+      "required": [
+        "title",
+        "title_suffix",
+        "goals",
+        "generations",
+        "rows"
+      ],
+      "optional": []
+    }
+  },
+  {
     "id": "solution.solution-arch-overview",
     "topic": "solution",
     "also_fits": [
@@ -603,6 +703,55 @@
     }
   },
   {
+    "id": "solution.solution-challenge-goal",
+    "topic": "solution",
+    "also_fits": [
+      "system",
+      "hardware",
+      "software"
+    ],
+    "name": "挑战与方案对照（双栏 + 佐证图 + 目标条）",
+    "roles": [
+      "solution"
+    ],
+    "density": "talk",
+    "level": "system",
+    "tags": [
+      "挑战方案对照",
+      "双栏",
+      "负载趋势",
+      "关键挑战",
+      "关键技术",
+      "架构图",
+      "目标条"
+    ],
+    "when_to_use": "一页讲清一项架构方案的完整论证：左栏从业务一侧讲起（趋势一句话 + 要点 → 佐证图 / 数据 → 挑战一句话 + 要点），右栏给答案（方案概述 → 关键技术 → 架构 / 数据流图 → 可选对比小表 → 底部量化目标条）；左右两栏一一对应，每条挑战都由方案侧回应",
+    "slots": {
+      "required": [
+        "title",
+        "title_suffix",
+        "challenge_label",
+        "solution_label",
+        "challenge_name",
+        "solution_name",
+        "trend_summary",
+        "trend_points",
+        "challenge_summary",
+        "challenge_points",
+        "solution_summary",
+        "key_techs",
+        "goal_text"
+      ],
+      "optional": [
+        "evidence_image",
+        "evidence_table",
+        "solution_image",
+        "compare_table",
+        "goal_metric"
+      ]
+    }
+  },
+  {
     "id": "solution.solution-dual-metrics",
     "topic": "solution",
     "also_fits": [
@@ -625,7 +774,7 @@
       "设计要点",
       "收益"
     ],
-    "when_to_use": "一页讲清一两个核心问题和各自的解法：顶部虚线框里列问题（问题名 + 所在方面 + 一句话总结），下方每个方案一栏，配机制示意图、前后指标表和设计要点",
+    "when_to_use": "一页讲清一两个核心问题和各自的解法：顶部虚线框里列问题（问题名 + 所在方面 + 一句话总结），下方每个方案一栏，配机制示意图、前后指标表和设计要点；只有一个方案时，下方两栏也可以是「机制 | 收益仿真」——左栏讲机制（示意图 + 要点），右栏摆收益证据（Before/After 示意 + 前后指标表 + 收益要点）",
     "slots": {
       "required": [
         "title",
@@ -758,6 +907,43 @@
         "subs"
       ],
       "optional": []
+    }
+  },
+  {
+    "id": "solution.solution-problem-panels",
+    "topic": "solution",
+    "also_fits": [
+      "system",
+      "hardware",
+      "software"
+    ],
+    "name": "问题挑战 × 技术方案双栏图文",
+    "roles": [
+      "solution",
+      "problem"
+    ],
+    "density": "talk",
+    "level": "subsystem",
+    "tags": [
+      "问题与挑战",
+      "技术方案",
+      "编号清单",
+      "示意图"
+    ],
+    "when_to_use": "一页讲清一个方向的问题挑战与技术方案全貌：标题下灰底横幅写技术目标或方案进展，左侧虚线框列编号的问题 / 挑战 / 目标并配现状示意图，右侧虚线框逐条展开编号方案（加粗名称 + 子要点），框底部配方案示意图",
+    "slots": {
+      "required": [
+        "title",
+        "title_suffix",
+        "banner_label",
+        "banner_text",
+        "problems",
+        "problem_images",
+        "solutions"
+      ],
+      "optional": [
+        "solution_images"
+      ]
     }
   },
   {

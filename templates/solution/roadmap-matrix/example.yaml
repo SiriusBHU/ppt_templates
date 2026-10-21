@@ -1,0 +1,59 @@
+title: 某领域发展规划
+title_suffix: 后半句写总体思路：聚焦什么场景、发挥什么优势、突破什么瓶颈
+goals:
+  - name: （1）目标一
+    text: 写全周期共同要建成的能力：针对什么对象、用什么方法、量化到什么精度、最终支撑哪项设计决策
+  - name: （2）目标二
+    text: 另一条共同目标：建成后解锁什么设计空间、带来什么量化收益，以及这些能力如何支撑后续各代际的选型、组合与规格设计决策制定
+generations:
+  - name: 代际一（平台或版本名）
+    theme: 代际主题：这一代要达成什么
+    note: （确定性与范围补充）
+  - name: 代际二（平台或版本名）
+    theme: 代际主题：这一代要达成什么
+    note: （确定性与范围补充）
+  - name: 代际三（平台或版本名）
+    theme: 代际主题：这一代要达成什么
+rows:
+  - name: 子系统一
+    cells:
+      - items:
+          - { name: 工作项名称, text: 写清针对什么对象、用什么方法、做到什么程度, highlight: 关键结论 }
+          - { name: 工作项名称, text: 每条一两行：对象、方法、精度、支撑的决策, highlight: 量化收益 }
+      - items:
+          - { name: 工作项名称, text: 写清针对什么对象、用什么方法、做到什么程度, highlight: 关键结论 }
+          - { name: 工作项名称, text: 每条一两行：对象、方法、精度、支撑的决策, highlight: 量化收益 }
+      - items:
+          - { name: 工作项名称, text: 单条工作项把对象、方法、量化精度和支撑的决策写全，可两三行, highlight: 关键结论 }
+  - name: 子系统二
+    cells:
+      - items:
+          - { name: 工作项名称, text: 写清针对什么对象、用什么方法、做到什么程度, highlight: 关键结论 }
+          - { name: 工作项名称, text: 每条一两行：对象、方法、精度、支撑的决策, highlight: 量化收益 }
+      - items:
+          - { name: 工作项名称, text: 写清针对什么对象、用什么方法、做到什么程度, highlight: 关键结论 }
+          - { name: 工作项名称, text: 每条一两行：对象、方法、精度、支撑的决策, highlight: 量化收益 }
+      - items:
+          - { name: 工作项名称, text: 写清针对什么对象、用什么方法、做到什么程度, highlight: 关键结论 }
+          - { name: 工作项名称, text: 每条一两行：对象、方法、精度、支撑的决策, highlight: 量化收益 }
+  - name: 子系统三
+    cells:
+      - items:
+          - { name: 工作项名称, text: 写清针对什么对象、用什么方法、做到什么程度, highlight: 关键结论 }
+          - { name: 工作项名称, text: 每条一两行：对象、方法、精度、支撑的决策, highlight: 量化收益 }
+      - items:
+          - { name: 工作项名称, text: 单条工作项把对象、方法、量化精度和支撑的决策写全，可两三行, highlight: 关键结论 }
+      - items:
+          - { name: 工作项名称, text: 写清针对什么对象、用什么方法、做到什么程度, highlight: 关键结论 }
+          - { name: 工作项名称, text: 每条一两行：对象、方法、精度、支撑的决策, highlight: 量化收益 }
+  - name: 子系统四
+    cells:
+      - items:
+          - { name: 工作项名称, text: 写清针对什么对象、用什么方法、做到什么程度, highlight: 关键结论 }
+          - { name: 工作项名称, text: 每条一两行：对象、方法、精度、支撑的决策, highlight: 量化收益 }
+      - items:
+          - { name: 工作项名称, text: 写清针对什么对象、用什么方法、做到什么程度, highlight: 关键结论 }
+          - { name: 工作项名称, text: 每条一两行：对象、方法、精度、支撑的决策, highlight: 量化收益 }
+      - items:
+          - { name: 工作项名称, text: 写清针对什么对象、用什么方法、做到什么程度, highlight: 关键结论 }
+          - { name: 工作项名称, text: 每条一两行：对象、方法、精度、支撑的决策, highlight: 量化收益 }

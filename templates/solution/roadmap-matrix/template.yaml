@@ -1,0 +1,126 @@
+id: solution.roadmap-matrix
+name: 代际×子系统工作项矩阵
+roles: [roadmap]
+density: talk
+level: system
+tags: [规划, 代际, 子系统, 工作项, 矩阵, 时间轴]
+when_to_use: 讲一条系统或产品线的分代际规划：顶部先给全周期的共同目标，再用时间轴串起若干代际列（每列一句代际主题），下方按「子系统 × 代际」铺开工作项矩阵，每格一两条「名称：说明」
+when_not_to_use: 不按子系统分行、只按时间轴排各条产品线 → product.roadmap-lanes；每代要展开架构图、方案与关键技术 → solution.solution-generations；不分代际、只按层次铺工作项 → project.roadmap-workstreams
+frame: standard
+
+structure:
+  - 标题：主题 + 一句结论——主体写规划对象（名词短语加冒号），后半句写贯穿各代际的总体思路和要突破的瓶颈；24 号 + 18 号，深红
+  - 目标带：左侧灰色竖标签「目标」（灰底带阴影、红字），右侧灰底面板逐条列全周期的共同目标（加粗小名 + 一句说明，可加序号）；回答「这几代合起来要达到什么」
+  - 时间轴：一条红色横轴贯穿各列、从左到右指向未来；轴上方每列写代际名（红色加粗居中，平台 / 版本名可写两行），轴下方每列一句蓝色加粗的代际主题，可带一行括号补充
+  - 矩阵：行是子系统（左侧灰底带阴影的行标签），列是代际；每个单元格一张白底圆角细框卡片，装一到两条「加粗名称：说明」工作项，说明里最关键的量化结论用蓝色加粗收尾
+  - 关系：目标带统摄全部代际；列按代际先后从左到右，行按子系统并列；单元格（i, j）是子系统 i 在代际 j 要做的工作项——整页把共同目标按代际 × 子系统铺开成可执行的工作项
+
+slots:
+  type: object
+  required: [title, title_suffix, goals, generations, rows]
+  properties:
+    title:
+      type: string
+      maxLength: 8
+      description: 标题主体（24 号加粗）：规划对象，名词短语加冒号
+    title_suffix:
+      type: string
+      maxLength: 36
+      description: 与标题同一行的后半句（18 号）：贯穿各代际的总体思路和要突破的瓶颈；与标题合计不超过一行（标题约 8 字 + 后半句约 36 字）
+    goals:
+      type: array
+      minItems: 1
+      maxItems: 3
+      description: 全周期的共同目标，逐条列出；全部目标合计不超过三行
+      items:
+        type: object
+        required: [name, text]
+        properties:
+          name: { type: string, maxLength: 8, description: 目标小名（加粗，自动接「：」），可带序号，如「（1）某某」 }
+          text: { type: string, maxLength: 60, description: 一句说明：建成什么能力、针对什么对象、量化到什么精度、支撑哪项决策；连同小名一行约 55 字、最长两行 }
+    generations:
+      type: array
+      minItems: 2
+      maxItems: 4
+      description: 各代际列，从左到右按时间先后排列；列数就是矩阵的列数
+      items:
+        type: object
+        required: [name, theme]
+        properties:
+          name: { type: string, maxLength: 42, description: 代际名（红色加粗居中，写在时间轴上方）：平台 / 版本 / 时间段，最多两行；3 列时每行约 20 个汉字当量（英文、数字约半个字），4 列时每行约 14 字 }
+          theme: { type: string, maxLength: 20, description: 代际主题（蓝色加粗居中，写在时间轴下方）：这一代要达成什么，一行写完；4 列时约 14 字 }
+          note: { type: string, maxLength: 16, description: 主题的括号补充（蓝色居中，可选）：确定性、范围等，一行写完 }
+    rows:
+      type: array
+      minItems: 2
+      maxItems: 5
+      description: 矩阵的行，每行一个子系统
+      items:
+        type: object
+        required: [name, cells]
+        properties:
+          name: { type: string, maxLength: 8, description: 子系统名称（行首灰色标签，18 号）：一行最多 4 个汉字，超出折成两行 }
+          cells:
+            type: array
+            minItems: 2
+            maxItems: 4
+            description: 这一行在各代际的工作项格，从左到右和代际一一对应；格数必须等于代际数
+            items:
+              type: object
+              required: [items]
+              properties:
+                items:
+                  type: array
+                  minItems: 1
+                  maxItems: 2
+                  description: 这一格的工作项，一到两条
+                  items:
+                    type: object
+                    required: [name, text]
+                    properties:
+                      name: { type: string, maxLength: 16, description: 工作项名称（加粗，自动接「：」），一行写完（英文、数字约半个字） }
+                      text: { type: string, maxLength: 56, description: 说明：针对什么、用什么方法、做到什么程度、支撑什么；一格两条时每条连同名称一两行、合计不超过三行（3 列时）；4 列时每条约 14 字 }
+                      highlight: { type: string, maxLength: 28, description: 最关键的量化结论或关键判断（蓝色加粗，接在说明句尾），可选；连同名称和说明合计不超过三行（3 列时） }
+
+layout:                         # 参考 body 区 1216×560（本页无 takeaway，正文区自动上移并纵向拉伸到 600）
+  # 目标带：左侧灰色竖标签 + 右侧灰底面板
+  - { type: shape, box: [0, 0, 64, 104], fill: surface, shadow: true }
+  - { type: text, box: [0, 0, 64, 104], value: 目标, style: subtitle, color: accent, align: center, valign: middle }
+  - { type: shape, box: [72, 0, 1144, 104], fill: line }
+  - { type: bullets, box: [92, 10, 1104, 88], bind: goals, style: lead, marker: false }
+  # 代际头：轴上红色代际名 + 轴下蓝色代际主题（列框和下方矩阵的单元格同宽对齐）
+  - type: grid
+    box: [140, 118, 1076, 84]
+    bind: generations
+    columns: 4
+    gap: 16
+    item:
+      - { type: text, box: [0, 0, "100%", 32], bind: name, style: body_strong, color: accent, align: center, valign: bottom }
+      - { type: text, box: [0, 38, "100%", 30], bind: theme, style: body_strong, color: primary_text, align: center, valign: top }
+      - { type: text, box: [0, 68, "100%", 16], bind: note, style: body_strong, color: primary_text, align: center, valign: top, when: note }
+  # 红色时间轴（横线；原页的箭头和三角标记渲染器没有对应元素，用色条表达）
+  - { type: shape, box: [124, 152, 1092, 3], fill: accent }
+  # 矩阵：行 = 子系统，每行内嵌一组和代际对齐的单元格卡片
+  - type: grid
+    box: [0, 212, 1216, 348]
+    bind: rows
+    columns: 1
+    gap: 8
+    item:
+      - { type: shape, box: [0, 0, 124, "100%"], fill: surface, shadow: true }
+      - { type: text, box: [10, 0, 108, "100%"], bind: name, style: subtitle, align: left, valign: middle }
+      - type: grid
+        box: [140, 0, 1076, "100%"]
+        bind: cells
+        columns: 4
+        gap: 16
+        item:
+          - { type: shape, box: [0, 0, "100%", "100%"], shape: rounded, radius: 8, fill: bg, line: line }
+          - { type: bullets, box: [12, 8, "100%-24", "100%-16"], bind: items, style: body }
+
+guidance:
+  - 标题主体写规划对象（名词短语加冒号），后半句一句写完总体思路和要突破的瓶颈，两者合计一行
+  - 目标写各代际的共同目标而不是某一代的：建成什么能力、量化到什么精度、支撑哪项决策；两三条合计不超过三行
+  - 代际从左到右按时间先后排；主题一句话写清这一代要达成什么，括号补充写确定性或范围
+  - 每行的单元格数必须等于代际数、顺序一一对应；每格一两条工作项，名称点出建的是什么，说明写对象、方法、精度、支撑的决策，最关键的量化结论放 highlight
+  - 3 列 4 行时每格合计不超过三行；加到 4 列或 5 行时每条说明收紧到一行左右

@@ -1,0 +1,130 @@
+id: solution.solution-problem-panels
+name: 问题挑战 × 技术方案双栏图文
+roles: [solution, problem]
+also_fits: [system, hardware, software]
+density: talk
+level: subsystem
+tags: [问题与挑战, 技术方案, 编号清单, 示意图]
+when_to_use: 一页讲清一个方向的问题挑战与技术方案全貌：标题下灰底横幅写技术目标或方案进展，左侧虚线框列编号的问题 / 挑战 / 目标并配现状示意图，右侧虚线框逐条展开编号方案（加粗名称 + 子要点），框底部配方案示意图
+when_not_to_use: 问题要展开背景、量化数据和竞争力目标 → solution.solution-problem-techs；一两个问题各配机制示意图和前后指标表 → solution.solution-dual-metrics；挑战加一两个方案、各配收益小表 → solution.solution-dual-techs
+frame: standard
+
+structure:
+  - 标题：结论式同行标题，主体（24 号加粗、深红）点明对象和方案名、以冒号收尾，后半句（18 号加粗、深红）写技术路线和最突出的量化目标
+  - 目标 / 进展横幅：标题下通栏浅灰底，加粗标签点明这一栏是「技术目标」还是「方案进展」，后面接一两句说明——目标写面向哪类问题现状、走什么路线、量化做到什么程度；进展分条写各方向完成了什么、进度多少
+  - 问题与挑战框（左侧虚线框）：白底栏名骑跨框顶；框内上部一到三段编号清单，每段一个角色标签（问题 / 挑战 / 目标），段内用「1) 2) 3)」编号逐条写症结和说明（对象是什么、现状如何、代价多大）；框底部一到三张示意图并排，画现状结构、问题原理或问题数据
+  - 技术方案框（右侧虚线框，比左框略宽）：白底栏名骑跨框顶；框内二到四条编号方案，每条一段加粗名称开头（名称里带「1. 」编号、自动接「：」），下面一到四条子要点「要点名：做法」（写清对象和方法、量化到什么精度、支撑哪项决策），关键结论蓝色加粗接句尾；名称和要点在一个文本框里自然往下排；框底部可放一到三张方案示意图，按方案编号顺序排
+  - 关系：横幅是整页的总起；右框各条方案按编号逐条回应左框提出的问题与挑战；左右栏名对仗，两边的示意图分别给问题和方案占位
+
+slots:
+  type: object
+  required: [title, title_suffix, banner_label, banner_text, problems, problem_images, solutions]
+  properties:
+    title:
+      type: string
+      maxLength: 18
+      description: 标题主体（24 号加粗、深红）：点明对象和方案名，以冒号收尾；中文不超过 14 个字（英文、数字约半个字宽），给同一行的后半句留位置
+    title_suffix:
+      type: string
+      maxLength: 40
+      description: 与标题同一行的后半句（18 号加粗、深红）：技术路线 + 最突出的量化目标；和标题主体合计不超过一行（约 44 个汉字，英文、数字约半个字宽）
+    banner_label:
+      type: string
+      maxLength: 4
+      description: 灰底横幅的加粗标签（14 号，自动接「：」）：这一栏的角色，二选一——「技术目标」或「方案进展」
+    banner_text:
+      type: string
+      maxLength: 140
+      description: 横幅说明（14 号，接在标签后面）：技术目标写面向哪类问题现状、走什么路线、量化做到什么程度；方案进展分条写各方向完成了什么、进度多少；连同标签不超过两行（每行约 63 个汉字，英文、数字约半个字宽）
+    problems:
+      type: array
+      minItems: 1
+      maxItems: 3
+      description: 左框上部的编号清单，一到三段，每段一个角色：问题写现状症结、挑战写难在哪、目标写量化做到什么程度
+      items:
+        type: object
+        required: [name, text]
+        properties:
+          name: { type: string, maxLength: 6, description: 段标签（12 号加粗，自动接「：」）：问题 / 挑战 / 目标 }
+          text: { type: string, maxLength: 220, description: 段内用「1) 症结：说明　2) …」编号逐条写：症结是一个短语，说明写清对象、现状和代价；三段连同标签合计不超过九行（每行约 33 个汉字，英文、数字约半个字宽） }
+          highlight: { type: string, maxLength: 20, description: 段尾的蓝色加粗强调（关键结论或数字）；没有就不填 }
+    problem_images:
+      type: array
+      minItems: 1
+      maxItems: 3
+      description: 左框底部的示意图，一到三张并排：现状结构、问题原理或问题数据（截图）
+      items: { type: string }
+    solutions:
+      type: array
+      minItems: 2
+      maxItems: 4
+      description: 右框的编号方案，二到四条，按编号逐条回应左框的问题与挑战
+      items:
+        type: object
+        required: [name, points]
+        properties:
+          name: { type: string, maxLength: 40, description: 方案名称（12 号加粗，自动接「：」）：开头写编号「1. 」，然后写基于什么做什么，一行写完（英文、数字约半个字宽） }
+          points:
+            type: array
+            minItems: 1
+            maxItems: 4
+            description: 子要点（• 开头），每条「要点名：做法」：写清对象和方法、量化到什么精度、支撑哪项决策
+            items:
+              type: object
+              required: [text]
+              properties:
+                name: { type: string, maxLength: 22, description: 要点名（加粗，自动接「：」）；没有名称就不填 }
+                text: { type: string, maxLength: 100, description: 做法说明：对象 + 方法 + 量化到的精度；一条最多三行（每行约 36 个汉字，英文、数字约半个字宽） }
+                highlight: { type: string, maxLength: 20, description: 句尾的蓝色加粗强调（关键结论 / 收益数字）；没有就不填 }
+    solution_images:
+      type: array
+      minItems: 1
+      maxItems: 3
+      description: 右框底部的方案示意图，一到三张并排（机制 / 流程 / 数据截图），按方案编号顺序放；没有就不填这个槽位
+      items: { type: string }
+
+layout:                         # 参考 body 区 1216×560（本页无 takeaway，正文区自动上移并纵向拉伸到 600）
+  # 顶部：目标 / 进展横幅——浅灰底通栏，加粗标签 + 说明
+  - { type: shape, box: [0, 0, 1216, 63], fill: surface_light }
+  - type: text
+    box: [16, 4, 1184, 55]
+    style: lead
+    valign: middle
+    runs:
+      - { bind: banner_label, style: emphasis }
+      - { value: "：", style: emphasis }
+      - { bind: banner_text }
+
+  # 左：问题与挑战框（虚线描边），白底栏名骑跨框顶
+  - { type: shape, box: [0, 81, 560, 472], fill: bg, line: muted, dash: true }
+  - { type: shape, box: [181, 67, 198, 28], fill: bg }
+  - { type: text, box: [181, 67, 198, 28], value: 问题与挑战, style: heading, align: center, valign: middle }
+  - { type: bullets, box: [14, 98, 532, 202], bind: problems, style: body, marker: false }
+  - type: grid
+    box: [14, 312, 532, 228]
+    bind: problem_images
+    columns: 3
+    gap: 12
+    item:
+      - { type: image, box: [0, 0, "100%", "100%"], bind: ".", placeholder: 现状 / 问题示意图：结构、原理或问题数据 }
+
+  # 右：技术方案框（虚线描边，比左框略宽），白底栏名骑跨框顶
+  - { type: shape, box: [592, 81, 624, 472], fill: bg, line: muted, dash: true }
+  - { type: shape, box: [805, 67, 198, 28], fill: bg }
+  - { type: text, box: [805, 67, 198, 28], value: 技术方案, style: heading, align: center, valign: middle }
+  # 各条的名称和要点在一个文本框里自然往下排，底部示意图行只在填了 solution_images 时出现（文字多时不配图）
+  - { type: bullets, box: [600, 98, 608, 447], bind: solutions, children: points, style: body, group_style: body_strong }
+  - type: grid
+    box: [612, 420, 588, 117]
+    bind: solution_images
+    columns: 3
+    gap: 12
+    when: solution_images
+    item:
+      - { type: image, box: [0, 0, "100%", "100%"], bind: ".", placeholder: 方案示意图：本条方案的机制 / 流程 / 数据 }
+
+guidance:
+  - 横幅二选一：还在定方向写「技术目标」（现状 → 路线 → 量化目标），已在推进写「方案进展」（分条列各方向的进展和完成度）
+  - 问题清单每段一个角色：问题写现状症结、挑战写要做成这件事难在哪、目标写量化做到什么程度；段内编号逐条写，症结词要短
+  - 方案和问题按编号对应着写，读者能逐条对上；每条方案的子要点写清对象和方法、量化精度、支撑的决策；右框全部文字合计不超过 20 行，底部配图时压缩到 15 行以内
+  - 示意图自己准备好再放进来：左框放现状 / 原理 / 问题数据图，右框放方案的机制或流程图，按方案编号顺序排

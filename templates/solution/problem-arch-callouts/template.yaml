@@ -1,0 +1,190 @@
+id: solution.problem-arch-callouts
+name: 架构图编号标注
+roles: [problem, analysis]
+density: talk
+level: system
+tags: [架构图, 编号标注, 问题对策, 业界技术扫描]
+when_to_use: 围绕一张中央架构图讲「哪里有问题、怎么办、业界怎么解」：图上用红色圆点编号标出存在问题的环节，四周标注卡按方位与编号一一对应；标注卡分两种——问题卡（红框问题 + 编号，可带对策说明）和业界技术扫描卡（名称 + 年份来源 + 原理说明）
+when_not_to_use: 没有问题与环节的对应关系、只罗列问题清单和技术清单 → solution.solution-problem-techs；讲方案自身架构而不是给既有架构挑问题 → solution.solution-arch-overview
+frame: standard
+
+structure:
+  - 标题：结论式一句（24 号加粗深红），点明对象 + 要解的问题 + 支撑的目标；整句写不下时把后半句挪给 title_suffix（18 号加粗深红）
+  - 中央架构图（图片）：分析对象的架构 / 分层示意图，图上用红色圆点编号①②…标出存在问题的环节；编号是图与标注卡之间唯一的连接（渲染器不画引线，靠编号 + 方位对应）
+  - 左右标注卡列：架构图两侧各一列，每张卡对应图上一个编号点或一项业界技术，列内自上而下就是编号的排布顺序，两种卡可在一列里混排
+  - 问题卡：红色描边白底直角框，框内红色加粗写问题（哪个环节 + 什么问题 + 什么后果），开头的圈码与图上编号一致；框下可接一段对策说明：黑色铺垫（场景 / 对象）+ 蓝色加粗的建模 / 仿真 / 优化动作关键词 + 黑色收尾（导出什么方案或决策）
+  - 业界技术扫描卡：浅灰底圆角卡（无描边无阴影），自上而下是居中加粗的技术名称、蓝色加粗的「（年份 来源）」、一段原理说明（什么机制 + 怎么做 + 量化收益），末尾可接一行红色加粗的遗留问题
+  - 底部通栏（可选）：图下方一个带编号的红框问题 + 一到两张技术扫描卡，对应图下方的编号点
+  - 关系：所有标注卡共同把图上的编号点讲透——问题卡讲「这一环节的短板、我们怎么解」，技术扫描卡讲「业界怎么解」；卡的行高随内容多少用 size 调整，内容多的卡调大
+
+slots:
+  type: object
+  required: [title, diagram, left_cards, right_cards]
+  properties:
+    title:
+      type: string
+      maxLength: 34
+      description: 页标题（24 号加粗深红、一行）：结论式，点明对象 + 要解的问题 + 支撑的目标；整句写不下就把后半句挪给 title_suffix
+    title_suffix:
+      type: string
+      maxLength: 26
+      description: 标题后半句（18 号加粗深红，与主体同一行）：收益或方法；与主体合计不超过一行（约 34 个汉字，英文、数字约半个字宽）；没有就不填
+    diagram:
+      type: string
+      description: 中央架构图的图片路径：分析对象的架构 / 分层示意图，图上用红色圆点编号①②…标出存在问题的环节，编号与问题卡开头的圈码一致；没有就留空显示占位框
+    left_cards:
+      type: array
+      minItems: 2
+      maxItems: 5
+      description: 架构图左侧的标注卡列，自上而下就是编号的排布顺序；问题卡与技术扫描卡可混排
+      items: &callout_item
+        type: object
+        required: [kind]
+        properties:
+          kind:
+            type: string
+            enum: [problem, tech]
+            description: 卡的种类：problem = 问题卡（红框问题 + 编号，可带对策说明）；tech = 业界技术扫描卡（灰底圆角卡）
+          num:
+            type: string
+            maxLength: 2
+            description: 与图上编号一致的圈码（①②③…），红色加粗、自动接在问题文字前；问题卡必填
+          size:
+            type: number
+            minimum: 1.5
+            maximum: 3
+            description: 这张卡的相对高度，默认 1.5；写得多就调大——两行的问题框约 2，三行的问题框或两行说明的技术卡约 2.2–2.6，带对策说明的问题卡 2.6 起
+          problem:
+            type: string
+            maxLength: 52
+            description: 问题框文字（14 号加粗深红）：哪个环节存在什么问题、造成什么后果；三行左右（约 50 个汉字，英文、数字约半个字宽）
+          measure_pre:
+            type: string
+            maxLength: 20
+            description: 对策说明里蓝色关键词之前的黑色铺垫（14 号）：对策针对的场景或对象；三段合计不超过三行（约 44 个汉字），没有就不填
+          measure_key:
+            type: string
+            maxLength: 24
+            description: 对策说明的蓝色加粗关键词（14 号）：建模 / 仿真 / 优化什么的动作短语；写对策说明时必填
+          measure_post:
+            type: string
+            maxLength: 20
+            description: 对策说明里关键词之后的黑色收尾（14 号）：导出什么方案或决策；没有就不填
+          name:
+            type: string
+            maxLength: 20
+            description: 技术名称（14 号加粗居中）：业界这项技术的名字，一行写完（约 15 个汉字，英文、数字约半个字宽）
+          meta:
+            type: string
+            maxLength: 28
+            description: 「（年份 来源）」（12 号加粗蓝色居中）：提出时间和机构 / 厂商，一行写完
+          desc:
+            type: string
+            maxLength: 56
+            description: 原理说明（12 号）：这项技术用什么机制解决对应环节的问题、怎么做、带来什么量化收益；两三行写完（约 48 个汉字，英文、数字约半个字宽）
+          desc_note:
+            type: string
+            maxLength: 20
+            description: 原理说明末尾的红色加粗遗留问题（12 号，一行）：这项技术还没解决什么；没有就不填
+        allOf:
+          - if: { properties: { kind: { const: problem } } }
+            then: { required: [problem, num] }
+          - if: { properties: { kind: { const: tech } } }
+            then: { required: [name, meta, desc] }
+    right_cards:
+      type: array
+      minItems: 2
+      maxItems: 5
+      description: 架构图右侧的标注卡列，同左列
+      items: *callout_item
+    bottom_num:
+      type: string
+      maxLength: 2
+      description: 底部通栏问题对应的图上圈码（①②③…），红色加粗、接在问题文字前；写底部通栏时必填
+    bottom_problem:
+      type: string
+      maxLength: 26
+      description: 底部通栏的红框问题（14 号加粗深红，横跨图下方）：哪个环节存在什么问题、造成什么后果，一行写完；没有就不填
+    bottom_cards:
+      type: array
+      minItems: 1
+      maxItems: 2
+      description: 底部通栏下的技术扫描卡（一两张并排，卡内字段同左右列，size 决定相对宽度）；没有就不填
+      items: *callout_item
+
+layout:                         # 参考 body 区 1216×560（本页无 takeaway，正文区自动上移并纵向拉伸到 600）
+  # 中央架构图：图上自带红色圆点编号，与问题卡开头的圈码一一对应
+  - { type: image, box: [332, 0, 552, 372], bind: diagram, placeholder: 中央架构图：分析对象的架构 / 分层示意图，图上用红色圆点编号①②…标出存在问题的环节 }
+
+  # 左侧标注卡列：行高按每张卡的 size 分配
+  - type: grid
+    box: [0, 0, 320, 560]
+    bind: left_cards
+    columns: 1
+    gap: 12
+    weight: size
+    item: &callout_layout
+      # 业界技术扫描卡：浅灰底圆角卡（无描边无阴影），名称 / 来源居中
+      - { type: shape, box: [0, 0, "100%", "100%"], shape: rounded, radius: 14, fill: surface_light, when: name }
+      - { type: text, box: [6, 6, "100%-12", 20], bind: name, style: emphasis, align: center, valign: middle, when: name }
+      - { type: text, box: [6, 28, "100%-12", 16], bind: meta, style: body_strong, color: primary_text, align: center, when: meta }
+      - { type: text, box: [12, 48, "100%-24", "100%-54"], bind: desc, style: body, valign: top, when: desc }
+      - { type: text, box: [12, "100%-20", "100%-24", 16], bind: desc_note, style: body_strong, color: accent, valign: top, when: desc_note }
+      # 问题卡：红色描边白底直角框，开头圈码与图上编号一致；框下接对策说明
+      - { type: shape, box: [0, 0, "100%", "48%"], fill: bg, line: accent, when: problem }
+      - type: text
+        box: [8, 0, "100%-16", "48%"]
+        style: emphasis
+        color: accent
+        valign: middle
+        when: problem
+        runs:
+          - { bind: num, style: emphasis, color: accent }
+          - { value: " " }
+          - { bind: problem }
+      - type: text
+        box: [2, "52%", "100%-4", "48%"]
+        style: lead
+        valign: top
+        when: measure_key
+        runs:
+          - { bind: measure_pre }
+          - { bind: measure_key, style: emphasis, color: primary_text }
+          - { bind: measure_post }
+
+  # 右侧标注卡列
+  - type: grid
+    box: [896, 0, 320, 560]
+    bind: right_cards
+    columns: 1
+    gap: 12
+    weight: size
+    item: *callout_layout
+
+  # 底部通栏：带编号的红框问题 + 一到两张技术扫描卡（可选）
+  - { type: shape, box: [332, 384, 552, 40], fill: bg, line: accent, when: bottom_problem }
+  - type: text
+    box: [342, 384, 532, 40]
+    style: emphasis
+    color: accent
+    valign: middle
+    when: bottom_problem
+    runs:
+      - { bind: bottom_num, style: emphasis, color: accent }
+      - { value: " " }
+      - { bind: bottom_problem }
+  - type: grid
+    box: [332, 432, 552, 128]
+    bind: bottom_cards
+    columns: 2
+    gap: 16
+    weight: size
+    when: bottom_cards
+    item: *callout_layout
+
+guidance:
+  - 整页围绕中央架构图：图上用红色圆点编号标出存在问题的环节，问题卡开头的圈码与图上编号一一对应；渲染器不画引线，靠编号 + 方位（左列 / 右列 / 底部通栏、自上而下）表达对应
+  - 问题卡写「哪个环节 + 什么问题 + 什么后果」；对策说明（可选）分三段：黑色铺垫（针对什么场景 / 对象）+ 蓝色加粗关键词（建模 / 仿真 / 优化什么）+ 黑色收尾（导出什么方案或决策）
+  - 技术扫描卡写业界怎么解对应环节的问题：名称一行、「（年份 来源）」一行、原理说明两三行（机制 + 做法 + 量化收益），末尾可接一行红色加粗的遗留问题
+  - 卡的高度用 size 调：按框内文字行数估，两行的问题框约 2、三行的问题框或两行说明的技术卡约 2.2–2.6、带对策说明的问题卡 2.6 起；一列里各卡 size 之和乘以内容比例刚好排满整列为宜
+  - 架构图自己准备：把分析对象的架构 / 分层画清楚，在存在问题的环节上叠红色圆点编号（①②…），编号顺序按左列自上而下、再右列自上而下、最后底部通栏排

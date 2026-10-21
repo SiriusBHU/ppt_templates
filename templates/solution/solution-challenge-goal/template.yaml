@@ -1,0 +1,165 @@
+id: solution.solution-challenge-goal
+name: 挑战与方案对照（双栏 + 佐证图 + 目标条）
+roles: [solution]
+also_fits: [system, hardware, software]
+density: talk
+level: system
+tags: [挑战方案对照, 双栏, 负载趋势, 关键挑战, 关键技术, 架构图, 目标条]
+when_to_use: 一页讲清一项架构方案的完整论证：左栏从业务一侧讲起（趋势一句话 + 要点 → 佐证图 / 数据 → 挑战一句话 + 要点），右栏给答案（方案概述 → 关键技术 → 架构 / 数据流图 → 可选对比小表 → 底部量化目标条）；左右两栏一一对应，每条挑战都由方案侧回应
+when_not_to_use: 一两个问题各配一个方案和指标表 → solution.solution-dual-metrics；问题要展开成背景 / 示意 / 数据、关键技术要逐项画开 → solution.solution-problem-techs；只讲方案全貌不讲挑战一侧 → solution.solution-arch-overview
+frame: standard
+
+structure:
+  - 标题：结论式同行标题——主体（24 号加粗、深红）写「编号前缀：方案名 + 定性概括」，编号形如「架构N」；后半句（18 号加粗、深红）写量化收益尾句，数字可检验
+  - 两根栏目标题条（浅蓝底、加粗居中）：左栏标出这一栏讲问题一侧，右栏标出这一栏讲方案与目标；标签文字是槽位
+  - 左栏（白底细描边）：栏名是蓝色加粗的挑战名，骑跨框顶；自上而下——「负载趋势：」一句话 + 一到两条趋势要点（名称：说明，关键数字可在段尾强调）→ 佐证区（一张图：趋势曲线 / 实测数据 / 机制示意，可再配一张小表）→「关键挑战：」一句话 + 两到三条挑战要点
+  - 右栏（白底细描边，比左栏宽）：栏名是蓝色加粗的方案名，骑跨框顶；自上而下——一句话概述（加粗，写清用什么架构或机制、实现什么转变）→ 两到三条关键技术（名称：说明）→ 架构 / 数据流图一张 → 可选的对比小表（本方案 vs 原方案）→ 底部「目标：」目标条，量化片段蓝色加粗
+  - 关系：左右两栏一一对应——左栏的每条挑战由右栏的概述与关键技术回应；底部目标条收束全页，量化片段与标题尾句的收益数字呼应；左右栏名分别是挑战和方案的一句话点题
+
+slots:
+  type: object
+  required: [title, title_suffix, challenge_label, solution_label, challenge_name, solution_name, trend_summary, trend_points, challenge_summary, challenge_points, solution_summary, key_techs, goal_text]
+  properties:
+    title:
+      type: string
+      maxLength: 32
+      description: 标题主体（24 号加粗、深红）：「编号前缀：方案名 + 定性概括」，编号形如「架构N」；中文不超过 26 个字（英文、数字约半个字宽），给同一行的后半句留位置
+    title_suffix:
+      type: string
+      maxLength: 24
+      description: 与标题同一行的后半句（18 号加粗、深红）：量化收益尾句——做到什么水平；和标题主体合计不超过一行
+    challenge_label:
+      type: string
+      maxLength: 12
+      description: 左栏栏目标题条的文字（18 号加粗、居中，浅蓝底）：标明这一栏讲问题一侧
+    solution_label:
+      type: string
+      maxLength: 12
+      description: 右栏栏目标题条的文字（18 号加粗、居中，浅蓝底）：标明这一栏讲答案与目标一侧
+    challenge_name:
+      type: string
+      maxLength: 18
+      description: 挑战名（18 号加粗、蓝色、居中，骑跨左栏框顶）：一句话点出症结，一行写完（中文不超过 14 个字，英文、数字约半个字宽）
+    solution_name:
+      type: string
+      maxLength: 22
+      description: 方案名（18 号加粗、蓝色、居中，骑跨右栏框顶）：「名称：是什么」，一行写完（中文不超过 20 个字，英文、数字约半个字宽）
+    trend_summary:
+      type: string
+      maxLength: 24
+      description: 负载趋势的一句话（14 号加粗，接在「负载趋势：」后面）：什么负载在涨、涨到多少量级，一行写完
+    trend_points:
+      type: array
+      minItems: 1
+      maxItems: 2
+      description: 负载趋势的要点，每条「名称：说明」；名称 + 说明 + 强调合计不超过两行（约 52 个汉字，英文、数字约半个字宽）
+      items:
+        type: object
+        required: [text]
+        properties:
+          name: { type: string, maxLength: 18, description: 趋势点名称（加粗，自动接「：」）；短句可不写名称 }
+          text: { type: string, maxLength: 62, description: "说明：什么负载在涨、涨多快，当前什么量级，预计何时超过什么阈值；名称 + 说明 + 强调合计不超过两行（中文约 52 个字，英文、数字约半个字宽，英文多时字数可相应增加）" }
+          highlight: { type: string, maxLength: 18, description: 最关键的量化结论（蓝色加粗，接在说明后面） }
+    evidence_image:
+      type: string
+      description: 佐证图的图片路径：负载变化曲线、实测数据截图或机制示意图；没有就留空显示占位框
+    evidence_table:
+      type: object
+      description: 佐证小表（table 组件，可选）：columns 是表头（指标 / 场景一 / 场景二……），rows 一两行；widths 按内容长短给相对宽度；不填则不画
+    challenge_summary:
+      type: string
+      maxLength: 22
+      description: 关键挑战的一句话（14 号加粗，接在「关键挑战：」后面）：核心卡点是什么、造成多大代价，一行写完（中文不超过 16 个字，英文、数字约半个字宽）
+    challenge_points:
+      type: array
+      minItems: 2
+      maxItems: 3
+      description: 挑战要点，每条「名称：说明」；名称 + 说明 + 强调合计不超过两行（约 52 个汉字，英文、数字约半个字宽）
+      items:
+        type: object
+        required: [text]
+        properties:
+          name: { type: string, maxLength: 16, description: 挑战点名称（加粗，自动接「：」），点出症结；短句可不写名称 }
+          text: { type: string, maxLength: 52, description: 说明：在什么场景下出现、根因是什么、对关键指标造成多大影响 }
+          highlight: { type: string, maxLength: 26, description: 最关键的代价或结论（蓝色加粗，接在说明后面） }
+    solution_summary:
+      type: string
+      maxLength: 56
+      description: 方案一句话概述（14 号加粗，最多两行）：用什么架构或核心机制，把原来的什么方式变成什么方式
+    key_techs:
+      type: array
+      minItems: 2
+      maxItems: 3
+      description: 关键技术，每条「名称：说明」；名称 + 说明 + 强调合计不超过两行（约 80 个汉字，英文、数字约半个字宽）
+      items:
+        type: object
+        required: [name, text]
+        properties:
+          name: { type: string, maxLength: 20, description: 技术名称（加粗，自动接「：」）：做法的名字 }
+          text: { type: string, maxLength: 104, description: "说明：基于什么机制做什么，覆盖哪些对象或哪条链路，比原做法好在哪里；名称 + 说明 + 强调合计不超过两行（中文约 77 个字，英文、数字约半个字宽，英文多时字数可相应增加）" }
+          highlight: { type: string, maxLength: 38, description: 最关键的收益（蓝色加粗，接在说明后面） }
+    solution_image:
+      type: string
+      description: 方案架构图 / 数据流图的图片路径：关键技术如何连接、数据如何流转；没有就留空显示占位框
+    compare_table:
+      type: object
+      description: 对比小表（table 组件，可选）：columns 是表头（对比项 / 各维度……），rows 为原方案与本方案各一行；widths 按内容长短给相对宽度；不填则不画
+    goal_text:
+      type: string
+      maxLength: 48
+      description: 目标条正文（14 号，接在加粗的「目标：」后面）：通过什么手段，在什么场景下达到什么目标
+    goal_metric:
+      type: string
+      maxLength: 44
+      description: 目标条的量化片段（14 号加粗、蓝色，接在正文后面）：一两个关键指标与目标数值；与正文合计不超过两行
+
+layout:                         # 参考 body 区 1216×560（本页无 takeaway，正文区自动上移并纵向拉伸到 600）
+  # 栏目标题条：浅蓝底、加粗居中
+  - { type: shape, box: [0, 0, 476, 32], fill: highlight_blue }
+  - { type: text, box: [0, 0, 476, 32], bind: challenge_label, style: heading, align: center, valign: middle }
+  - { type: shape, box: [504, 0, 704, 32], fill: highlight_blue }
+  - { type: text, box: [504, 0, 704, 32], bind: solution_label, style: heading, align: center, valign: middle }
+  # 两栏：白底细描边，右栏比左栏宽
+  - { type: shape, box: [0, 50, 476, 498], fill: bg, line: line }
+  - { type: shape, box: [504, 50, 704, 498], fill: bg, line: line }
+  # 栏名骑跨框顶：白底遮住框线 + 蓝色加粗居中
+  - { type: shape, box: [48, 32, 380, 36], fill: bg }
+  - { type: text, box: [48, 32, 380, 36], bind: challenge_name, style: heading, color: primary_text, align: center, valign: middle }
+  - { type: shape, box: [574, 32, 564, 36], fill: bg }
+  - { type: text, box: [574, 32, 564, 36], bind: solution_name, style: heading, color: primary_text, align: center, valign: middle }
+  # 左栏：负载趋势 → 佐证区（图 + 可选小表）→ 关键挑战
+  - type: text
+    box: [2, 68, 470, 22]
+    style: emphasis
+    runs:
+      - { value: "负载趋势：" }
+      - { bind: trend_summary }
+  - { type: bullets, box: [2, 94, 470, 110], bind: trend_points, style: body }
+  - { type: image, box: [6, 208, 464, 126], bind: evidence_image, placeholder: 佐证图：负载变化曲线、实测数据截图或机制示意图 }
+  - { type: component, component: table, box: [6, 334, 464, 48], bind: evidence_table, when: evidence_table, props: { look: plain, text_style: caption, align: center } }
+  - type: text
+    box: [2, 388, 470, 22]
+    style: emphasis
+    runs:
+      - { value: "关键挑战：" }
+      - { bind: challenge_summary }
+  - { type: bullets, box: [2, 414, 470, 130], bind: challenge_points, style: body }
+  # 右栏：概述 → 关键技术 → 架构 / 数据流图 → 可选对比小表 → 目标条
+  - { type: text, box: [508, 68, 696, 42], bind: solution_summary, style: emphasis }
+  - { type: bullets, box: [508, 114, 696, 148], bind: key_techs, style: body }
+  - { type: image, box: [516, 266, 684, 148], bind: solution_image, placeholder: 方案架构图 / 数据流图：关键技术如何连接、数据如何流转 }
+  - { type: component, component: table, box: [516, 418, 684, 74], bind: compare_table, when: compare_table, props: { look: plain, text_style: caption, align: center } }
+  - type: text
+    box: [508, 496, 696, 48]
+    style: lead
+    runs:
+      - { value: "目标：", style: emphasis }
+      - { bind: goal_text }
+      - { bind: goal_metric, style: emphasis, color: primary_text }
+
+guidance:
+  - 整页是一条论证链：趋势（为什么要变）→ 佐证（数据支撑）→ 挑战（卡点在哪）→ 方案（怎么做）→ 目标（做到多少）；左右两栏一一对应，挑战侧不写方案、方案侧要回应每条挑战
+  - 标题照「编号前缀：方案名 + 定性概括，量化收益尾句」写；尾句的数字要能在目标条里找到出处
+  - 趋势要点写清对象、速度、量级和时间点；挑战要点写场景、根因和量化代价；关键技术的说明写机制，不要只写名词
+  - 佐证图和架构图自己准备好再放进来：佐证图给负载 / 资源的实测或趋势，架构图画清关键技术的连接与数据流向；图太多时合成一张，保持左一右一
+  - 两张小表都可省：佐证小表放实测对比数据，对比小表放原方案与本方案的逐项对比，单元格都写短语、一行写完

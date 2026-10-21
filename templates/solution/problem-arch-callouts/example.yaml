@@ -1,0 +1,50 @@
+title: 结论式标题：点明分析对象、要解的问题与目标
+title_suffix: 后半句写收益或方法
+diagram: ""
+left_cards:
+  - kind: problem
+    num: "①"
+    size: 2.6
+    problem: 问题卡文字：写清哪个环节存在什么问题、根因是什么、造成多大的量化后果
+    measure_pre: 对策说明先写黑色铺垫，
+    measure_key: 蓝色加粗关键词写建模或仿真什么
+    measure_post: ，黑色收尾写导出什么决策
+  - kind: tech
+    size: 2.2
+    name: 技术名称：业界这项技术全称
+    meta: （起始~截止年份，来源机构或厂商）
+    desc: 原理说明：这项技术用什么机制解决对应环节的问题、具体怎么做、带来什么量化收益
+    desc_note: 遗留问题：这项技术没解决什么
+  - kind: tech
+    size: 2.2
+    name: 技术名称：业界这项技术全称
+    meta: （起始~截止年份，来源机构或厂商）
+    desc: 原理说明：这项技术用什么机制解决对应环节的问题、具体怎么做、带来什么量化收益
+right_cards:
+  - kind: problem
+    num: "②"
+    size: 2
+    problem: 问题卡文字：写清哪个环节存在什么问题、造成什么后果
+  - kind: tech
+    size: 2.2
+    name: 技术名称：业界这项技术全称
+    meta: （起始~截止年份，来源机构或厂商）
+    desc: 原理说明：这项技术用什么机制解决对应环节的问题、具体怎么做、带来什么量化收益
+  - kind: tech
+    size: 2.2
+    name: 技术名称：业界这项技术全称
+    meta: （起始~截止年份，来源机构或厂商）
+    desc: 原理说明：这项技术用什么机制解决对应环节的问题、具体怎么做、带来什么量化收益
+bottom_num: "③"
+bottom_problem: 底部通栏问题框：横跨图下方的问题，一行写完
+bottom_cards:
+  - kind: tech
+    size: 1.6
+    name: 技术名称：业界技术全称
+    meta: （起始~截止年份，来源机构）
+    desc: 原理说明：用什么机制解决对应环节的问题、带来什么量化收益
+  - kind: tech
+    size: 1.6
+    name: 技术名称：业界技术全称
+    meta: （起始~截止年份，来源机构）
+    desc: 原理说明：用什么机制解决对应环节的问题、带来什么量化收益

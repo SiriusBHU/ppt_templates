@@ -1,0 +1,238 @@
+id: solution.result-sim-tables-read
+name: 分析成果汇报（诉求卡 + 策略 + 多栏指标表）
+roles: [result, overview]
+density: read
+level: system
+tags: [成果汇报, 指标表, 诉求, 策略, 进展要点, 多栏]
+when_to_use: 一页汇报一批分析 / 评估工作的成果：顶部左侧是诉求方的诉求小卡、右侧是分析策略，下半页用 2~5 个等宽栏给出量化结论，每栏一栏标题 + 一两张指标表 + 代号打头的进展要点；适合评审 / 汇报里「按对象分栏、用数据说话」的阅读型页面
+when_not_to_use: 单个问题配单个方案的对照讲解 → solution.solution-dual-metrics；讲架构组成而不是摆结果 → solution.solution-arch-overview；只有一张大表、没有诉求与策略区 → common 的表格页
+frame: standard
+
+structure:
+  - 标题：主题式，主标题（24 号加粗深红）点出分析对象，后半句（18 号加粗深红、与主标题同一行）写一句结论——论证了什么、支撑哪项决策
+  - 顶部左区「诉求」：一行区标题（谁的诉求 + 一句判断），细边框里 2~4 张彩色小卡；每卡一条「名称：说明」，写清这类诉求关注什么对象、要回答什么问题、量化到什么口径；卡底色是黄 / 灰 / 蓝轮换的装饰色，不承载分类含义
+  - 顶部右区「策略」：一行区标题（分析工作怎么组织的一句话概括），细边框里 2~4 条要点，每条「名称：做法」，写清这一步做什么、用什么方法、产出什么；策略本身是流程图时用示意图图片整块替换列表
+  - 可选横幅：一句话承上启下（从诉求与策略过渡到结果），浅蓝底、居中
+  - 结果区标题：浅蓝色带上的居中标签（如「关键结果」），留空则不画色带
+  - 结果栏：2~5 栏等宽并排，每栏一张白底细边框卡片：红色栏标题点出这一栏评估的对象或主题，栏内自上而下 2~3 个内容块，按高度权重分栏高
+  - 内容块两种：指标表（可选表题 + 白底只画横线的表格，每格一行写完；栏宽充足时一个块里也可以是左右并排、各带表题的两张子表）和进展要点（红字「关键进展」标签 + 代号或主题打头的要点，句尾关键数字蓝色加粗）；要点里的数字要能在同栏表格里找到出处
+  - 关系：上半页讲「为什么做、怎么做」（诉求 → 策略），下半页讲「做出了什么」（每栏一类对象，表格给数据、要点给结论）；左右两区标题对仗，诉求卡与策略条数量各自独立
+
+slots:
+  type: object
+  required: [title, title_suffix, demand_title, demands, strategy_title, columns]
+  properties:
+    title:
+      type: string
+      maxLength: 18
+      description: 页标题主体（24 号加粗深红）：点出分析 / 评估的对象和范围
+    title_suffix:
+      type: string
+      maxLength: 42
+      description: 标题后半句（18 号加粗深红，与主体同一行，写满会折到第二行）：一句结论——论证了什么、支撑哪项决策
+    demand_title:
+      type: string
+      maxLength: 34
+      description: 左上区标题（14 号加粗居中）：谁的诉求 + 一句判断，一行写完
+    demands:
+      type: array
+      minItems: 2
+      maxItems: 4
+      description: 诉求小卡，从左到右排，4 张时第 4 张单独落到第二行；每张一条「名称：说明」
+      items:
+        type: object
+        required: [name, desc]
+        properties:
+          name: { type: string, maxLength: 12, description: 诉求名称（短语，蓝色），点出这类诉求的关注点 }
+          desc:
+            type: string
+            maxLength: 84
+            description: 说明（10 号，顶对齐按卡宽折行）：关注什么对象和场景、要回答什么问题、量化到什么口径；3 张一排时每张约 5 行（60 字内），4 张时每张约 2 行（34 字内）
+          tone:
+            type: string
+            enum: [warm, gray, cool]
+            description: 卡片底色（装饰性轮换，不带分类含义）：warm 浅黄 / gray 浅灰 / cool 浅蓝，缺省浅黄
+    strategy_title:
+      type: string
+      maxLength: 34
+      description: 右上区标题（14 号加粗居中）：分析策略的一句话概括，一行写完
+    strategies:
+      type: array
+      minItems: 2
+      maxItems: 4
+      description: 策略要点，每条「名称：做法」（名称加粗）；与 strategy_image 二选一——策略是流程图等列表表达不了的内容时，本槽留空、填 strategy_image
+      items:
+        type: object
+        required: [name, text]
+        properties:
+          name: { type: string, maxLength: 14, description: 策略名称（短语，加粗，自动接「：」） }
+          text: { type: string, maxLength: 60, description: 做法：这一步做什么、用什么方法、产出什么；名称加做法合计不超过一行半（约 50 字） }
+    strategy_image:
+      type: string
+      description: 策略示意图的图片路径（流程图等）：填写后盖住策略要点区，strategies 留空；没有就整页用列表
+    banner:
+      type: string
+      maxLength: 38
+      description: 可选横幅（浅蓝底、14 号加粗居中，一行）：承上启下的一句话，从诉求与策略过渡到结果；不填则不画
+    results_label:
+      type: string
+      maxLength: 8
+      description: 结果区标题（浅蓝色带上的居中标签，如「关键结果」）；留空则不画色带
+    columns:
+      type: array
+      minItems: 2
+      maxItems: 5
+      description: 结果栏，从左到右等宽并排，每栏评估一类对象或主题
+      items:
+        type: object
+        required: [title, blocks]
+        properties:
+          title: { type: string, maxLength: 16, description: 栏标题（12 号加粗深红居中）：这一栏评估的对象或主题，一行写完（5 栏时每栏只有约 13 字宽） }
+          blocks:
+            type: array
+            minItems: 2
+            maxItems: 3
+            description: 栏内自上而下的内容块：1~2 个指标表块（放不下的表格用截图块）+ 最后一个进展要点块；块高按 size 权重分栏内高度
+            items:
+              type: object
+              required: [size]
+              properties:
+                size:
+                  type: number
+                  minimum: 1
+                  maximum: 6
+                  description: 块高度权重（块与块之间的相对比例）：表块 ≈ 表格行数（含表头）的一半，要点块 ≈ 要点条数，按预览微调
+                caption:
+                  type: string
+                  maxLength: 24
+                  description: 表题（10 号居中，写在表上方）：这张表评估什么；不填则表顶着栏标题下方
+                data:
+                  type: object
+                  description: 指标表（table 组件，白底只画横线）：columns 是表头（2~6 列），rows 每行一条数据（1~9 行），widths 按内容长短给各列相对宽度；每格一行写完，窄列只放短词和数字；合并单元格、窄列长数字等原生放不下的表格改用 image 截图。与 pair / points / image 四选一
+                  properties:
+                    columns:
+                      type: array
+                      minItems: 2
+                      maxItems: 6
+                      items: { type: string, maxLength: 18 }
+                    rows:
+                      type: array
+                      minItems: 1
+                      maxItems: 9
+                      items:
+                        type: array
+                        items: { type: string, maxLength: 18 }
+                    widths:
+                      type: array
+                      items: { type: number, exclusiveMinimum: 0 }
+                pair:
+                  type: array
+                  minItems: 2
+                  maxItems: 2
+                  description: 左右并排的两张子表（各带可选表题），栏宽充足时用；与 data / points / image 四选一
+                  items:
+                    type: object
+                    properties:
+                      caption: { type: string, maxLength: 24, description: 子表表题（10 号居中） }
+                      data:
+                        type: object
+                        properties:
+                          columns:
+                            type: array
+                            minItems: 2
+                            maxItems: 6
+                            items: { type: string, maxLength: 18 }
+                          rows:
+                            type: array
+                            minItems: 1
+                            maxItems: 9
+                            items:
+                              type: array
+                              items: { type: string, maxLength: 18 }
+                          widths:
+                            type: array
+                            items: { type: number, exclusiveMinimum: 0 }
+                points:
+                  type: array
+                  minItems: 2
+                  maxItems: 4
+                  description: 进展要点块（红字「关键进展」标签 + 代号或主题打头的要点）：每条「代号：结论」，句尾关键数字写进 highlight。与 data / pair / image 四选一
+                  items:
+                    type: object
+                    required: [name, text]
+                    properties:
+                      name: { type: string, maxLength: 16, description: 代号或主题名（加粗，自动接「：」），如代际代号、工作项名 }
+                      text: { type: string, maxLength: 70, description: 结论：做了什么分析、得出什么结论，数字要能在同栏表格里找到出处 }
+                      highlight: { type: string, maxLength: 24, description: 句尾的关键数字或结论（蓝色加粗，接在 text 后面） }
+                image:
+                  type: string
+                  description: 指标表截图路径：合并单元格、窄列长数字等原生表格放不下时，把表格区域（可含原表题）整块截图放入；与 data / pair / points 四选一
+
+layout:                         # 参考 body 区 1216×560（本页无 takeaway，正文区自动上移并纵向拉伸到 600）
+  # 顶部左右两区标题
+  - { type: text, box: [0, 0, 604, 20], bind: demand_title, style: emphasis, align: center, valign: middle }
+  - { type: text, box: [612, 0, 604, 20], bind: strategy_title, style: emphasis, align: center, valign: middle }
+  # 左区：细边框 + 诉求小卡（黄 / 灰 / 蓝装饰底色）
+  - { type: shape, box: [0, 22, 604, 118], fill: bg, line: line }
+  - type: grid
+    box: [6, 26, 592, 110]
+    bind: demands
+    columns: 3
+    gap: 8
+    item:
+      - { type: shape, box: [0, 0, "100%", "100%"], fill: highlight, by: tone, fill_map: { warm: highlight, gray: surface, cool: highlight_blue } }
+      - type: text
+        box: [6, 4, "100%-12", "100%-8"]
+        style: detail
+        valign: top
+        runs:
+          - { bind: name, color: primary_text }
+          - { value: "：" }
+          - { bind: desc }
+  # 右区：细边框 + 策略要点列表（或策略示意图整块盖上）
+  - { type: shape, box: [612, 22, 604, 118], fill: bg, line: line }
+  - { type: bullets, box: [624, 30, 584, 102], bind: strategies, style: body, when: strategies }
+  - { type: image, box: [612, 24, 604, 114], bind: strategy_image, when: strategy_image, fit: contain, placeholder: 策略示意图：分析工作的步骤与产出 }
+  # 可选横幅
+  - { type: shape, box: [248, 144, 720, 20], fill: highlight_blue, when: banner }
+  - { type: text, box: [248, 144, 720, 20], bind: banner, style: emphasis, align: center, valign: middle, when: banner }
+  # 结果区标题色带
+  - { type: shape, box: [304, 168, 608, 20], fill: highlight_blue, when: results_label }
+  - { type: text, box: [304, 168, 608, 20], bind: results_label, style: emphasis, align: center, valign: middle, when: results_label }
+  # 结果栏：2~5 栏等宽，每栏 = 栏标题 + 内容块（指标表 / 进展要点）按权重分高
+  - type: grid
+    box: [0, 192, 1216, 368]
+    bind: columns
+    columns: 5
+    gap: 16
+    item:
+      - { type: shape, box: [0, 0, "100%", "100%"], fill: bg, line: line }
+      - { type: text, box: [4, 5, "100%-8", 18], bind: title, style: body_strong, color: accent, align: center }
+      - type: grid
+        box: [8, 27, "100%-16", "100%-35"]
+        bind: blocks
+        columns: 1
+        gap: 4
+        weight: size
+        item:
+          - { type: text, box: [0, 0, "100%", 16], bind: caption, style: detail, align: center, when: caption }
+          - { type: component, component: table, box: [0, 18, "100%", "100%-18"], bind: data, when: data, props: { look: plain, text_style: caption, align: center } }
+          - { type: image, box: [0, 0, "100%", "100%"], bind: image, when: image, fit: contain, placeholder: 指标表截图：原生表格放不下时整块截图 }
+          - type: grid
+            box: [0, 0, "100%", "100%"]
+            bind: pair
+            columns: 2
+            gap: 8
+            when: pair
+            item:
+              - { type: text, box: [0, 0, "100%", 16], bind: caption, style: detail, align: center, when: caption }
+              - { type: component, component: table, box: [0, 18, "100%", "100%-18"], bind: data, when: data, props: { look: plain, text_style: caption, align: center } }
+          - { type: text, box: [0, 1, "100%", 17], value: 关键进展, style: body_strong, color: accent, when: points }
+          - { type: bullets, box: [0, 20, "100%", "100%-20"], bind: points, style: detail, when: points }
+
+guidance:
+  - 上半页讲「为什么做、怎么做」：左区写诉求方的诉求（每张卡一类关注点，说明里写清量化口径），右区写分析工作的策略（每条一步做法）；两区标题对仗，如「XX 诉求：……」和「分析策略：……」
+  - 策略是流程图（几步建模、箭头汇聚到产出）时，把流程图截成图片填 strategy_image，strategies 留空
+  - 下半页每栏一类对象：栏标题点对象，指标表给可检验的数据（表题写清评估什么，每格一行写完，长内容挪到要点里；两张子表左右并排时用 pair；合并单元格、窄列长数字等原生放不下的表格，把表格区域截图填块的 image），进展要点以代号或主题打头、句尾关键数字蓝色加粗
+  - 块高权重 size：表块 = 表格行数（含表头）+1，要点块 ≈ 要点条数；表格行多、要点长的栏按预览微调
+  - 诉求卡 2~3 张时一排放下，4 张时第 4 张落到第二行；卡的底色只是装饰轮换，用 tone 选
