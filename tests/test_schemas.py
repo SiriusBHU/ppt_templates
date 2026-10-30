@@ -57,7 +57,7 @@ def test_every_constraint_message_is_chinese():
          '必须至少满足以下写法之一：{"type": "string"} / {"type": "integer"}'),
         ({"not": {"type": "string"}}, "x", '不能是 {"type": "string"} 这种写法'),
         ({"contains": {"const": 1}}, [2], "不满足约束 contains"),
-        ({"dependentRequired": {"a": ["b"]}}, {"a": 1}, "不满足约束 dependentRequired"),
+        ({"dependentRequired": {"a": ["b", "c"]}}, {"a": 1, "c": 2}, "写了 a 就必须同时写 b"),
     ]
     for constraint, instance, expected in cases:
         assert errors(constraint, instance) == [f"/  {expected}"], constraint

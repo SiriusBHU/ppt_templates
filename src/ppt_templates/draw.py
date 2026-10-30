@@ -14,6 +14,7 @@ from .geometry import Box, px_to_emu
 ALIGN = {"left": PP_ALIGN.LEFT, "center": PP_ALIGN.CENTER, "right": PP_ALIGN.RIGHT}
 VALIGN = {"top": MSO_ANCHOR.TOP, "middle": MSO_ANCHOR.MIDDLE, "bottom": MSO_ANCHOR.BOTTOM}
 SHAPES = {"rect": MSO_SHAPE.RECTANGLE, "rounded": MSO_SHAPE.ROUNDED_RECTANGLE, "oval": MSO_SHAPE.OVAL,
+          "triangle": MSO_SHAPE.ISOSCELES_TRIANGLE,  # 尖朝上的等腰三角（时间轴节点）
           "pentagon": MSO_SHAPE.PENTAGON}  # pentagon = 指向右侧的五边形箭头（homePlate）
 
 
@@ -166,7 +167,7 @@ def _outer_shadow(style: dict):
 
 def add_shape(slide, style: dict, box: Box, fill: str, *, line=None, line_width=0.75, kind="rect", shadow=False, radius=None,
               dash=False, text=None, **text_opts):
-    """实心形状（kind: rect / rounded / oval）；line 给定才画 line_width pt 的描边。
+    """实心形状（kind: rect / rounded / oval / triangle）；line 给定才画 line_width pt 的描边。
     默认无阴影；shadow=True 按风格的 shadow 小节画投影。rounded 给了 radius（px）就固定圆角大小，
     不给则用 PowerPoint 默认的按短边比例（框越大圆角越大）。dash=True 时描边画成虚线。text 直接写在形状里，便于居中。"""
     shape = slide.shapes.add_shape(SHAPES[kind], *emu_box(box))

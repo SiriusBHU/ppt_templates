@@ -1,0 +1,185 @@
+id: solution.solution-kickoff-difficulties
+name: 立项方案（挑战目标 × 原生架构 × 技术难题 × 交付节奏）
+roles: [solution, problem, roadmap]
+also_fits: [system, hardware, software]
+density: talk
+level: subsystem
+tags: [立项, 挑战与目标, 方案架构, 技术难题, 交付节奏, 里程碑, 原生架构图, 可编辑框图]
+when_to_use: 立项评审时一页讲清一个方案方向：左上一段话写挑战（症结 + 现状 + 代价）和立项目标，左下用占左栏约七成高度的原生可编辑架构图展开机制，右侧把关键技术写成两到三个技术难题（难在哪、怎么破），右下用时间轴给出交付节奏和交付件；只讲要做什么、怎么做，不放实测结果
+when_not_to_use: 已有实测数据、要讲效果和收益 → solution.solution-problem-native；只放现成截图、不画架构 → solution.solution-problem-panels；问题要展开背景、量化数据和竞争力目标 → solution.solution-problem-techs
+frame: standard
+
+structure:
+  - 标题：结论式同行标题，主体点明对象和方案名、以冒号收尾，后半句写技术路线和立项要达成的量化目标
+  - 挑战 / 目标卡（左上，浅灰底细描边圆角卡）：第一段以红色加粗的「挑战：」开头，一到三条挑战连成一段，每条是红色加粗的症结短语 + 黑色的现状与代价；第二段以红色加粗的「目标：」开头，写立项要达成的状态，可在句尾用蓝色加粗点出量化目标
+  - 方案架构（左下，占左栏约七成高度，不加外框和栏名）：原生可编辑的架构画布，按「感知 / 建模 → 决策 → 执行 → 反馈」分区，分区是浅灰底圆角面板，分区标题前有红色圆形编号，节点、连线、标注都是 PPT 原生元素；立项阶段只画机制，不放实测结果和对比数据
+  - 技术难题卡（右侧，浅灰底细描边圆角卡，自上而下两到三张）：卡首是红色加粗的「难题一：难题名称」，下面是带项目符号的要点，每条「加粗名称：说明」，句尾可接蓝色加粗的关键突破；先写难在哪，再写怎么破；卡的高度按内容多少分配
+  - 交付节奏（右下）：一根红色横向时间轴，每个里程碑是轴上的红色三角节点，节点上方的浅灰底黑框写交付件，下方蓝色加粗写交付日期，从左到右按时间排
+  - 关系：读序是左上挑战 / 目标 → 左下架构 → 右侧技术难题 → 右下交付节奏；难题序号与架构图分区编号一一对应，每个难题解释架构里对应的一块；目标与标题后半句的量化数字保持一致，交付件落实目标
+
+slots:
+  type: object
+  required: [title, title_suffix, challenges, goal, arch, difficulties, milestones]
+  properties:
+    title:
+      type: string
+      maxLength: 16
+      description: 标题主体（24 号加粗、深红）：点明对象和方案名，以冒号收尾；中文不超过 15 个字（英文、数字约半个字宽），给同一行的后半句留位置
+    title_suffix:
+      type: string
+      maxLength: 28
+      description: 与标题同一行的后半句（18 号加粗、深红）：技术路线 + 立项要达成的量化目标；和标题主体合计不超过一行
+    challenges:
+      type: array
+      minItems: 1
+      maxItems: 3
+      description: 左上「挑战：」后连成一段的挑战，每条是症结短语 + 现状与代价；整段不超过三行
+      items:
+        type: object
+        required: [name, text]
+        properties:
+          name:
+            type: string
+            maxLength: 10
+            description: 症结短语（红色加粗，自动接「，」）：一句话点出卡在哪，如「对象 + 问题」
+          text:
+            type: string
+            maxLength: 42
+            description: 现状与代价（黑色）：对象现在怎样、为什么不行、造成什么影响，最好带一个量化数字；以句号收尾，接下一条挑战
+    goal:
+      type: string
+      maxLength: 44
+      description: 「目标：」后的立项目标（黑色）：做成什么机制、达到什么状态
+    goal_highlight:
+      type: string
+      maxLength: 24
+      description: 接在目标句尾的量化目标（蓝色加粗），与标题后半句的数字一致；没有就不填
+    arch:
+      type: object
+      required: [canvas]
+      description: 原生架构画布（arch-canvas 组件）：canvas 写 [640, 411]，与框的实际像素一致、不变形；panels 画分区（浅灰底圆角，dash 画虚线分组）、shapes 画节点（可带文字）、texts 写标注、arrows 画连线；分区标题前放红色圆形编号（kind oval + fill highlight_strong + color on_primary），与 difficulties 的序号对应；文字最小 9 号
+    difficulties:
+      type: array
+      minItems: 2
+      maxItems: 3
+      description: 右侧的技术难题卡，自上而下按序号排列，序号与架构图分区编号对应
+      items:
+        type: object
+        required: [name, points]
+        properties:
+          name:
+            type: string
+            maxLength: 18
+            description: 难题名称（红色加粗，自动加「难题一：」）：一个名词短语，点出要攻克的技术问题
+          size:
+            type: number
+            minimum: 3
+            maximum: 8
+            default: 5
+            description: 这张卡的相对高度，按卡内文字行数估：难题名称算 1 行，每条要点按折行后的行数算；默认 5
+          points:
+            type: array
+            minItems: 1
+            maxItems: 3
+            description: 卡内要点：先写难在哪，再写怎么破
+            items:
+              type: object
+              required: [name, text]
+              properties:
+                name:
+                  type: string
+                  maxLength: 8
+                  description: 要点名（加粗，自动接「：」），如「难点」或方法名
+                text:
+                  type: string
+                  maxLength: 40
+                  description: 说明：难点写清约束和为什么难，方法写清对什么做什么、对应架构里哪一块
+                highlight:
+                  type: string
+                  maxLength: 14
+                  description: 句尾的关键突破（蓝色加粗），一句话点出机制上的转变；不写实测结果
+    milestones:
+      type: array
+      minItems: 1
+      maxItems: 3
+      description: 交付节奏：时间轴上的里程碑，从左到右按时间排
+      items:
+        type: object
+        required: [date, deliverable]
+        properties:
+          date:
+            type: string
+            maxLength: 12
+            description: 交付日期（蓝色加粗），如「2027.03.30」
+          deliverable:
+            type: string
+            maxLength: 16
+            description: 这个节点的交付件（黑色加粗，最多两行），如原型、特性合入的版本
+
+  allOf:
+    - if: {properties: {challenges: {minItems: 3}}}
+      then: {properties: {challenges: {items: {properties: {text: {maxLength: 22}}}}}}
+
+layout:                         # 参考 body 区 1216×560（本页无 takeaway，正文区自动上移并纵向拉伸到 600）
+  # 挑战 / 目标卡：浅灰底细描边圆角，两段分别以红色加粗的「挑战：」「目标：」开头
+  - { type: shape, box: [0, 0, 640, 156], shape: rounded, radius: 17, fill: surface_light, line: line }
+  - type: text
+    box: [12, 11, 616, 66]
+    style: body
+    runs:
+      - { value: "挑战：", style: body_strong, color: accent }
+      - each: challenges
+        runs:
+          - { bind: name, style: body_strong, color: accent }
+          - { value: "，", style: body_strong, color: accent }
+          - { bind: text }
+  - type: text
+    box: [12, 79, 616, 66]
+    style: body
+    runs:
+      - { value: "目标：", style: body_strong, color: accent }
+      - { bind: goal }
+      - { bind: goal_highlight, style: body_strong, color: primary_text }
+
+  # 方案架构：原生可编辑画布，不加外框和栏名
+  - { type: component, component: arch-canvas, box: [0, 176, 640, 384], bind: arch }
+
+  # 技术难题卡：卡高按 size 分配
+  - type: grid
+    box: [664, 0, 552, 441]
+    bind: difficulties
+    columns: 1
+    gap: 18
+    weight: size
+    item:
+      - { type: shape, box: [0, 0, "100%", "100%"], shape: rounded, radius: 14, fill: surface_light, line: line }
+      - type: text
+        box: [13, 11, "100%-26", 20]
+        style: body_strong
+        color: accent
+        runs:
+          - { value: "难题" }
+          - { bind: "#", numerals: zh }
+          - { value: "：" }
+          - { bind: name }
+      - { type: bullets, box: [13, 35, "100%-26", "100%-41"], bind: points, style: body }
+
+  # 交付节奏：红色时间轴 + 三角节点，上方交付件、下方日期
+  - { type: shape, box: [666, 521, 548, 4], fill: accent }
+  - type: grid
+    box: [664, 456, 552, 104]
+    bind: milestones
+    columns: 3
+    gap: 8
+    item:
+      - { type: shape, box: ["50%-78", 7, 156, 50], fill: surface_light, line: text }
+      - { type: text, box: ["50%-74", 7, 148, 50], bind: deliverable, style: body_strong, align: center, valign: middle }
+      - { type: shape, box: ["50%-12", 56, 24, 19], shape: triangle, fill: accent }
+      - { type: text, box: ["50%-60", 76, 120, 24], bind: date, style: body_strong, color: primary_text, align: center }
+
+guidance:
+  - 立项页讲要做什么、为什么难、怎么做、何时交付：挑战写症结和代价，目标写要达到的状态和量化指标，全页不放实测结果和前后对比
+  - 架构图是整页主体：先定分区（感知 / 建模、决策、执行、反馈），再在分区里放节点和连线；节点写「对象 + 动作」，不写空泛的「模块一」；画布空间大，可把关键数据结构（矩阵、链表、分代、流水线）画出来
+  - 每个难题先用一条要点写难点（约束、为什么现有做法不行），再用一两条写破解思路，和架构图对应分区的节点用同一套叫法
+  - 交付件写成可验收的产物（原型、特性、合入版本），日期写到日；里程碑两三个为宜
+  - 画布内文字用 detail / caption 写节点和标注，分区标题用 body_strong；颜色只用 token，深色实心底上的文字用 on_primary

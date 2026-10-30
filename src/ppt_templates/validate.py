@@ -133,6 +133,8 @@ def _type_error(el: dict, slot: dict) -> str | None:
         return "bullets 只能绑定 string 数组，或含 string 字段 text 的对象数组"
     if kind == "image":
         return None if t == "string" else f"image 只能绑定 string 槽位（图片路径），实际是 {t}"
+    if kind == "each":
+        return None if t == "array" else f"each 只能指向数组槽位，实际是 {t}"
     if kind == "grid":
         if t != "array":
             return f"grid 只能绑定数组槽位，实际是 {t}"
@@ -215,34 +217,57 @@ def check_layout(f: str, tpl: dict, colors: set[str], texts: set[str]) -> list[s
                     if str(k) not in allowed:
                         err(f"{p}/{key}/{k}", f"键 {k} 不在槽位 {path} 的可选取值 {enum} 内")
 
-    def check_bind(p, el, scope, top):
-        """检查 el 的 bind（text 的 run 按 text 处理）：槽位存在、类型匹配，顶层不重复。通过返回槽位 schema，否则返回 None。"""
-        path = el["bind"]
+    def check_bind(p, el, scope, top, key="bind"):
+        """检查 el 的 bind（text 的 run 按 text 处理；run 的 each 按 type: each 传入、key="each"）：槽位存在、类型匹配，
+        顶层不重复。通过返回槽位 schema，否则返回 None。"""
+        path, at = el["bind"], f"{p}/{key}"
         if path == INDEX_BIND:  # grid item 的序号，不对应任何槽位
             if top:
-                err(f"{p}/bind", f"{INDEX_BIND} 只能用在 grid 的 item 内")
+                err(at, f"{INDEX_BIND} 只能用在 grid 的 item 或 runs 的 each 内")
             elif el["type"] != "text":
-                err(f"{p}/bind", f"{INDEX_BIND} 只能绑定给 text，实际是 {el['type']}")
+                err(at, f"{INDEX_BIND} 只能绑定给 text，实际是 {el['type']}")
             return None
         slot = slot_at(scope, path)
         if slot is None:
-            err(f"{p}/bind", f"槽位 {path} 不存在")
+            err(at, f"槽位 {path} 不存在")
             return None
         if not isinstance(slot, dict):
-            err(f"{p}/bind", "槽位必须是对象 schema")
+            err(at, "槽位必须是对象 schema")
             return None
         if top:
             head = path.split(".")[0]
             if path in top_paths:
-                err(f"{p}/bind", f"槽位 {path} 被重复绑定")
+                err(at, f"槽位 {path} 被重复绑定")
             top_paths.add(path)
             if standard and head in FRAME_SLOTS:
-                err(f"{p}/bind", f"{head} 由页框渲染，layout 不能再绑定")
+                err(at, f"{head} 由页框渲染，layout 不能再绑定")
         problem = _type_error(el, slot)
         if problem:
-            err(f"{p}/bind", problem)
+            err(at, problem)
             return None
         return slot
+
+    def check_numerals(p, el):
+        if "numerals" in el and el.get("bind") != INDEX_BIND:
+            err(f"{p}/numerals", f"numerals 只用于 bind: \"{INDEX_BIND}\"（序号）")
+
+    def check_runs(runs, scope, ptr, top):
+        """runs 里每个 run 的 token 和 bind；each 指向数组，它的 runs 在数组每一项的作用域里检查（"#" 可用）。"""
+        for k, run in enumerate(runs):
+            rp = f"{ptr}/{k}"
+            if "color" in run and run["color"] not in colors:
+                err(f"{rp}/color", f"未知颜色 token {run['color']}")
+            elif "color" in run:
+                check_text_color(f"{rp}/color", run["color"])
+            if "style" in run and run["style"] not in texts:
+                err(f"{rp}/style", f"未知文字样式 token {run['style']}")
+            check_numerals(rp, run)
+            if "bind" in run:
+                check_bind(rp, {"type": "text", "bind": run["bind"]}, scope, top)
+            if "each" in run:
+                slot = check_bind(rp, {"type": "each", "bind": run["each"]}, scope, top, key="each")
+                if slot is not None:
+                    check_runs(run["runs"], _obj(slot.get("items")), f"{rp}/runs", False)
 
     def walk(elements, scope, ptr, top):
         for i, el in enumerate(elements):
@@ -262,19 +287,11 @@ def check_layout(f: str, tpl: dict, colors: set[str], texts: set[str]) -> list[s
                     check_text_color(f"{p}/color", el["color"])
                 for k, token in el.get("color_map", {}).items():
                     check_text_color(f"{p}/color_map/{k}", token)
-            if "runs" in el:
+            check_numerals(p, el)
+            if "runs" in el and el["type"] == "text":
                 if "color_map" in el and "by" not in el:
                     err(f"{p}/by", "runs 的 color_map 必须配合 by（按哪个槽位取色）")
-                for k, run in enumerate(el["runs"]):
-                    rp = f"{p}/runs/{k}"
-                    if "color" in run and run["color"] not in colors:
-                        err(f"{rp}/color", f"未知颜色 token {run['color']}")
-                    elif "color" in run:
-                        check_text_color(f"{rp}/color", run["color"])
-                    if "style" in run and run["style"] not in texts:
-                        err(f"{rp}/style", f"未知文字样式 token {run['style']}")
-                    if "bind" in run:
-                        check_bind(rp, {"type": "text", "bind": run["bind"]}, scope, top)
+                check_runs(el["runs"], scope, f"{p}/runs", top)
             if el["type"] == "component":
                 if el["component"] not in COMPONENTS:
                     err(f"{p}/component", f"未知组件 {el['component']}")

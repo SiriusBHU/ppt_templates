@@ -26,6 +26,9 @@ def message(e: ValidationError) -> str:
         return f"共 {len(inst)} 项，低于下限 {limit}"
     if v == "required":
         return "缺少必填字段 " + "、".join(k for k in limit if k not in inst)
+    if v == "dependentRequired":
+        return "；".join(f"写了 {k} 就必须同时写 " + "、".join(d for d in deps if d not in inst)
+                        for k, deps in limit.items() if k in inst and any(d not in inst for d in deps))
     if v == "const":
         return f"必须是 {limit}，实际是 {inst}"
     if v == "enum":

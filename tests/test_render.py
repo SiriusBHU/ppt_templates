@@ -421,6 +421,45 @@ def test_runs_resolve_in_the_grid_item_scope_and_support_the_index_bind(make_rep
     assert [sh.text_frame.text for sh in shapes if sh.has_text_frame][-2:] == ["1. 甲", "2. 乙"]
 
 
+def test_runs_each_repeats_its_runs_for_every_item_in_one_paragraph(make_repo, root):
+    runs = [{"value": "挑战：", "style": "body_strong"},
+            {"each": "items", "runs": [{"bind": "name", "style": "body_strong", "color": "accent"}, {"value": "，"},
+                                       {"bind": "text"}, {"bind": "tail"}]}]
+    item = {"type": "object", "properties": {"name": {"type": "string"}, "text": {"type": "string"}, "tail": {"type": "string"}}}
+    layout = [{"type": "text", "box": [0, 0, 600, 40], "style": "body", "runs": runs}]
+    template = _when_template(layout, items={"type": "array", "items": item})
+    data = {"title": "t", "items": [{"name": "甲", "text": "一。", "tail": "尾"}, {"name": "乙", "text": "二"}]}
+    shape = next(sh for sh in _shapes(make_repo, template, data) if sh.has_text_frame and sh.text_frame.text.startswith("挑战"))
+    text, accent = _color(root, "text"), _color(root, "accent")
+    assert _run_info(shape) == [("挑战：", True, text), ("甲", True, accent), ("，", False, text), ("一。", False, text),
+                                ("尾", False, text), ("乙", True, accent), ("，", False, text), ("二", False, text)]
+
+
+def test_runs_each_supports_the_index_bind_and_chinese_numerals(make_repo):
+    runs = [{"each": "items", "runs": [{"bind": "#", "numerals": "zh"}, {"bind": "."}, {"bind": "#"}]}]
+    layout = [{"type": "text", "box": [0, 0, 600, 40], "style": "body", "runs": runs}]
+    template = _when_template(layout, items={"type": "array", "items": {"type": "string"}})
+    shapes = _shapes(make_repo, template, {"title": "t", "items": ["甲", "乙"]})
+    assert "一甲1二乙2" in [sh.text_frame.text for sh in shapes if sh.has_text_frame]
+
+
+def test_index_bind_with_chinese_numerals_in_a_grid(make_repo):
+    item = [{"type": "text", "box": [0, 0, "100%", 20], "style": "body",
+             "runs": [{"value": "难题"}, {"bind": "#", "numerals": "zh"}, {"value": "："}, {"bind": "."}]}]
+    grid = {"type": "grid", "box": [0, 0, 400, 300], "bind": "cards", "columns": 1, "item": item}
+    template = _when_template([grid], cards={"type": "array", "maxItems": 12, "items": {"type": "string"}})
+    shapes = _shapes(make_repo, template, {"title": "t", "cards": list("甲乙丙丁戊己庚辛壬癸子丑")})
+    texts = [sh.text_frame.text for sh in shapes if sh.has_text_frame]
+    assert texts[1:4] == ["难题一：甲", "难题二：乙", "难题三：丙"]
+    assert texts[-3:] == ["难题十：癸", "难题十一：子", "难题十二：丑"]
+
+
+def test_triangle_shape_is_an_isosceles_triangle(make_repo):
+    shape = {"type": "shape", "box": [0, 100, 24, 20], "fill": "accent", "shape": "triangle"}
+    (tri,) = [sh for sh in _shapes(make_repo, _when_template([shape]), {"title": "t"}) if _px(sh) == (32, 228, 24, 20)]
+    assert tri._element.xpath(".//a:prstGeom/@prst") == ["triangle"]
+
+
 def test_shape_shadow_follows_the_style_and_is_off_by_default(make_repo, root):
     card = {"type": "shape", "box": [0, 100, 50, 50], "fill": "bg", "shadow": True}
     plain = {"type": "shape", "box": [0, 200, 50, 50], "fill": "bg"}

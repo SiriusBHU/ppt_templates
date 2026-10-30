@@ -1,6 +1,14 @@
 """点号路径：在数据里取值（lookup），在 JSON Schema 里找对应的子 schema（slot_at）。"""
 
 INDEX_BIND = "#"  # grid item 内的特殊 bind：当前项的 1 起序号（字符串），不是点号路径
+_ZH_DIGITS = "零一二三四五六七八九"
+
+
+def zh_numeral(n: int) -> str:
+    """1–99 的中文数字：1 → 一，10 → 十，12 → 十二，20 → 二十。"""
+    tens, ones = divmod(n, 10)
+    head = "" if tens == 0 else "十" if tens == 1 else _ZH_DIGITS[tens] + "十"
+    return head + (_ZH_DIGITS[ones] if ones or not tens else "")
 
 
 def lookup(scope, path: str):

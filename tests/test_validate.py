@@ -383,7 +383,7 @@ def test_index_bind_in_a_grid_item_is_not_a_slot_binding(make_repo):
 
 
 def test_index_bind_outside_a_grid_item_is_an_error(make_repo):
-    assert "/layout/1/bind  # 只能用在 grid 的 item 内" in _errors(make_repo, layout=[NOTE, INDEX])
+    assert "/layout/1/bind  # 只能用在 grid 的 item 或 runs 的 each 内" in _errors(make_repo, layout=[NOTE, INDEX])
 
 
 @pytest.mark.parametrize("kind, element", [
@@ -395,12 +395,12 @@ def test_index_bind_only_binds_to_text(make_repo, kind, element):
     assert f"/layout/1/item/0/bind  # 只能绑定给 text，实际是 {kind}" in errs
 
 
-@pytest.mark.parametrize("kind, valid", [("oval", True), ("rounded", True), ("star", False)])
+@pytest.mark.parametrize("kind, valid", [("oval", True), ("rounded", True), ("triangle", True), ("star", False)])
 def test_shape_kinds(make_repo, kind, valid):
     shape = {"type": "shape", "box": [0, 100, 10, 10], "fill": "accent", "shape": kind}
     errs = _errors(make_repo, layout=[NOTE, shape])
     assert (errs == []) is valid
-    assert valid or any("取值 star 不在可选范围 ['rect', 'rounded', 'oval']" in e for e in errs)
+    assert valid or any("取值 star 不在可选范围 ['rect', 'rounded', 'oval', 'triangle']" in e for e in errs)
 
 
 RUNS = {"type": "text", "box": [0, 100, 600, 40], "style": "body", "runs": [{"bind": "extra", "style": "body_strong"}, {"value": "："}]}
@@ -445,6 +445,44 @@ def test_runs_may_take_color_from_by(make_repo):
     assert _errors(make_repo, layout=[NOTE, {**RUNS, "runs": [{"value": "x"}], "by": "note", "color_map": {"x": "accent"}}]) == []
 
 
+def _each_slots():
+    item = {"type": "object", "properties": {"name": {"type": "string"}, "n": {"type": "integer"}}}
+    return _slots(items={"type": "array", "items": item})
+
+
+def test_runs_each_binds_the_array_and_allows_the_index_bind_inside(make_repo):
+    each = {**RUNS, "runs": [{"each": "items", "runs": [{"bind": "name"}, {"bind": "#", "numerals": "zh"}]}]}
+    assert _errors(make_repo, slots=_each_slots(), layout=[NOTE, each]) == []
+
+
+def test_runs_each_checks_inner_runs_in_the_item_scope(make_repo):
+    bad = {**RUNS, "runs": [{"each": "items", "runs": [{"bind": "nope"}, {"bind": "n"}, {"value": "x", "color": "red"}]}]}
+    errs = _errors(make_repo, slots=_each_slots(), layout=[NOTE, bad])
+    assert "/layout/1/runs/0/runs/0/bind  槽位 nope 不存在" in errs
+    assert "/layout/1/runs/0/runs/1/bind  text 只能绑定 string 槽位，实际是 integer" in errs
+    assert "/layout/1/runs/0/runs/2/color  未知颜色 token red" in errs
+
+
+def test_runs_each_must_point_to_an_array_and_counts_as_a_top_level_binding(make_repo):
+    errs = _errors(make_repo, layout=[NOTE, {**RUNS, "runs": [{"each": "note", "runs": [{"bind": "."}]}]}])
+    assert "/layout/1/runs/0/each  each 只能指向数组槽位，实际是 string" in errs
+    assert "/layout/1/runs/0/each  槽位 note 被重复绑定" in errs
+
+
+@pytest.mark.parametrize("run", [{"each": "items"}, {"bind": "note", "runs": [{"value": "x"}]}])
+def test_run_each_and_runs_go_together(make_repo, run):
+    template = mini_template(slots=_each_slots(), layout=[{"type": "text", "box": [0, 0, 10, 10], "style": "body", "runs": [run]}])
+    errs = validate_repo(make_repo({"common.summary-note": template})).errors
+    assert any(e.startswith(f"{F}  /layout/0/runs/0") for e in errs)
+    assert "runs" not in run or f"{F}  /layout/0/runs/0  写了 runs 就必须同时写 each" in errs
+
+
+def test_numerals_only_go_with_the_index_bind(make_repo):
+    errs = _errors(make_repo, layout=[NOTE, {**RUNS, "runs": [{"bind": "extra", "numerals": "zh"}]}],
+                   slots=_slots(extra={"type": "string"}))
+    assert '/layout/1/runs/0/numerals  numerals 只用于 bind: "#"（序号）' in errs
+
+
 def test_runs_in_a_grid_item_use_the_item_scope_and_the_index_bind(make_repo):
     item = [{"type": "text", "box": [0, 0, 100, 20], "style": "body",
              "runs": [{"bind": "#"}, {"value": ". "}, {"bind": "."}]}]
@@ -452,7 +490,7 @@ def test_runs_in_a_grid_item_use_the_item_scope_and_the_index_bind(make_repo):
 
 
 def test_index_bind_in_top_level_runs_is_an_error(make_repo):
-    assert "/layout/1/runs/0/bind  # 只能用在 grid 的 item 内" in _errors(
+    assert "/layout/1/runs/0/bind  # 只能用在 grid 的 item 或 runs 的 each 内" in _errors(
         make_repo, layout=[NOTE, {**RUNS, "runs": [{"bind": "#"}]}])
 
 

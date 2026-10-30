@@ -11,7 +11,7 @@ from .errors import PptError
 from .geometry import CANVAS_H, CANVAS_W, REF_H, REF_W, Transform, body_box, grid_cells, px_to_emu, resolve_box
 from .images import ImageSource
 from .loader import load_style
-from .paths import INDEX_BIND, is_empty, lookup
+from .paths import INDEX_BIND, is_empty, lookup, zh_numeral
 from .schemas import pointer
 from .slots import prepare_pages
 
@@ -65,12 +65,26 @@ def _mapped(mapping, value):
 
 
 def _text_of(scope, el, index):
-    """text 元素或 run 的文字：value 是字面量，bind 按 scope 取值（"#" 是 grid 当前项序号）；取不到返回 None。"""
+    """text 元素或 run 的文字：value 是字面量，bind 按 scope 取值（"#" 是 grid 当前项序号，numerals: zh 写成一、二、三）；
+    取不到返回 None。"""
     if "value" in el:
         return el["value"]
     if el["bind"] == INDEX_BIND:
-        return str(index)
+        return zh_numeral(index) if el.get("numerals") == "zh" else str(index)
     return lookup(scope, el["bind"])
+
+
+def _runs_of(scope, runs, index, style, color):
+    """runs → [(文字, 样式, 颜色)]：没写 style / color 的 run 用元素的；取不到值的 run 跳过；
+    each 对数组的每一项重复它的 runs（在该项里解析 bind，"#" 是项在数组里的 1 起序号）。"""
+    out = []
+    for run in runs:
+        if "each" in run:
+            for i, item in enumerate(lookup(scope, run["each"]) or [], 1):
+                out += _runs_of(item, run["runs"], i, style, color)
+        elif (text := _text_of(scope, run, index)) is not None:
+            out.append((text, run.get("style", style), run.get("color", color)))
+    return out
 
 
 def _render_elements(slide, style, elements, area, scope, tf, index=None, *, images=None):
@@ -89,10 +103,9 @@ def _render_elements(slide, style, elements, area, scope, tf, index=None, *, ima
                       line=_mapped(el.get("line_map"), key) or el.get("line"), kind=el.get("shape", "rect"),
                       shadow=el.get("shadow", False), radius=el.get("radius"), dash=el.get("dash", False))
         elif kind == "text" and "runs" in el:
-            # 一个段落里连排多个 run；run 没写 style / color 就用元素的（有 by + color_map 时按值取色）；取不到值的 run 跳过，全部取不到则不画
+            # 一个段落里连排多个 run（有 by + color_map 时按值取色）；全部取不到则不画
             color = (_mapped(el.get("color_map"), lookup(scope, el["by"])) if "by" in el else None) or el.get("color")
-            runs = [(text, run.get("style", el["style"]), run.get("color", color))
-                    for run in el["runs"] if (text := _text_of(scope, run, index)) is not None]
+            runs = _runs_of(scope, el["runs"], index, el["style"], color)
             if runs:
                 add_runs(slide, style, tf(ref_box), runs, align=el.get("align", "left"), valign=el.get("valign", "top"))
         elif kind == "text":

@@ -1,0 +1,434 @@
+title: 标题主体写对象和方案名称：
+title_suffix: 后半句写清技术路线，以及立项的量化目标
+challenges:
+- {name: 症结一写卡在哪里, text: 写清对象现在怎样、为什么不行，以及造成的代价，最好带一个量化数字。}
+- {name: 症结二写为何做不到, text: 写清现有机制卡在哪一步、为何解决不了，对体验或资源造成什么影响}
+goal: 写清立项要做成什么机制、在什么范围内生效，以及做完后要达到的状态，
+goal_highlight: 量化目标写这里，与标题后半句一致
+arch:
+  canvas: [640, 411]
+  panels:
+  - box: [0, 0, 202, 386]
+    fill: surface_light
+    kind: rounded
+    radius: 8
+  - box: [214, 0, 202, 386]
+    fill: surface_light
+    kind: rounded
+    radius: 8
+  - box: [428, 0, 212, 386]
+    fill: surface_light
+    kind: rounded
+    radius: 8
+  - box: [436, 30, 196, 124]
+    fill: bg
+    kind: rounded
+    radius: 6
+    line: muted
+    dash: true
+  shapes:
+  - box: [8, 32, 186, 44]
+    fill: highlight_blue
+    kind: rounded
+    text: '在线输入：写触发事件
+
+      如负载变化、压力变化'
+    text_style: detail
+    radius: 3
+    line: primary
+  - box: [8, 92, 186, 30]
+    fill: bg
+    kind: rounded
+    text: 离线：写建模的数据来源
+    text_style: detail
+    radius: 3
+    line: line
+  - box: [8, 156, 44, 28]
+    fill: bg
+    kind: rect
+    text: ''
+    text_style: caption
+    line: bg
+    color: text
+    bold: true
+  - box: [52, 156, 47, 28]
+    fill: bg
+    kind: rect
+    text: 对象一
+    text_style: caption
+    line: bg
+    color: text
+    bold: true
+  - box: [99, 156, 47, 28]
+    fill: bg
+    kind: rect
+    text: 对象二
+    text_style: caption
+    line: bg
+    color: text
+    bold: true
+  - box: [146, 156, 48, 28]
+    fill: bg
+    kind: rect
+    text: 对象三
+    text_style: caption
+    line: bg
+    color: text
+    bold: true
+  - box: [8, 184, 44, 28]
+    fill: surface_light
+    kind: rect
+    text: 条件一
+    text_style: caption
+    line: line
+    bold: true
+  - box: [52, 184, 47, 28]
+    fill: primary
+    kind: rect
+    text: 高
+    text_style: caption
+    line: line
+    color: on_primary
+    bold: true
+  - box: [99, 184, 47, 28]
+    fill: bg
+    kind: rect
+    text: 低
+    text_style: caption
+    line: line
+  - box: [146, 184, 48, 28]
+    fill: bg
+    kind: rect
+    text: 低
+    text_style: caption
+    line: line
+  - box: [8, 212, 44, 28]
+    fill: surface_light
+    kind: rect
+    text: 条件二
+    text_style: caption
+    line: line
+    bold: true
+  - box: [52, 212, 47, 28]
+    fill: highlight_blue
+    kind: rect
+    text: 中
+    text_style: caption
+    line: line
+  - box: [99, 212, 47, 28]
+    fill: bg
+    kind: rect
+    text: 低
+    text_style: caption
+    line: line
+  - box: [146, 212, 48, 28]
+    fill: primary
+    kind: rect
+    text: 高
+    text_style: caption
+    line: line
+    color: on_primary
+    bold: true
+  - box: [8, 240, 44, 28]
+    fill: surface_light
+    kind: rect
+    text: 条件三
+    text_style: caption
+    line: line
+    bold: true
+  - box: [52, 240, 47, 28]
+    fill: primary
+    kind: rect
+    text: 高
+    text_style: caption
+    line: line
+    color: on_primary
+    bold: true
+  - box: [99, 240, 47, 28]
+    fill: bg
+    kind: rect
+    text: 低
+    text_style: caption
+    line: line
+  - box: [146, 240, 48, 28]
+    fill: bg
+    kind: rect
+    text: 低
+    text_style: caption
+    line: line
+  - box: [8, 300, 186, 44]
+    fill: bg
+    kind: rounded
+    text: '定期修正：写回流哪些数据
+
+      怎样更新模型'
+    text_style: caption
+    radius: 3
+    line: line
+  - box: [222, 32, 186, 44]
+    fill: primary
+    kind: rounded
+    text: '决策核心：写触发时机
+
+      以及查询什么依据'
+    text_style: detail
+    radius: 3
+    line: primary
+    color: on_primary
+    bold: true
+  - box: [222, 96, 186, 36]
+    fill: highlight
+    kind: rounded
+    text: 判定条件：写阈值或规则
+    text_style: detail
+    radius: 3
+    line: accent
+    color: accent
+    bold: true
+  - box: [222, 160, 89, 50]
+    fill: bg
+    kind: rounded
+    text: '分支一
+
+      写执行的动作'
+    text_style: detail
+    radius: 3
+    line: line
+  - box: [319, 160, 89, 50]
+    fill: bg
+    kind: rounded
+    text: '分支二
+
+      写执行的动作'
+    text_style: detail
+    radius: 3
+    line: line
+  - box: [222, 236, 186, 44]
+    fill: bg
+    kind: rounded
+    text: '约束：写防抖、限速等
+
+      避免副作用的机制'
+    text_style: caption
+    radius: 3
+    line: line
+  - box: [222, 302, 186, 42]
+    fill: primary
+    kind: rounded
+    text: 下发：写指令发给哪一层
+    text_style: detail
+    radius: 3
+    line: primary
+    color: on_primary
+    bold: true
+  - box: [444, 38, 86, 46]
+    fill: highlight
+    kind: rounded
+    text: 执行动作一
+    text_style: detail
+    radius: 3
+    line: accent
+    color: accent
+    bold: true
+  - box: [540, 38, 86, 46]
+    fill: bg
+    kind: rounded
+    text: 作用对象一
+    text_style: detail
+    radius: 3
+    line: line
+  - box: [444, 96, 86, 46]
+    fill: highlight
+    kind: rounded
+    text: 执行动作二
+    text_style: detail
+    radius: 3
+    line: accent
+    color: accent
+    bold: true
+  - box: [540, 96, 86, 46]
+    fill: bg
+    kind: rounded
+    text: 作用对象二
+    text_style: detail
+    radius: 3
+    line: line
+  - box: [436, 170, 196, 44]
+    fill: highlight_blue
+    kind: rounded
+    text: '直接作用：写释放了什么
+
+      补充了什么资源'
+    text_style: detail
+    radius: 3
+    line: primary
+  - box: [436, 234, 196, 44]
+    fill: highlight_blue
+    kind: rounded
+    text: '间接作用：写对体验的影响
+
+      如减少卡顿、提升保活'
+    text_style: detail
+    radius: 3
+    line: primary
+  - box: [436, 302, 196, 42]
+    fill: bg
+    kind: rounded
+    text: 评估：写用哪些指标衡量
+    text_style: detail
+    radius: 3
+    line: line
+  - box: [214, 393, 214, 14]
+    fill: bg
+    kind: rect
+    text: 评估结果反馈，写清闭环怎样形成
+    text_style: caption
+    color: accent
+  - box: [8, 5, 16, 16]
+    fill: highlight_strong
+    kind: oval
+    text: '1'
+    text_style: caption
+    color: on_primary
+    bold: true
+  - box: [222, 5, 16, 16]
+    fill: highlight_strong
+    kind: oval
+    text: '2'
+    text_style: caption
+    color: on_primary
+    bold: true
+  - box: [436, 5, 16, 16]
+    fill: highlight_strong
+    kind: oval
+    text: '3'
+    text_style: caption
+    color: on_primary
+    bold: true
+  texts:
+  - box: [30, 3, 166, 20]
+    text: 感知与建模
+    style: body_strong
+    align: left
+    valign: middle
+    color: primary_text
+  - box: [244, 3, 166, 20]
+    text: 决策
+    style: body_strong
+    align: left
+    valign: middle
+    color: primary_text
+  - box: [458, 3, 176, 20]
+    text: 执行与作用
+    style: body_strong
+    align: left
+    valign: middle
+    color: primary_text
+  - box: [8, 136, 186, 16]
+    text: 模型 / 矩阵：写建模对象
+    style: caption
+    align: center
+    valign: middle
+    color: primary_text
+    bold: true
+  - box: [8, 268, 186, 16]
+    text: 格内写量化结果，深色为强关联
+    style: caption
+    align: center
+    valign: middle
+  - box: [270, 138, 18, 14]
+    text: 是
+    style: caption
+    align: center
+    valign: middle
+    color: accent
+    bold: true
+  - box: [368, 138, 18, 14]
+    text: 否
+    style: caption
+    align: center
+    valign: middle
+    color: accent
+    bold: true
+  arrows:
+  - points:
+    - [101, 122]
+    - [101, 136]
+  - points:
+    - [101, 300]
+    - [101, 290]
+  - points:
+    - [194, 54]
+    - [222, 54]
+  - points:
+    - [194, 212]
+    - [208, 212]
+    - [208, 66]
+    - [222, 66]
+  - points:
+    - [315, 76]
+    - [315, 96]
+  - points:
+    - [266, 132]
+    - [266, 160]
+  - points:
+    - [364, 132]
+    - [364, 160]
+  - points:
+    - [266, 210]
+    - [266, 236]
+  - points:
+    - [364, 210]
+    - [364, 236]
+  - points:
+    - [315, 280]
+    - [315, 302]
+  - points:
+    - [408, 323]
+    - [420, 323]
+    - [420, 61]
+    - [444, 61]
+  - points:
+    - [420, 119]
+    - [444, 119]
+  - points:
+    - [530, 61]
+    - [540, 61]
+  - points:
+    - [530, 119]
+    - [540, 119]
+  - points:
+    - [534, 154]
+    - [534, 170]
+  - points:
+    - [534, 214]
+    - [534, 234]
+  - points:
+    - [534, 278]
+    - [534, 302]
+  - points:
+    - [534, 344]
+    - [534, 400]
+    - [101, 400]
+    - [101, 344]
+    color: accent
+difficulties:
+- name: 难题名称写要攻克的技术问题
+  size: 5
+  points:
+  - {name: 难点, text: 写清约束条件、现有做法为什么不行，点出最关键的矛盾在哪里}
+  - {name: 方法名一, text: 写清对什么对象用什么方法，对应架构图里编号相同的分区}
+  - {name: 方法名二, text: 写清数据从哪里来、怎样在线校准，结论怎样验证，对应架构图里的哪个节点，, highlight: 关键突破写这里，蓝色加粗}
+- name: 难题名称写第二个技术问题
+  size: 4
+  points:
+  - {name: 难点, text: 写清这一环节的约束条件，以及现有做法为什么在这里行不通}
+  - {name: 方法名, text: 写清触发时机、判定依据和选择对象的规则，以及怎样避免误判、抖动等副作用，, highlight: 关键突破写这里，蓝色加粗}
+- name: 难题名称写第三个技术问题
+  size: 4
+  points:
+  - {name: 难点, text: 写清执行落在哪一层、对业务有什么约束，比如不能卡顿或掉帧}
+  - {name: 方法名, text: 写清执行动作作用于什么对象、怎样做到对业务透明，以及效果怎样反馈形成闭环，, highlight: 关键突破写这里，蓝色加粗}
+milestones:
+- {date: YYYY.MM.DD, deliverable: 交付件写原型或特性等可验收产物}
+- {date: YYYY.MM.DD, deliverable: 交付件写特性合入的版本和范围}

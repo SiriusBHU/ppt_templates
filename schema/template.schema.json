@@ -53,6 +53,7 @@
         "bind": {"type": "string"},
         "value": {"type": "string"},
         "runs": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/run"}},
+        "numerals": {"enum": ["zh"]},
         "style": {"type": "string"},
         "color": {"type": "string"},
         "by": {"type": "string"},
@@ -64,11 +65,15 @@
     },
     "run": {
       "type": "object",
-      "oneOf": [{"required": ["bind"]}, {"required": ["value"]}],
+      "oneOf": [{"required": ["bind"]}, {"required": ["value"]}, {"required": ["each", "runs"]}],
+      "dependentRequired": {"runs": ["each"]},
       "additionalProperties": false,
       "properties": {
         "bind": {"type": "string"},
         "value": {"type": "string"},
+        "each": {"type": "string"},
+        "runs": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/run"}},
+        "numerals": {"enum": ["zh"]},
         "style": {"type": "string"},
         "color": {"type": "string"}
       }
@@ -98,7 +103,7 @@
         "box": {"$ref": "#/$defs/box"},
         "fill": {"type": "string"},
         "line": {"type": "string"},
-        "shape": {"enum": ["rect", "rounded", "oval"]},
+        "shape": {"enum": ["rect", "rounded", "oval", "triangle"]},
         "radius": {"type": "number", "minimum": 0},
         "dash": {"type": "boolean"},
         "shadow": {"type": "boolean"},
