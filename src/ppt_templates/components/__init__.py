@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from . import block_diagram, capability_map, lane_roadmap, layered_arch, partitioned_arch, table
+from . import arch_canvas, block_diagram, capability_map, lane_roadmap, layered_arch, partitioned_arch, table
 
 
 def _no_problems(data, box, props=None) -> list:
@@ -27,4 +27,5 @@ COMPONENTS = {
     "capability-map": Component(capability_map.render, capability_map.SCHEMA, capability_map.PROPS_SCHEMA, capability_map.check),
     "table": Component(table.render, table.SCHEMA, table.PROPS_SCHEMA, table.check),
     "block-diagram": Component(block_diagram.render, block_diagram.SCHEMA, block_diagram.PROPS_SCHEMA, block_diagram.check),
+    "arch-canvas": Component(arch_canvas.render, arch_canvas.SCHEMA, arch_canvas.PROPS_SCHEMA, arch_canvas.check),
 }

@@ -4,7 +4,7 @@
 
 ## 当前状态
 
-已实现：`ppt render / preview / validate / catalog / list / show / import / leaks / sync-skill / mcp`；布局元素 `text` / `bullets` / `shape` / `grid` / `image`；组件 `layered-arch` / `partitioned-arch` / `lane-roadmap` / `capability-map` / `table` / `block-diagram`；仓库级校验（spec 7.1 全部规则，外加 skill 副本一致性）和 catalog；skill（`.agents/skills/ppt-templates`、`.agents/skills/pptx-to-template`）和 MCP server。模板清单见 `catalog.json`。尚未实现：母版（`master.pptx`）支持。
+已实现：`ppt render / preview / validate / catalog / list / show / import / leaks / sync-skill / mcp`；布局元素 `text` / `bullets` / `shape` / `grid` / `image`；组件 `layered-arch` / `partitioned-arch` / `lane-roadmap` / `capability-map` / `table` / `block-diagram` / `arch-canvas`；仓库级校验（spec 7.1 全部规则，外加 skill 副本一致性）和 catalog；skill（`.agents/skills/ppt-templates`、`.agents/skills/pptx-to-template`）和 MCP server。模板清单见 `catalog.json`。尚未实现：母版（`master.pptx`）支持。
 
 ## 术语（不要混用）
 
@@ -44,7 +44,7 @@
 - `shape` 写 `dash: true`（需要 `line`）时描边画成虚线。
 - `shape` 写 `shadow: true` 画卡片投影，样式（颜色 token、alpha、blur / distance 像素、angle 度）只来自风格的 `shadow` 小节，模板不能自己写；风格没有 `shadow` 时渲染报错。
 - YAML 按 1.2 读取：只有 `true` / `false` 是布尔，`yes` / `no` / `on` / `off` 都是字符串（所以 `no:` 可以当字段名，布尔字段写 `yes` 会被 schema 拒绝）。
-- 表格、架构图、框图这类复杂元素不在 YAML 里逐个画框，而是引用 `src/ppt_templates/` 中的内置组件（`table`、`layered-arch`、`partitioned-arch`、`lane-roadmap`、`capability-map`、`block-diagram`）。组件自带数据 Schema、`props` Schema 和语义检查，模板 `example.yaml` 与 deck 的数据、layout 的 `props` 都会按它们校验。照原页调样式用 `props`：`capability-map` 有 `frame`（外框描边，图例留在框外）、`group_fill`、`outline`、`title_color`、`item_style`、`fills`（两类条目的底色）、`legend_look: box`（图例画成带文字的小框）；`table` 有 `look: plain`（白底、只画横线）、`text_style`、`align`、`rule`，数据里可写 `widths` 给各列相对宽度。需要新的复杂元素时，新增组件，而不是在模板里堆 shape。
+- 表格、架构图、框图这类复杂元素不在 YAML 里逐个画框，而是引用 `src/ppt_templates/` 中的内置组件（`table`、`layered-arch`、`partitioned-arch`、`lane-roadmap`、`capability-map`、`block-diagram`、`arch-canvas`）。组件自带数据 Schema、`props` Schema 和语义检查，模板 `example.yaml` 与 deck 的数据、layout 的 `props` 都会按它们校验。照原页调样式用 `props`：`capability-map` 有 `frame`（外框描边，图例留在框外）、`group_fill`、`outline`、`title_color`、`item_style`、`fills`（两类条目的底色）、`legend_look: box`（图例画成带文字的小框）；`table` 有 `look: plain`（白底、只画横线）、`text_style`、`align`、`rule`，数据里可写 `widths` 给各列相对宽度。`arch-canvas` 用于自由分区架构，数据写 `canvas` / `panels` / `shapes` / `texts` / `arrows`（`panels` / `shapes` 写 `dash: true` 画虚线描边），坐标相对 `canvas` 声明的参考尺寸缩放，全部生成原生可编辑形状、文本和连接线，文字样式只能用 `caption` / `detail` / `body` / `body_strong` / `emphasis`（最小 9pt）。需要新的复杂元素时，新增组件，而不是在模板里堆 shape。
 - 从样板做模板时，形状和文字的样式照原页：描边还是阴影、圆角还是直角、底色、文字对齐方式都保留，只把颜色、字号换成最接近的 token（颜色和字号的硬性规则不变）。下面的约定用于从零设计的模板，以及原页没交代的地方。
 - 风格约定（用户定的 house style，新模板默认遵守，不要等用户逐页再提）：
   - 文字颜色只用三种：深红（`accent` / `highlight_strong`）、纯蓝（`primary_text`）、黑（`text`）；靛蓝 `primary` 只做实心色块（表头、封面、层名底色）；`on_primary`（白）只用在深色实心底上；文字不用 `muted` 等其他颜色。`ppt validate` 检查：layout 里 `text` / `bullets` 的 `color`、`color_map` 的值、`runs[].color`，以及风格里每个 `text_styles.*.color`，只能取 `accent` / `highlight_strong` / `primary_text` / `text` / `on_primary`。

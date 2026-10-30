@@ -910,6 +910,43 @@
     }
   },
   {
+    "id": "solution.solution-problem-native",
+    "topic": "solution",
+    "also_fits": [
+      "system",
+      "hardware",
+      "software"
+    ],
+    "name": "问题 × 原生架构 × 关键技术",
+    "roles": [
+      "solution",
+      "problem"
+    ],
+    "density": "talk",
+    "level": "subsystem",
+    "tags": [
+      "问题与挑战",
+      "方案架构",
+      "关键技术",
+      "预期收益",
+      "原生架构图",
+      "可编辑框图"
+    ],
+    "when_to_use": "一页讲清一个方案方向的完整论证：左上编号列出核心问题，左下用占左栏约七成高度的原生可编辑架构图展开机制（感知 / 建模 → 决策 → 执行 → 反馈，配示例数据），右上逐条展开与架构图编号对应的关键技术，右下用指标块给出预期收益",
+    "slots": {
+      "required": [
+        "title",
+        "title_suffix",
+        "problems",
+        "arch_title",
+        "arch",
+        "techs",
+        "metrics"
+      ],
+      "optional": []
+    }
+  },
+  {
     "id": "solution.solution-problem-panels",
     "topic": "solution",
     "also_fits": [

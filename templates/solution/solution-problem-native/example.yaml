@@ -1,0 +1,448 @@
+title: 标题主体写对象与方案名：
+title_suffix: 后半句写清核心技术路线和最突出的量化收益，一行写完
+problems:
+- {name: 症结短语写这里, text: 写清对象是什么、现状如何、代价有多大，最好带上一个量化数字说明严重程度}
+- {name: 症结短语写这里, text: 写清现有机制为什么做不到位、卡在哪一步，以及对体验或资源造成的影响}
+arch_title: 架构栏名写完整的机制名称
+arch:
+  canvas: [616, 390]
+  panels:
+  - box: [0, 0, 196, 256]
+    fill: surface_light
+    kind: rounded
+    radius: 8
+  - box: [208, 0, 196, 256]
+    fill: surface_light
+    kind: rounded
+    radius: 8
+  - box: [416, 0, 200, 256]
+    fill: surface_light
+    kind: rounded
+    radius: 8
+  - box: [422, 26, 188, 94]
+    fill: bg
+    kind: rounded
+    radius: 6
+    line: muted
+    dash: true
+  shapes:
+  - box: [8, 28, 180, 34]
+    fill: highlight_blue
+    kind: rounded
+    text: '在线输入：写触发事件
+
+      如场景切换、压力变化'
+    text_style: detail
+    radius: 3
+    line: primary
+  - box: [8, 72, 180, 22]
+    fill: bg
+    kind: rounded
+    text: 离线：写建模的数据来源
+    text_style: detail
+    radius: 3
+    line: line
+  - box: [8, 104, 180, 34]
+    fill: highlight
+    kind: rounded
+    text: '模型 / 矩阵：写建模对象
+
+      以及输出的量化指标'
+    text_style: detail
+    radius: 3
+    line: accent
+    color: accent
+    bold: true
+  - box: [8, 148, 86, 36]
+    fill: bg
+    kind: rounded
+    text: '输出一
+
+      如核心热页'
+    text_style: caption
+    radius: 3
+    line: line
+  - box: [102, 148, 86, 36]
+    fill: bg
+    kind: rounded
+    text: '输出二
+
+      如可回收对象'
+    text_style: caption
+    radius: 3
+    line: line
+  - box: [8, 214, 180, 36]
+    fill: bg
+    kind: rounded
+    text: '周期校准：写回流哪些数据
+
+      怎样更新模型'
+    text_style: caption
+    radius: 3
+    line: line
+  - box: [216, 28, 180, 34]
+    fill: primary
+    kind: rounded
+    text: '决策模块：写触发时机
+
+      以及查询什么依据'
+    text_style: detail
+    radius: 3
+    line: primary
+    color: on_primary
+    bold: true
+  - box: [216, 74, 180, 26]
+    fill: highlight
+    kind: rounded
+    text: 判定条件：写阈值或规则
+    text_style: detail
+    radius: 3
+    line: accent
+    color: accent
+    bold: true
+  - box: [216, 120, 86, 38]
+    fill: bg
+    kind: rounded
+    text: '分支一
+
+      写动作'
+    text_style: detail
+    radius: 3
+    line: line
+  - box: [310, 120, 86, 38]
+    fill: bg
+    kind: rounded
+    text: '分支二
+
+      写动作'
+    text_style: detail
+    radius: 3
+    line: line
+  - box: [216, 170, 180, 34]
+    fill: bg
+    kind: rounded
+    text: '约束：写防抖、限速等
+
+      避免副作用的机制'
+    text_style: caption
+    radius: 3
+    line: line
+  - box: [216, 216, 180, 30]
+    fill: primary
+    kind: rounded
+    text: 下发：写指令发给谁
+    text_style: detail
+    radius: 3
+    line: primary
+    color: on_primary
+    bold: true
+  - box: [430, 34, 80, 34]
+    fill: highlight
+    kind: rounded
+    text: 执行动作一
+    text_style: detail
+    radius: 3
+    line: accent
+    color: accent
+    bold: true
+  - box: [522, 34, 80, 34]
+    fill: bg
+    kind: rounded
+    text: 作用对象一
+    text_style: detail
+    radius: 3
+    line: line
+  - box: [430, 78, 80, 34]
+    fill: highlight
+    kind: rounded
+    text: 执行动作二
+    text_style: detail
+    radius: 3
+    line: accent
+    color: accent
+    bold: true
+  - box: [522, 78, 80, 34]
+    fill: bg
+    kind: rounded
+    text: 作用对象二
+    text_style: detail
+    radius: 3
+    line: line
+  - box: [422, 130, 188, 34]
+    fill: highlight_blue
+    kind: rounded
+    text: '直接收益：写释放了什么
+
+      补充了什么资源'
+    text_style: detail
+    radius: 3
+    line: primary
+  - box: [422, 174, 188, 34]
+    fill: highlight_blue
+    kind: rounded
+    text: '间接收益：写对体验的影响
+
+      如减少卡顿、提升保活'
+    text_style: detail
+    radius: 3
+    line: primary
+  - box: [422, 218, 188, 30]
+    fill: bg
+    kind: rounded
+    text: 效果评估：写评估指标
+    text_style: detail
+    radius: 3
+    line: line
+  - box: [212, 257, 192, 14]
+    fill: bg
+    kind: rect
+    text: 效果数据回流，写清闭环怎样形成
+    text_style: caption
+    color: accent
+  - box: [0, 274, 116, 22]
+    fill: primary
+    kind: rect
+    text: 示例 / 对比
+    text_style: caption
+    line: bg
+    color: on_primary
+    bold: true
+  - box: [116, 274, 250, 22]
+    fill: primary
+    kind: rect
+    text: 现状或基线：写原来怎么做
+    text_style: caption
+    line: bg
+    color: on_primary
+    bold: true
+  - box: [366, 274, 250, 22]
+    fill: primary
+    kind: rect
+    text: 本方案：写现在怎么做
+    text_style: caption
+    line: bg
+    color: on_primary
+    bold: true
+  - box: [0, 296, 116, 22]
+    fill: surface_light
+    kind: rect
+    text: 场景一
+    text_style: caption
+    line: line
+    bold: true
+  - box: [116, 296, 250, 22]
+    fill: bg
+    kind: rect
+    text: 写原机制的动作与结果
+    text_style: caption
+    line: line
+  - box: [366, 296, 250, 22]
+    fill: highlight
+    kind: rect
+    text: 写本方案的动作与结果
+    text_style: caption
+    line: line
+    color: accent
+    bold: true
+  - box: [0, 318, 116, 22]
+    fill: surface_light
+    kind: rect
+    text: 场景二
+    text_style: caption
+    line: line
+    bold: true
+  - box: [116, 318, 250, 22]
+    fill: bg
+    kind: rect
+    text: 写原机制的动作与结果
+    text_style: caption
+    line: line
+  - box: [366, 318, 250, 22]
+    fill: highlight
+    kind: rect
+    text: 写本方案的动作与结果
+    text_style: caption
+    line: line
+    color: accent
+    bold: true
+  - box: [0, 340, 116, 22]
+    fill: surface_light
+    kind: rect
+    text: 场景三
+    text_style: caption
+    line: line
+    bold: true
+  - box: [116, 340, 250, 22]
+    fill: bg
+    kind: rect
+    text: 写原机制的动作与结果
+    text_style: caption
+    line: line
+  - box: [366, 340, 250, 22]
+    fill: highlight
+    kind: rect
+    text: 写本方案的动作与结果
+    text_style: caption
+    line: line
+    color: accent
+    bold: true
+  - box: [0, 362, 116, 22]
+    fill: surface_light
+    kind: rect
+    text: 量化结果
+    text_style: caption
+    line: line
+    bold: true
+  - box: [116, 362, 250, 22]
+    fill: bg
+    kind: rect
+    text: 写基线数值
+    text_style: caption
+    line: line
+  - box: [366, 362, 250, 22]
+    fill: highlight
+    kind: rect
+    text: 写优化后数值与幅度
+    text_style: caption
+    line: line
+    color: accent
+    bold: true
+  - box: [8, 5, 16, 16]
+    fill: highlight_strong
+    kind: oval
+    text: '1'
+    text_style: caption
+    color: on_primary
+    bold: true
+  - box: [216, 5, 16, 16]
+    fill: highlight_strong
+    kind: oval
+    text: '2'
+    text_style: caption
+    color: on_primary
+    bold: true
+  - box: [424, 5, 16, 16]
+    fill: highlight_strong
+    kind: oval
+    text: '3'
+    text_style: caption
+    color: on_primary
+    bold: true
+  texts:
+  - box: [30, 3, 160, 20]
+    text: 感知与建模
+    style: body_strong
+    align: left
+    valign: middle
+    color: primary_text
+  - box: [238, 3, 160, 20]
+    text: 决策
+    style: body_strong
+    align: left
+    valign: middle
+    color: primary_text
+  - box: [446, 3, 164, 20]
+    text: 执行与收益
+    style: body_strong
+    align: left
+    valign: middle
+    color: primary_text
+  - box: [262, 102, 18, 14]
+    text: 是
+    style: caption
+    align: center
+    valign: middle
+    color: accent
+    bold: true
+  - box: [356, 102, 18, 14]
+    text: 否
+    style: caption
+    align: center
+    valign: middle
+    color: accent
+    bold: true
+  arrows:
+  - points:
+    - [98, 94]
+    - [98, 104]
+  - points:
+    - [98, 138]
+    - [98, 148]
+  - points:
+    - [188, 45]
+    - [216, 45]
+  - points:
+    - [188, 166]
+    - [202, 166]
+    - [202, 56]
+    - [216, 56]
+  - points:
+    - [306, 62]
+    - [306, 74]
+  - points:
+    - [259, 100]
+    - [259, 120]
+  - points:
+    - [353, 100]
+    - [353, 120]
+  - points:
+    - [259, 158]
+    - [259, 170]
+  - points:
+    - [353, 158]
+    - [353, 170]
+  - points:
+    - [306, 204]
+    - [306, 216]
+  - points:
+    - [396, 231]
+    - [409, 231]
+    - [409, 51]
+    - [430, 51]
+  - points:
+    - [409, 95]
+    - [430, 95]
+  - points:
+    - [510, 51]
+    - [522, 51]
+  - points:
+    - [510, 95]
+    - [522, 95]
+  - points:
+    - [516, 120]
+    - [516, 130]
+  - points:
+    - [516, 164]
+    - [516, 174]
+  - points:
+    - [516, 208]
+    - [516, 218]
+  - points:
+    - [516, 248]
+    - [516, 264]
+    - [98, 264]
+    - [98, 250]
+    color: accent
+techs:
+- name: 1. 关键技术一写基于什么做什么
+  points:
+  - {name: 要点名一, text: 写清作用对象、使用的方法和对应的架构节点，说明怎样解决左侧的问题}
+  - {name: 要点名二, text: 写清数据从哪里来、怎样校准，结论如何验证, highlight: 关键结论写这里}
+- name: 2. 关键技术二写何时做、对谁做
+  points:
+  - {name: 要点名一, text: 写清触发时机和判定依据，与现有做法相比改变了什么}
+  - {name: 要点名二, text: 写清选择对象的规则，以及怎样避免误判和副作用, highlight: 收益数字写这里}
+- name: 3. 关键技术三写执行与闭环
+  points:
+  - {name: 要点名一, text: 写清执行动作落在哪一层、作用于什么对象，怎样保证业务无感}
+  - {name: 要点名二, text: 写清直接收益和间接收益分别是什么，用什么指标衡量, highlight: 体验收益写这里}
+metrics:
+- {value: -XXMB, label: '指标对象写这里
+
+    基线或测试条件'}
+- {value: +XX%, label: '指标对象写这里
+
+    基线或测试条件'}
+- {value: <XXms, label: '指标对象写这里
+
+    基线或测试条件'}

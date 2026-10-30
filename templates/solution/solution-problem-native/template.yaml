@@ -1,0 +1,135 @@
+id: solution.solution-problem-native
+name: 问题 × 原生架构 × 关键技术
+roles: [solution, problem]
+also_fits: [system, hardware, software]
+density: talk
+level: subsystem
+tags: [问题与挑战, 方案架构, 关键技术, 预期收益, 原生架构图, 可编辑框图]
+when_to_use: 一页讲清一个方案方向的完整论证：左上编号列出核心问题，左下用占左栏约七成高度的原生可编辑架构图展开机制（感知 / 建模 → 决策 → 执行 → 反馈，配示例数据），右上逐条展开与架构图编号对应的关键技术，右下用指标块给出预期收益
+when_not_to_use: 只放现成截图、不画架构 → solution.solution-problem-panels；问题要展开背景、量化数据和竞争力目标 → solution.solution-problem-techs；整页只讲架构分层 → solution.solution-tiered-arch
+frame: standard
+
+structure:
+  - 标题：结论式同行标题，主体点明对象和方案名、以冒号收尾，后半句写技术路线和最突出的量化收益
+  - 核心问题框（左上虚线框）：编号问题，每条「症结短语：对象 + 现状 + 代价」，红色圆形序号和红色症结词让读者先抓住为什么要做
+  - 方案架构框（左下虚线框，占左栏约七成高度）：栏名写机制名称；框内是原生可编辑的架构画布，按「感知 / 建模 → 决策 → 执行 → 反馈」分区，节点、连线、示例数据都是 PPT 原生元素；分区标题带红色圆形编号，与右侧关键技术的编号一一对应；底部放一张示例或对比小表，让机制落到具体数据上
+  - 关键技术框（右上虚线框）：编号关键技术，每条加粗名称 + 「要点名：做法」子要点，关键结论蓝色加粗接句尾；编号与架构图分区编号对应
+  - 预期收益框（右下虚线框）：指标块，每块一个红色大号数值 + 一句口径说明（对象、基线、测试条件）
+  - 关系：读序是左上问题 → 左下架构 → 右上关键技术 → 右下收益；关键技术逐条解释架构里带编号的部分，收益数字回扣标题里的量化目标
+
+slots:
+  type: object
+  required: [title, title_suffix, problems, arch_title, arch, techs, metrics]
+  properties:
+    title:
+      type: string
+      maxLength: 18
+      description: 标题主体（24 号加粗、深红）：点明对象和方案名，以冒号收尾；中文不超过 14 个字（英文、数字约半个字宽），给同一行的后半句留位置
+    title_suffix:
+      type: string
+      maxLength: 40
+      description: 与标题同一行的后半句（18 号加粗、深红）：技术路线 + 最突出的量化收益；和标题主体合计不超过一行（约 44 个汉字，英文、数字约半个字宽）
+    problems:
+      type: array
+      minItems: 1
+      maxItems: 2
+      description: 左上的核心问题，序号自动生成；每条讲一个症结
+      items:
+        type: object
+        required: [name, text]
+        properties:
+          name: { type: string, maxLength: 10, description: 症结短语（12 号加粗、深红，自动接「：」），如「被动回收滞后」 }
+          text: { type: string, maxLength: 60, description: 说明：对象 + 现状 + 代价（量化），连同症结词两行以内（每行约 36 个汉字，英文、数字约半个字宽） }
+    arch_title:
+      type: string
+      maxLength: 16
+      description: 架构框的栏名（18 号加粗）：机制名称，如「场景化语义感知主动压缩机制」
+    arch:
+      type: object
+      required: [canvas]
+      description: 原生架构画布（arch-canvas 组件）：canvas 写 [616, 390]，与框的实际像素一致、不变形；panels 画分区（dash 画虚线分组）、shapes 画节点（可带文字）、texts 写标注、arrows 画连线；分区标题前放红色圆形编号（kind oval + fill highlight_strong + color on_primary），与 techs 的编号对应；文字最小 9 号
+    techs:
+      type: array
+      minItems: 2
+      maxItems: 4
+      description: 右上的关键技术，按编号逐条解释架构图中带编号的部分
+      items:
+        type: object
+        required: [name, points]
+        properties:
+          name: { type: string, maxLength: 24, description: 名称（12 号加粗，自动接「：」）：开头写编号「1. 」，与架构图分区编号一致，一行写完 }
+          points:
+            type: array
+            minItems: 1
+            maxItems: 3
+            description: 子要点（• 开头），每条「要点名：做法」
+            items:
+              type: object
+              required: [text]
+              properties:
+                name: { type: string, maxLength: 10, description: 要点名（加粗，自动接「：」）；没有名称就不填 }
+                text: { type: string, maxLength: 64, description: 做法：对象 + 方法 + 效果；一条两行以内（每行约 32 个汉字，英文、数字约半个字宽） }
+                highlight: { type: string, maxLength: 16, description: 句尾的蓝色加粗强调（关键结论 / 收益数字）；没有就不填 }
+    metrics:
+      type: array
+      minItems: 2
+      maxItems: 3
+      description: 右下的预期收益指标块，回扣标题里的量化目标
+      items:
+        type: object
+        required: [value, label]
+        properties:
+          value: { type: string, maxLength: 9, description: 数值（24 号加粗、深红），如「-0.53GB」「+70%」「<200ms」 }
+          label: { type: string, maxLength: 24, description: 口径说明（10 号）：指标对象、基线或测试条件，两行以内（每行约 12 个汉字） }
+
+layout:                         # 参考 body 区 1216×560（本页无 takeaway，正文区自动上移并纵向拉伸到 600）
+  # 左上：核心问题（虚线框），白底栏名骑跨框顶；红色圆形序号 + 红色症结词
+  - { type: shape, box: [0, 14, 640, 124], fill: bg, line: muted, dash: true }
+  - { type: shape, box: [221, 0, 198, 28], fill: bg }
+  - { type: text, box: [221, 0, 198, 28], value: 核心问题, style: heading, align: center, valign: middle }
+  - type: grid
+    box: [16, 36, 608, 94]
+    bind: problems
+    columns: 1
+    item:
+      - { type: shape, box: [0, 2, 20, 19], shape: oval, fill: highlight_strong }
+      - { type: text, box: [0, 2, 20, 19], bind: "#", style: body_strong, color: on_primary, align: center, valign: middle }
+      - type: text
+        box: [30, 0, "100%-30", "100%"]
+        style: body
+        runs:
+          - { bind: name, style: body_strong, color: accent }
+          - { value: "：", style: body_strong, color: accent }
+          - { bind: text }
+
+  # 左下：方案架构（虚线框，占左栏约七成高度），栏名写机制名称；框内是原生架构画布
+  - { type: shape, box: [0, 164, 640, 396], fill: bg, line: muted, dash: true }
+  - { type: shape, box: [100, 150, 440, 28], fill: bg }
+  - { type: text, box: [100, 150, 440, 28], bind: arch_title, style: heading, align: center, valign: middle }
+  - { type: component, component: arch-canvas, box: [12, 186, 616, 364], bind: arch }
+
+  # 右上：关键技术（虚线框），名称和要点在一个文本框里自然往下排
+  - { type: shape, box: [664, 14, 552, 414], fill: bg, line: muted, dash: true }
+  - { type: shape, box: [841, 0, 198, 28], fill: bg }
+  - { type: text, box: [841, 0, 198, 28], value: 关键技术, style: heading, align: center, valign: middle }
+  - { type: bullets, box: [678, 38, 526, 382], bind: techs, children: points, style: body, group_style: body_strong }
+
+  # 右下：预期收益（虚线框），指标块 = 红色大号数值 + 口径说明
+  - { type: shape, box: [664, 456, 552, 104], fill: bg, line: muted, dash: true }
+  - { type: shape, box: [841, 442, 198, 28], fill: bg }
+  - { type: text, box: [841, 442, 198, 28], value: 预期收益, style: heading, align: center, valign: middle }
+  - type: grid
+    box: [678, 476, 524, 76]
+    bind: metrics
+    columns: 3
+    gap: 10
+    item:
+      - { type: shape, box: [0, 0, "100%", "100%"], fill: surface_light }
+      - { type: text, box: [4, 2, "100%-8", 36], bind: value, style: kpi, align: center, valign: middle }
+      - { type: text, box: [8, 38, "100%-16", "100%-40"], bind: label, style: detail, align: center, valign: top }
+
+guidance:
+  - 架构图是整页主体：先定分区（感知 / 建模、决策、执行、反馈），再在分区里放节点和连线；分区标题前的红色编号和右侧关键技术逐一对应，读者能对着图听讲
+  - 架构图底部放一张示例或对比小表（真实场景的决策示例、前后对比、穿刺数据），让机制落到数据上；节点文字写「对象 + 动作」，不写空泛的「模块一」
+  - 问题写症结和代价，不写方案；关键技术写做法和效果，不重复问题；收益指标写口径（对象、基线、测试条件），和标题后半句的数字保持一致
+  - 画布内文字用 detail / caption 写节点和标注，分区标题用 body_strong；颜色只用 token，深色实心底上的文字用 on_primary
